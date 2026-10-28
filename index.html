@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Positiva — Entrar</title>
+<link rel="icon" href="assets/logo-escuro.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/marca.css">
+<script>window.__hashInicial = location.hash;</script>
+<style>
+#tela{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--grad-dark);position:relative;overflow:hidden;padding:24px}
+#tela::before{content:"";position:absolute;top:50%;left:-10%;width:120%;height:140px;background:var(--grad-brand);opacity:.22;transform:translateY(-50%) rotate(-9deg);filter:blur(2px)}
+#tela::after{content:"";position:absolute;top:0;right:0;width:42%;height:100%;background:radial-gradient(circle at 80% 20%,rgba(190,245,117,.10),transparent 60%)}
+.caixa{position:relative;z-index:2;background:var(--white);border-radius:24px;padding:48px 40px;width:100%;max-width:430px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.caixa.larga{max-width:720px}
+.topo{text-align:center;margin-bottom:30px}
+.topo .logo-img{height:84px;width:auto;margin:0 auto 16px}
+.topo h1{font-size:22px;font-weight:900;font-style:italic;letter-spacing:1px;text-transform:uppercase}
+.topo p{color:var(--mid);font-size:11px;margin-top:6px;text-transform:uppercase;letter-spacing:3px;font-weight:700}
+.topo .traco{width:48px;height:4px;background:var(--grad-brand);border-radius:4px;margin:16px auto 0}
+.campo{margin-bottom:16px}
+.campo label{display:block;font-weight:700;font-size:12px;color:var(--navy);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.campo input{width:100%;padding:12px 16px;border:2px solid var(--gray);border-radius:10px;font-size:15px;color:var(--dark);outline:none;transition:border-color .2s}
+.campo input:focus{border-color:var(--navy)}
+.btn{width:100%;padding:15px;background:var(--dark);color:var(--white);border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-top:8px;text-transform:uppercase;letter-spacing:1px;transition:background .2s,transform .2s}
+.btn:hover{background:var(--navy);transform:translateY(-1px)}
+.btn:disabled{opacity:.6;cursor:wait;transform:none}
+.link{display:block;margin:16px auto 0;background:none;border:none;color:var(--navy);font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline}
+.msg{font-size:13px;text-align:center;margin-top:12px;min-height:18px}
+.msg.erro{color:var(--danger)}
+.msg.ok{color:var(--success)}
+.ajuda{color:var(--mid);font-size:13px;line-height:1.5;margin-bottom:18px;text-align:center}
+.opcoes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.opcao{display:flex;flex-direction:column;gap:10px;text-align:left;padding:26px 22px;border-radius:18px;border:2px solid var(--line);background:var(--white);cursor:pointer;text-decoration:none;color:var(--dark);transition:border-color .2s,transform .2s,box-shadow .2s;position:relative;overflow:hidden}
+.opcao::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:5px;background:var(--grad-brand);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.opcao:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:var(--shadow)}
+.opcao:hover::after{transform:scaleX(1)}
+.opcao .icone{width:46px;height:46px;border-radius:12px;background:var(--dark);color:var(--green);display:flex;align-items:center;justify-content:center}
+.opcao strong{font-size:18px;font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:.5px}
+.opcao span{font-size:13px;color:var(--mid);line-height:1.45}
+.rodape{display:flex;justify-content:space-between;align-items:center;margin-top:22px;font-size:13px;color:var(--mid)}
+.rodape .link{margin:0}
+[hidden]{display:none!important}
+@media (max-width:560px){.caixa{padding:36px 22px}.opcoes{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main id="tela">
+  <div class="caixa" id="caixa">
+    <div class="topo">
+      <img class="logo-img" src="assets/logo-escuro.png" alt="Positiva">
+      <h1 id="titulo">Positiva</h1>
+      <p id="subtitulo">Área da equipe</p>
+      <div class="traco"></div>
+    </div>
+
+    <form id="form-login" hidden>
+      <div class="campo"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="campo"><label for="senha">Senha</label><input id="senha" type="password" autocomplete="current-password" required></div>
+      <button class="btn" type="submit">Entrar</button>
+      <p class="msg" id="msg-login" role="alert"></p>
+      <button class="link" type="button" data-ir="esqueci">Esqueci minha senha</button>
+    </form>
+
+    <form id="form-esqueci" hidden>
+      <p class="ajuda">Informe seu e-mail. Você vai receber um link para criar uma senha nova.</p>
+      <div class="campo"><label for="email-esqueci">E-mail</label><input id="email-esqueci" type="email" autocomplete="username" required></div>
+      <button class="btn" type="submit">Enviar link</button>
+      <p class="msg" id="msg-esqueci" role="alert"></p>
+      <button class="link" type="button" data-ir="login">Voltar para o login</button>
+    </form>
+
+    <form id="form-nova" hidden>
+      <p class="ajuda" id="ajuda-nova">Crie sua senha (mínimo de 8 caracteres).</p>
+      <div class="campo"><label for="nova1">Nova senha</label><input id="nova1" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="campo"><label for="nova2">Repita a senha</label><input id="nova2" type="password" autocomplete="new-password" minlength="8" required></div>
+      <button class="btn" type="submit">Salvar senha</button>
+      <p class="msg" id="msg-nova" role="alert"></p>
+    </form>
+
+    <section id="escolha" hidden>
+      <p class="ajuda" id="ola"></p>
+      <div class="opcoes">
+        <a class="opcao" href="bonus/index.html">
+          <div class="icone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <strong>Controle de Bônus</strong>
+          <span>Bônus, vendas, contestações e pagamentos do mês.</span>
+        </a>
+        <a class="opcao" href="tarefas/index.html">
+          <div class="icone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <strong>Controle de Tarefas</strong>
+          <span>Inadimplência, risco de abandono e "Por que não fechou?".</span>
+        </a>
+      </div>
+      <div class="rodape"><span id="quem"></span><button class="link" type="button" id="sair">Sair</button></div>
+    </section>
+
+    <section id="sem-acesso" hidden>
+      <p class="ajuda">Seu usuário ainda não tem acesso liberado. Fale com o administrador.</p>
+      <button class="btn" type="button" id="sair2">Sair</button>
+    </section>
+
+    <p class="msg" id="carregando">Carregando…</p>
+  </div>
+</main>
+
+<script type="module">
+import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js';
+
+const $ = (id) => document.getElementById(id);
+const telas = ['form-login', 'form-esqueci', 'form-nova', 'escolha', 'sem-acesso', 'carregando'];
+const mostrar = (id) => {
+  telas.forEach((t) => { $(t).hidden = t !== id; });
+  $('caixa').classList.toggle('larga', id === 'escolha');
+  const foco = $(id).querySelector('input');
+  if (foco) foco.focus();
+};
+const msg = (id, texto, tipo = 'erro') => { $(id).textContent = texto; $(id).className = `msg ${tipo}`; };
+const ocupado = (form, sim) => { form.querySelector('button[type=submit]').disabled = sim; };
+
+const hash = new URLSearchParams((window.__hashInicial || '').replace(/^#/, ''));
+let definindoSenha = hash.get('type') === 'invite' || hash.get('type') === 'recovery';
+if (hash.get('error_description')) msg('msg-login', 'O link expirou ou já foi usado. Peça um novo.');
+
+async function seguir() {
+  if (definindoSenha) {
+    $('ajuda-nova').textContent = hash.get('type') === 'invite'
+      ? 'Boas-vindas! Crie sua senha de acesso (mínimo de 8 caracteres).'
+      : 'Crie uma senha nova (mínimo de 8 caracteres).';
+    return mostrar('form-nova');
+  }
+  let perfil;
+  try { perfil = await carregarPerfil(); } catch { msg('msg-login', 'Erro ao carregar seu perfil. Tente de novo.'); return mostrar('form-login'); }
+  if (!perfil) return mostrar('form-login');
+  const areas = areasDoPerfil(perfil);
+  if (areas.tarefas && areas.bonus) {
+    $('ola').textContent = `Olá, ${perfil.nome || perfil.email}! O que você quer acessar?`;
+    $('quem').textContent = perfil.email;
+    return mostrar('escolha');
+  }
+  if (areas.tarefas) return location.replace('tarefas/index.html');
+  if (areas.bonus) return location.replace('bonus/index.html');
+  mostrar('sem-acesso');
+}
+
+sb.auth.onAuthStateChange((evento) => {
+  if (evento === 'PASSWORD_RECOVERY') { definindoSenha = true; seguir(); }
+});
+
+$('form-login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  ocupado(e.target, true); msg('msg-login', '');
+  const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('senha').value });
+  ocupado(e.target, false);
+  if (error) return msg('msg-login', traduzirErroAuth(error.message));
+  seguir();
+});
+
+$('form-esqueci').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  ocupado(e.target, true);
+  const redirectTo = new URL('index.html', location.href).href;
+  const { error } = await sb.auth.resetPasswordForEmail($('email-esqueci').value.trim(), { redirectTo });
+  ocupado(e.target, false);
+  if (error) return msg('msg-esqueci', traduzirErroAuth(error.message));
+  msg('msg-esqueci', 'Se esse e-mail estiver cadastrado, o link chega em alguns minutos.', 'ok');
+});
+
+$('form-nova').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if ($('nova1').value !== $('nova2').value) return msg('msg-nova', 'As senhas não são iguais.');
+  ocupado(e.target, true);
+  const { error } = await sb.auth.updateUser({ password: $('nova1').value });
+  ocupado(e.target, false);
+  if (error) return msg('msg-nova', traduzirErroAuth(error.message));
+  definindoSenha = false;
+  history.replaceState(null, '', location.pathname);
+  seguir();
+});
+
+document.querySelectorAll('[data-ir]').forEach((b) => b.addEventListener('click', () => {
+  mostrar(b.dataset.ir === 'esqueci' ? 'form-esqueci' : 'form-login');
+}));
+$('sair').addEventListener('click', sair);
+$('sair2').addEventListener('click', sair);
+
+// dá tempo do Supabase ler o link (convite/recuperação) antes de decidir a tela
+await sb.auth.getSession();
+seguir();
+</script>
+</body>
+</html>
