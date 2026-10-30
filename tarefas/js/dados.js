@@ -104,6 +104,12 @@ export async function convidar(email, perfil) {
   return data;
 }
 
+// Novo link para criar/trocar a senha (mesmo e-mail do "Esqueci minha senha"; o convite vence em 24h).
+export async function enviarLinkAcesso(email) {
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: new URL('../index.html', location.href).href });
+  if (error) throw error;
+}
+
 export const perfis = async () => ok(await sb.from('profiles').select('*').order('nome'));
 export const atualizarPerfil = async (id, campos) => ok(await sb.from('profiles').update(campos).eq('id', id));
 export const atualizarControle = async (id, campos) => ok(await sb.from('controles').update(campos).eq('id', id));

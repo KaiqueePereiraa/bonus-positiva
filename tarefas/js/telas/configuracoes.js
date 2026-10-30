@@ -49,7 +49,8 @@ async function usuarios(el, ctx) {
       <td>${p.acesso_tarefas ? (p.papel_tarefas === 'admin' ? 'Admin' : `Consultora${p.unidade ? `<span class="sub">${esc(ctx.nomeUnidade(p.unidade).replace('Positiva ', ''))}</span>` : ''}`) : '—'}</td>
       <td>${p.acesso_bonus ? (p.papel_bonus === 'coordinator' ? 'Coordenador' : 'Consultor') : '—'}</td>
       <td>${p.ordem_rodizio ?? '—'}</td><td>${p.whatsapp ? esc(p.whatsapp) : '—'}</td>
-      <td class="acoes"><button class="btn sec peq" data-acao="editar">Editar</button></td></tr>`).join('')}</tbody></table></div>` : vazio('Nenhum usuário ainda.')}`;
+      <td class="acoes"><button class="btn sec peq" data-acao="link" title="Envia um e-mail para a pessoa criar ou trocar a senha">Enviar link de acesso</button> <button class="btn sec peq" data-acao="editar">Editar</button></td></tr>`).join('')}</tbody></table></div>` : vazio('Nenhum usuário ainda.')}
+    <p class="dica" style="margin-top:12px">O link do convite vale 24 horas. Se a pessoa não recebeu ou o link venceu, use "Enviar link de acesso" e peça para ela olhar também o spam/lixo eletrônico.</p>`;
   el.onclick = async (e) => {
     const b = e.target.closest('[data-acao]');
     if (!b) return;
@@ -67,6 +68,13 @@ async function usuarios(el, ctx) {
       return;
     }
     const p = perfis.find((x) => x.id === b.closest('tr').dataset.id);
+    if (b.dataset.acao === 'link') {
+      b.disabled = true;
+      try { await dados.enviarLinkAcesso(p.email); toast(`Link de acesso enviado para ${p.email}.`); }
+      catch (err) { erro(err); }
+      b.disabled = false;
+      return;
+    }
     const r = await modal(`Editar ${p.nome || p.email}`, formPerfil(p, ctx),
       { ler: true, acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: null }, { rotulo: 'Salvar', valor: 'ok' }] });
     if (r?.valor !== 'ok') return;
