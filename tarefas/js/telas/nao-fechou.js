@@ -1,8 +1,8 @@
 // Por que não fechou? — admin importa o mês; consultora justifica os seus e pode assumir os sem responsável.
-import * as dados from '../dados.js';
-import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js';
-import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio } from '../ui.js';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js';
+import * as dados from '../dados.js?v=20261030185834';
+import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261030185834';
+import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio } from '../ui.js?v=20261030185834';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261030185834';
 
 const mesDe = (t) => nomeMesCap(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
 

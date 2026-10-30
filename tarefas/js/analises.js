@@ -2,7 +2,7 @@
 // tarefa: linha de tarefas_status { controle_id, responsavel_id, prazo, periodo_inicio, status, total, feitos }
 // item:   linha de itens (do "Por que não fechou?") com motivo_id, dados, tarefas.periodo_inicio
 
-import { semanaDe } from './regras.js';
+import { semanaDe } from './regras.js?v=20261030185834';
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
