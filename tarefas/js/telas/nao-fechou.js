@@ -1,8 +1,8 @@
 // Por que não fechou? — admin importa o mês; consultora justifica os seus e pode assumir os sem responsável.
-import * as dados from '../dados.js?v=20261104135312';
-import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261104135312';
-import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio } from '../ui.js?v=20261104135312';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261104135312';
+import * as dados from '../dados.js?v=20261104135611';
+import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261104135611';
+import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio } from '../ui.js?v=20261104135611';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261104135611';
 
 const mesDe = (t) => nomeMesCap(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
 
@@ -143,7 +143,7 @@ async function painelAdmin(el, ctx) {
       ${doMes ? `${tarefasMes.map((t) => `<a href="#/nao-fechou/${t.id}" style="text-decoration:none;color:inherit">${linhaProgresso(ctx.nomeDe(t.responsavel_id), t.feitos, t.total, t.status)}</a>`).join('')}
         <p class="dica" style="margin-top:8px">${doMes.linhas} interessados importados · ${feitos} motivos preenchidos${pool.length ? ` · ${pool.length} sem responsável` : ''}.</p>
         <div class="linha-acoes" style="margin-top:14px">${doMes.arquivo_path ? '<button class="btn sec peq" id="baixar">Baixar planilha original</button>' : ''}${feitos === 0 ? '<button class="btn perigo peq" id="desfazer">Desfazer importação</button>' : ''}</div>`
-        : `<p class="dica" style="margin-bottom:14px">Envie o export de interessados da ${esc(ctx.nomeUnidade(unidade))} de ${nomeMesCap(ref.ano, ref.mes)}. O sistema separa pela coluna "Consultor"; quem não estiver com ${daUnidade.map((c) => esc(c.nome)).join(', ') || 'as consultoras da unidade'} é dividido igualmente entre elas.</p>
+        : `<p class="dica" style="margin-bottom:14px">Envie o export de interessados da ${esc(ctx.nomeUnidade(unidade))} de ${nomeMesCap(ref.ano, ref.mes)}. O sistema separa pela coluna "Consultor"; quem não estiver com ${daUnidade.map((c) => esc(c.nome)).join(', ') || 'as consultoras da unidade'} é dividido de forma que todas fiquem com o mesmo total.</p>
            <div class="filtros" style="margin-bottom:14px"><label class="campo">Mês de referência<input type="month" id="mes" value="${ref.ano}-${String(ref.mes).padStart(2, '0')}"></label></div>
            <div id="upload"></div><div id="previa"></div>`}
     </div>
@@ -187,13 +187,15 @@ async function painelAdmin(el, ctx) {
     const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
     const porConsultora = daUnidade.map((c) => ({ nome: c.nome, ordem: c.ordem_rodizio ?? 99, n: registros.filter((r) => norm(r.dados.consultor_evo) === norm(c.nome_evo)).length, extra: 0 }));
     const semResp = registros.length - porConsultora.reduce((s, c) => s + c.n, 0);
-    const fila = [...porConsultora].sort((a, b) => a.n - b.n || a.ordem - b.ordem);
-    for (let k = 0; fila.length && k < semResp; k++) fila[k % fila.length].extra++;
+    // mesma regra do banco: cada sem dono vai para quem tem menos no total (empate: ordem do rodízio)
+    for (let k = 0; porConsultora.length && k < semResp; k++) {
+      [...porConsultora].sort((a, b) => (a.n + a.extra) - (b.n + b.extra) || a.ordem - b.ordem)[0].extra++;
+    }
     const dia = +ctx.hoje().slice(8, 10);
     alvo.innerHTML = `<div style="margin-top:16px"><h2 style="font-size:14px;margin-bottom:10px">Prévia — ${registros.length} interessados de ${nomeMesCap(ano, mes)}</h2>
       ${porConsultora.map((c) => `<div class="linha-info"><b>${esc(c.nome)}</b><span>${c.n + c.extra} (${c.n} dela no EVO + ${c.extra} sem dono)</span></div>`).join('')}
       ${semResp && !porConsultora.length ? `<div class="linha-info"><b>Sem responsável</b><span>${semResp}</span></div>` : ''}
-      ${semResp && porConsultora.length ? `<p class="dica">${semResp} interessado(s) sem consultora da unidade no EVO serão divididos igualmente.</p>` : ''}
+      ${semResp && porConsultora.length ? `<p class="dica">${semResp} interessado(s) sem consultora da unidade no EVO serão divididos para deixar o total de cada consultora igual.</p>` : ''}
       ${dia > 5 ? `<p class="aviso-lista">Atenção: o prazo é ${dataCurta(prazoNaoFechou({ ano, mes }))} — as consultoras terão pouco tempo.</p>` : ''}
       ${listaAvisos(avisos)}
       <div class="linha-acoes" style="margin-top:16px"><button class="btn verde" id="confirmar">Confirmar importação</button><button class="btn sec" id="cancelar">Cancelar</button></div></div>`;

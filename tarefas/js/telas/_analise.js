@@ -1,7 +1,7 @@
 // Filtros e carga de dados compartilhados por Indicadores e Relatórios.
-import * as dados from '../dados.js?v=20261104135312';
-import { esc, STATUS, NOMES_CONTROLE } from '../ui.js?v=20261104135312';
-import { somarDias } from '../regras.js?v=20261104135312';
+import * as dados from '../dados.js?v=20261104135611';
+import { esc, STATUS, NOMES_CONTROLE } from '../ui.js?v=20261104135611';
+import { somarDias } from '../regras.js?v=20261104135611';
 
 export function filtrosPadrao(ctx) {
   const hoje = ctx.hoje();
