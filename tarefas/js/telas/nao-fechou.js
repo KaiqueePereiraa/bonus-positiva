@@ -1,8 +1,8 @@
 // Por que não fechou? — admin importa o mês; consultora justifica os seus e pode assumir os sem responsável.
-import * as dados from '../dados.js?v=20261030185834';
-import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261030185834';
-import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio } from '../ui.js?v=20261030185834';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261030185834';
+import * as dados from '../dados.js?v=20261104135312';
+import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261104135312';
+import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio } from '../ui.js?v=20261104135312';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261104135312';
 
 const mesDe = (t) => nomeMesCap(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
 
@@ -70,7 +70,7 @@ async function painelConsultora(el, ctx) {
     <div class="cartao">
       <div class="abas" role="tablist">
         <button class="ativo" data-aba="meus">Meus interessados <span class="cont">${atual ? atual.total - atual.feitos : 0} pendentes</span></button>
-        <button data-aba="pool">Sem responsável <span class="cont">${pool.length}</span></button>
+        ${pool.length ? `<button data-aba="pool">Sem responsável <span class="cont">${pool.length}</span></button>` : ''}
         ${tarefas.length > 1 ? '<button data-aba="anteriores">Meses anteriores</button>' : ''}
       </div>
       <div id="aba"></div>
@@ -141,13 +141,15 @@ async function painelAdmin(el, ctx) {
   el.innerHTML = `
     <div class="cartao"><h2>${esc(ctx.nomeUnidade(unidade))} · referência ${nomeMesCap(ref.ano, ref.mes)} · prazo ${dataCurta(prazoNaoFechou(ref))}</h2>
       ${doMes ? `${tarefasMes.map((t) => `<a href="#/nao-fechou/${t.id}" style="text-decoration:none;color:inherit">${linhaProgresso(ctx.nomeDe(t.responsavel_id), t.feitos, t.total, t.status)}</a>`).join('')}
-        <p class="dica" style="margin-top:8px">${doMes.linhas} interessados importados · ${feitos} motivos preenchidos · ${pool.length} sem responsável.</p>
+        <p class="dica" style="margin-top:8px">${doMes.linhas} interessados importados · ${feitos} motivos preenchidos${pool.length ? ` · ${pool.length} sem responsável` : ''}.</p>
         <div class="linha-acoes" style="margin-top:14px">${doMes.arquivo_path ? '<button class="btn sec peq" id="baixar">Baixar planilha original</button>' : ''}${feitos === 0 ? '<button class="btn perigo peq" id="desfazer">Desfazer importação</button>' : ''}</div>`
-        : `<p class="dica" style="margin-bottom:14px">Envie o export de interessados da ${esc(ctx.nomeUnidade(unidade))} de ${nomeMesCap(ref.ano, ref.mes)}. O sistema separa pela coluna "Consultor"; quem não estiver com ${daUnidade.map((c) => esc(c.nome)).join(', ') || 'as consultoras da unidade'} vai para "Sem responsável".</p>
+        : `<p class="dica" style="margin-bottom:14px">Envie o export de interessados da ${esc(ctx.nomeUnidade(unidade))} de ${nomeMesCap(ref.ano, ref.mes)}. O sistema separa pela coluna "Consultor"; quem não estiver com ${daUnidade.map((c) => esc(c.nome)).join(', ') || 'as consultoras da unidade'} é dividido igualmente entre elas.</p>
            <div class="filtros" style="margin-bottom:14px"><label class="campo">Mês de referência<input type="month" id="mes" value="${ref.ano}-${String(ref.mes).padStart(2, '0')}"></label></div>
            <div id="upload"></div><div id="previa"></div>`}
     </div>
-    ${doMes ? `<div class="cartao"><h2>Sem responsável <span class="selo cinza">${pool.length}</span></h2>${pool.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Interessado</th><th>No EVO</th><th>Atribuir a</th></tr></thead><tbody>
+    ${doMes && pool.length ? `<div class="cartao"><h2>Sem responsável <span class="selo cinza">${pool.length}</span></h2>
+      ${daUnidade.length ? '<div class="linha-acoes" style="margin-bottom:12px"><button class="btn verde peq" id="dividir">Dividir igualmente entre as consultoras</button><span class="dica">ou atribua um por um abaixo</span></div>' : '<p class="dica" style="margin-bottom:12px">Cadastre as consultoras desta unidade para dividir.</p>'}
+      ${pool.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Interessado</th><th>No EVO</th><th>Atribuir a</th></tr></thead><tbody>
       ${pool.map((i) => `<tr data-id="${i.id}"><td class="nome">${esc(i.nome)}</td><td>${esc(i.dados?.consultor_evo || '—')}</td>
         <td><select class="ctrl" data-acao="atribuir"><option value="">Escolher…</option>${daUnidade.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></td></tr>`).join('')}
       </tbody></table></div>` : vazio('Todos os interessados têm responsável.')}</div>` : ''}
@@ -157,6 +159,11 @@ async function painelAdmin(el, ctx) {
 
   if (doMes) {
     el.querySelector('#baixar')?.addEventListener('click', () => baixarArquivo(doMes.arquivo_path));
+    el.querySelector('#dividir')?.addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      try { const n = await dados.dividirSemResponsavel(doMes.id); toast(`${n} interessado(s) divididos entre as consultoras.`); ctx.atualizarSino(); await recarregarNoLugar(() => painelAdmin(el, ctx)); }
+      catch (err) { erro(err); e.target.disabled = false; }
+    });
     el.querySelector('#desfazer')?.addEventListener('click', async () => {
       if (!(await confirmarDesfazer(doMes))) return;
       try { await dados.desfazerImportacao(doMes.id); toast('Importação desfeita.'); painelAdmin(el, ctx); } catch (e) { erro(e); }
@@ -178,12 +185,15 @@ async function painelAdmin(el, ctx) {
     const { registros, avisos, erro: problema } = await lerPlanilha(arquivo, 'nao_fechou');
     if (problema) { alvo.innerHTML = `<p class="aviso-lista" style="margin-top:12px">${esc(problema)}</p>`; return; }
     const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
-    const porConsultora = daUnidade.map((c) => ({ nome: c.nome, n: registros.filter((r) => norm(r.dados.consultor_evo) === norm(c.nome_evo)).length }));
+    const porConsultora = daUnidade.map((c) => ({ nome: c.nome, ordem: c.ordem_rodizio ?? 99, n: registros.filter((r) => norm(r.dados.consultor_evo) === norm(c.nome_evo)).length, extra: 0 }));
     const semResp = registros.length - porConsultora.reduce((s, c) => s + c.n, 0);
+    const fila = [...porConsultora].sort((a, b) => a.n - b.n || a.ordem - b.ordem);
+    for (let k = 0; fila.length && k < semResp; k++) fila[k % fila.length].extra++;
     const dia = +ctx.hoje().slice(8, 10);
     alvo.innerHTML = `<div style="margin-top:16px"><h2 style="font-size:14px;margin-bottom:10px">Prévia — ${registros.length} interessados de ${nomeMesCap(ano, mes)}</h2>
-      ${porConsultora.map((c) => `<div class="linha-info"><b>${esc(c.nome)}</b><span>${c.n}</span></div>`).join('')}
-      <div class="linha-info"><b>Sem responsável</b><span>${semResp}</span></div>
+      ${porConsultora.map((c) => `<div class="linha-info"><b>${esc(c.nome)}</b><span>${c.n + c.extra} (${c.n} dela no EVO + ${c.extra} sem dono)</span></div>`).join('')}
+      ${semResp && !porConsultora.length ? `<div class="linha-info"><b>Sem responsável</b><span>${semResp}</span></div>` : ''}
+      ${semResp && porConsultora.length ? `<p class="dica">${semResp} interessado(s) sem consultora da unidade no EVO serão divididos igualmente.</p>` : ''}
       ${dia > 5 ? `<p class="aviso-lista">Atenção: o prazo é ${dataCurta(prazoNaoFechou({ ano, mes }))} — as consultoras terão pouco tempo.</p>` : ''}
       ${listaAvisos(avisos)}
       <div class="linha-acoes" style="margin-top:16px"><button class="btn verde" id="confirmar">Confirmar importação</button><button class="btn sec" id="cancelar">Cancelar</button></div></div>`;

@@ -1,10 +1,10 @@
 // Relatórios — escolhe período, controle e consultoras; mostra na tela e exporta PDF, Excel ou CSV.
-import * as dados from '../dados.js?v=20261030185834';
-import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261030185834';
-import { barras, imagem } from '../graficos.js?v=20261030185834';
-import { csv, excel, pdf } from '../exportar.js?v=20261030185834';
-import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261030185834';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto } from './_analise.js?v=20261030185834';
+import * as dados from '../dados.js?v=20261104135312';
+import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261104135312';
+import { barras, imagem } from '../graficos.js?v=20261104135312';
+import { csv, excel, pdf } from '../exportar.js?v=20261104135312';
+import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261104135312';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto } from './_analise.js?v=20261104135312';
 
 let filtros;
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;

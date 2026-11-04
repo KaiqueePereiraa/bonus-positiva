@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261030185834';
+import { sb } from '../../shared/sessao.js?v=20261104135312';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -89,6 +89,7 @@ export const importarInadimplencia = (tarefaId, caminho, nome, registros) =>
 export const desfazerImportacao = (id) => rpc('desfazer_importacao', { p_importacao: id });
 
 // ── Ações do admin ──
+export const dividirSemResponsavel = (importacaoId) => rpc('dividir_sem_responsavel', { p_importacao: importacaoId });
 export const moverItem = (id, para) => rpc('mover_item', { p_item: id, p_para: para });
 export const trocarPlantao = (tarefaId, nova) => rpc('trocar_plantao', { p_tarefa: tarefaId, p_nova: nova });
 export const garantirInadimplencia = () => rpc('garantir_inadimplencia');
