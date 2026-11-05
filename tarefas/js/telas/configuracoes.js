@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261104135611';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261104135611';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal } from '../ui.js?v=20261104135611';
+import * as dados from '../dados.js?v=20261105110152';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261105110152';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal } from '../ui.js?v=20261105110152';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp']];
 
@@ -50,7 +50,7 @@ async function usuarios(el, ctx) {
       <td>${p.acesso_bonus ? (p.papel_bonus === 'coordinator' ? 'Coordenador' : 'Consultor') : '—'}</td>
       <td>${p.ordem_rodizio ?? '—'}</td><td>${p.whatsapp ? esc(p.whatsapp) : '—'}</td>
       <td class="acoes"><button class="btn sec peq" data-acao="link" title="Envia um e-mail para a pessoa criar ou trocar a senha">Enviar link de acesso</button> <button class="btn sec peq" data-acao="editar">Editar</button></td></tr>`).join('')}</tbody></table></div>` : vazio('Nenhum usuário ainda.')}
-    <p class="dica" style="margin-top:12px">O link do convite vale 24 horas. Se a pessoa não recebeu ou o link venceu, use "Enviar link de acesso" e peça para ela olhar também o spam/lixo eletrônico.</p>`;
+    <p class="dica" style="margin-top:12px">O link vence rápido e cada novo envio cancela os anteriores. Se a pessoa não recebeu ou o link venceu, use "Enviar link de acesso" e peça para ela abrir o e-mail MAIS RECENTE (olhe também o spam/lixo eletrônico).</p>`;
   el.onclick = async (e) => {
     const b = e.target.closest('[data-acao]');
     if (!b) return;

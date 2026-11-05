@@ -1,8 +1,8 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261104135611';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261104135611';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa } from '../regras.js?v=20261104135611';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261104135611';
+import * as dados from '../dados.js?v=20261105110152';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261105110152';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa } from '../regras.js?v=20261105110152';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261105110152';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {

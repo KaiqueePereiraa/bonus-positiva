@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo-escuro.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/marca.css?v=20261104135611">
+<link rel="stylesheet" href="shared/marca.css?v=20261105110152">
 <script>window.__hashInicial = location.hash;</script>
 <style>
 #tela{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--grad-dark);position:relative;overflow:hidden;padding:24px}
@@ -107,7 +107,7 @@
 </main>
 
 <script type="module">
-import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261104135611';
+import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261105110152';
 
 const $ = (id) => document.getElementById(id);
 const telas = ['form-login', 'form-esqueci', 'form-nova', 'escolha', 'sem-acesso', 'carregando'];
@@ -122,7 +122,9 @@ const ocupado = (form, sim) => { form.querySelector('button[type=submit]').disab
 
 const hash = new URLSearchParams((window.__hashInicial || '').replace(/^#/, ''));
 let definindoSenha = hash.get('type') === 'invite' || hash.get('type') === 'recovery';
-if (hash.get('error_description')) msg('msg-login', 'O link expirou ou já foi usado. Peça um novo.');
+// Link de convite/senha vencido ou já usado: o Supabase volta com #error=... (ou ?error=...)
+const busca = new URLSearchParams(location.search);
+const linkInvalido = !!(hash.get('error') || hash.get('error_description') || busca.get('error'));
 
 async function seguir() {
   if (definindoSenha) {
@@ -133,6 +135,11 @@ async function seguir() {
   }
   let perfil;
   try { perfil = await carregarPerfil(); } catch { msg('msg-login', 'Erro ao carregar seu perfil. Tente de novo.'); return mostrar('form-login'); }
+  if (!perfil && linkInvalido) {
+    history.replaceState(null, '', location.pathname);
+    mostrar('form-esqueci');
+    return msg('msg-esqueci', 'Este link expirou ou já foi usado. Digite seu e-mail para receber um novo — e abra sempre o e-mail MAIS RECENTE (cada novo pedido cancela os anteriores).');
+  }
   if (!perfil) return mostrar('form-login');
   const areas = areasDoPerfil(perfil);
   if (areas.tarefas && areas.bonus) {
