@@ -1,0 +1,16 @@
+/* Identidade Positiva — mesmos tokens do dashboard de bônus. */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --dark:#212B37;--navy:#34425C;--green:#BEF575;--green-deep:#7FB85A;--gray:#BBC0C9;
+  --mid:#788192;--white:#fff;--bg:#EEF1F4;--card:#fff;--line:#E3E7EC;
+  --danger:#E74C3C;--warning:#F39C12;--success:#27AE60;--info:#3B82F6;
+  --grad-brand:linear-gradient(100deg,#34425C 0%,#7FB85A 55%,#BEF575 100%);
+  --grad-dark:linear-gradient(135deg,#212B37 0%,#34425C 100%);
+  --radius:14px;--shadow:0 1px 3px rgba(33,43,55,.06),0 6px 20px rgba(33,43,55,.08);
+}
+html,body{background:var(--bg)}
+body{font-family:'Avenir Next','Avenir','Montserrat',sans-serif;color:var(--dark);min-height:100vh;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
+.logo-img{display:block;object-fit:contain}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:3px solid var(--green-deep);outline-offset:2px}
