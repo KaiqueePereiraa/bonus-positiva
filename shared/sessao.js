@@ -1,6 +1,6 @@
 // Sessão do Supabase Auth compartilhada entre login, bônus e Central de Tarefas.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=20261105110152';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=20261106191808';
 
 export const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },

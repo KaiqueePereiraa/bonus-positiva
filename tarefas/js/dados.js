@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261105110152';
+import { sb } from '../../shared/sessao.js?v=20261106191808';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -59,6 +59,12 @@ export async function itensPeriodo({ controle, desde, ate, unidade }) {
   return ok(await q.limit(10000));
 }
 
+// Todos os interessados das listas escolhidas (inclui quem ainda não tem consultora) — relatório da diretoria.
+export async function itensDasImportacoes(ids) {
+  if (!ids.length) return [];
+  return ok(await sb.from('itens').select('*').eq('controle_id', 'nao_fechou').in('importacao_id', ids).order('ordem').limit(10000));
+}
+
 // ── Ações da consultora ──
 export const marcar = (id) => rpc('marcar_enviada', { p_item: id });
 export const desmarcar = (id) => rpc('desmarcar', { p_item: id });
@@ -91,6 +97,8 @@ export const desfazerImportacao = (id) => rpc('desfazer_importacao', { p_importa
 // ── Ações do admin ──
 export const dividirSemResponsavel = (importacaoId) => rpc('dividir_sem_responsavel', { p_importacao: importacaoId });
 export const moverItem = (id, para) => rpc('mover_item', { p_item: id, p_para: para });
+// Remove um interessado do "Por que não fechou?" (ex.: cadastro duplicado). Só admin; fica registrado em `eventos`.
+export const excluirInteressado = (id) => rpc('excluir_item_nao_fechou', { p_item: id });
 export const trocarPlantao = (tarefaId, nova) => rpc('trocar_plantao', { p_tarefa: tarefaId, p_nova: nova });
 export const garantirInadimplencia = () => rpc('garantir_inadimplencia');
 

@@ -2293,6 +2293,9 @@ function renderDisputes(sales) {
         <p style="font-size:14px"><strong>Decisão:</strong> ${d.action==='transfer'?`Transferida para ${shortName(d.claimant)}`:'Mantida com '+shortName(d.originalConsultant)}</p>
         <p class="dispute-reason"><strong>Motivo da contestação:</strong> ${d.reason}</p>
         <div class="dispute-decision"><strong>Decisão do coordenador:</strong> ${d.resolution}<br><span style="font-size:11px">por ${d.resolvedBy} em ${d.resolvedAt}</span></div>
+        ${isCoord ? `<div class="dispute-actions">
+          <button class="btn-sm btn-reject" onclick="reopenDispute(${disputes.indexOf(d)})" title="Desfaz a decisão e devolve a disputa para Em Aberto">↩ Reabrir disputa</button>
+        </div>` : ''}
       </div>`;
     });
   }
@@ -2737,6 +2740,29 @@ async function resolveDispute(action) {
   d.resolvedAt = new Date().toLocaleDateString('pt-BR');
   saveDisputesLocal(disputes);
   closeModal('modal-resolve');
+  buildSectionNav();
+  renderSection('disputes');
+  await sbUpdateDispute(d);
+}
+
+// Desfaz a decisão (ex.: coordenador decidiu errado): a disputa volta para "Em Aberto".
+// Mantém contestação e defesa; limpa decisão e responsável. Se a decisão era "transferir",
+// a venda volta sozinha para o consultor original (a transferência só vale para disputa resolvida).
+async function reopenDispute(idx) {
+  const d = disputes[idx];
+  if (!d || d.status !== 'resolved') return;
+  const decisao = d.action === 'transfer' ? `A venda #${d.displayId} volta para ${shortName(d.originalConsultant)}.` : 'A venda continua com o consultor atual.';
+  if (!confirm(`Reabrir a disputa #${d.displayId}?
+
+${decisao}
+A decisão anterior será apagada e a disputa volta para "Em Aberto".`)) return;
+  d.status     = 'open';
+  d.action     = null;
+  d.resolution = null;
+  d.resolvedBy = null;
+  d.resolvedAt = null;
+  saveDisputesLocal(disputes);
+  destroyCharts();
   buildSectionNav();
   renderSection('disputes');
   await sbUpdateDispute(d);

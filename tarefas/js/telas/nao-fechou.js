@@ -1,8 +1,14 @@
 // Por que não fechou? — admin importa o mês; consultora justifica os seus e pode assumir os sem responsável.
-import * as dados from '../dados.js?v=20261105110152';
-import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261105110152';
-import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio } from '../ui.js?v=20261105110152';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261105110152';
+import * as dados from '../dados.js?v=20261106191808';
+import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261106191808';
+import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261106191808';
+import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261106191808';
+
+// Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
+async function confirmarExclusao(nome) {
+  return confirmar('Excluir interessado', `Excluir "${nome}" desta lista? Use para cadastro duplicado. A exclusão fica registrada, mas não dá para desfazer por aqui.`, 'Excluir');
+}
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261106191808';
 
 const mesDe = (t) => nomeMesCap(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
 
@@ -25,7 +31,8 @@ function linhaMotivo(i, ctx, editavel) {
       : `${motivo ? esc(motivo.nome) : '<span class="dica">—</span>'}${i.motivo_texto ? `<span class="sub">${esc(i.motivo_texto)}</span>` : ''}`}</td>
     <td style="min-width:180px">${editavel ? `<textarea class="ctrl" data-campo="obs" rows="1" placeholder="Observação (opcional)">${esc(i.observacao || '')}</textarea>` : esc(i.observacao || '')}</td>
     <td class="acoes">${editavel ? `<button class="btn peq ${i.feito_em ? 'sec' : ''}" data-acao="salvar">${i.feito_em ? 'Atualizar' : 'Salvar'}</button>` : ''}
-      ${i.feito_em ? '<span class="selo verde">Preenchido</span>' : ''}</td></tr>`;
+      ${i.feito_em ? '<span class="selo verde">Preenchido</span>' : ''}
+      ${ctx.ehAdmin ? '<button class="btn perigo peq" data-acao="excluir" title="Excluir da lista (ex.: cadastro duplicado)">Excluir</button>' : ''}</td></tr>`;
 }
 
 // Salvar atualiza só a linha e o cabeçalho (a página não pula para o topo).
@@ -42,6 +49,25 @@ async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }) {
     if (!texto.hidden) texto.focus();
   };
   el.onclick = async (e) => {
+    const ex = e.target.closest('[data-acao="excluir"]');
+    if (ex) {
+      const trEx = ex.closest('tr');
+      const id = trEx.dataset.id;
+      const alvo = itens.find((i) => i.id === id);
+      if (!(await confirmarExclusao(alvo?.nome || 'este interessado'))) return;
+      ex.disabled = true;
+      try {
+        await dados.excluirInteressado(id);
+        toast('Interessado excluído.');
+        itens.splice(itens.findIndex((i) => i.id === id), 1);
+        trEx.remove();
+        atualizarCabecalho(tarefa, itens);
+        aoContar?.(itens.filter((i) => !i.feito_em).length);
+        if (!itens.length) el.innerHTML = vazio('Nenhum interessado aqui.');
+        ctx.atualizarSino();
+      } catch (err) { erro(err); ex.disabled = false; }
+      return;
+    }
     const b = e.target.closest('[data-acao="salvar"]');
     if (!b) return;
     const tr = b.closest('tr');
@@ -149,13 +175,17 @@ async function painelAdmin(el, ctx) {
     </div>
     ${doMes && pool.length ? `<div class="cartao"><h2>Sem responsável <span class="selo cinza">${pool.length}</span></h2>
       ${daUnidade.length ? '<div class="linha-acoes" style="margin-bottom:12px"><button class="btn verde peq" id="dividir">Dividir igualmente entre as consultoras</button><span class="dica">ou atribua um por um abaixo</span></div>' : '<p class="dica" style="margin-bottom:12px">Cadastre as consultoras desta unidade para dividir.</p>'}
-      ${pool.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Interessado</th><th>No EVO</th><th>Atribuir a</th></tr></thead><tbody>
+      ${pool.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Interessado</th><th>No EVO</th><th>Atribuir a</th><th></th></tr></thead><tbody>
       ${pool.map((i) => `<tr data-id="${i.id}"><td class="nome">${esc(i.nome)}</td><td>${esc(i.dados?.consultor_evo || '—')}</td>
-        <td><select class="ctrl" data-acao="atribuir"><option value="">Escolher…</option>${daUnidade.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></td></tr>`).join('')}
+        <td><select class="ctrl" data-acao="atribuir"><option value="">Escolher…</option>${daUnidade.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></td>
+        <td class="acoes"><button class="btn perigo peq" data-acao="excluir" title="Excluir da lista (ex.: cadastro duplicado)">Excluir</button></td></tr>`).join('')}
       </tbody></table></div>` : vazio('Todos os interessados têm responsável.')}</div>` : ''}
+    <div id="relatorio-diretoria"></div>
     <div class="cartao"><h2>Histórico</h2>${tarefas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Mês</th><th>Consultora</th><th>Preenchidos</th><th>Status</th><th></th></tr></thead><tbody>
       ${tarefas.map((t) => `<tr><td>${mesDe(t)}</td><td>${esc(ctx.nomeDe(t.responsavel_id))}</td><td>${t.feitos}/${t.total}</td><td>${seloStatus(t.status, t.prazo_proximo)}</td><td class="acoes"><a class="btn sec peq" href="#/nao-fechou/${t.id}">Abrir</a></td></tr>`).join('')}
       </tbody></table></div>` : vazio('Nenhum mês importado ainda.')}</div>`;
+
+  cartaoRelatorioDiretoria(el.querySelector('#relatorio-diretoria'), ctx);
 
   if (doMes) {
     el.querySelector('#baixar')?.addEventListener('click', () => baixarArquivo(doMes.arquivo_path));
@@ -168,6 +198,16 @@ async function painelAdmin(el, ctx) {
       if (!(await confirmarDesfazer(doMes))) return;
       try { await dados.desfazerImportacao(doMes.id); toast('Importação desfeita.'); painelAdmin(el, ctx); } catch (e) { erro(e); }
     });
+    el.onclick = async (e) => {
+      const ex = e.target.closest('[data-acao="excluir"]');
+      if (!ex) return;
+      const tr = ex.closest('tr');
+      const alvo = pool.find((i) => i.id === tr.dataset.id);
+      if (!(await confirmarExclusao(alvo?.nome || 'este interessado'))) return;
+      ex.disabled = true;
+      try { await dados.excluirInteressado(tr.dataset.id); toast('Interessado excluído.'); ctx.atualizarSino(); await recarregarNoLugar(() => painelAdmin(el, ctx)); }
+      catch (err) { erro(err); ex.disabled = false; }
+    };
     el.onchange = async (e) => {
       const s = e.target.closest('[data-acao="atribuir"]');
       if (!s?.value) return;
