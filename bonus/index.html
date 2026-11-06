@@ -2290,7 +2290,20 @@ function renderDisputes(sales) {
           <span class="tag tag-type">${disputeTypeLabel(d.saleId)}</span>
           <span style="color:var(--mid);font-size:13px">${d.unit_label}</span>
         </div>
-        <p style="font-size:14px"><strong>Decisão:</strong> ${d.action==='transfer'?`Transferida para ${shortName(d.claimant)}`:'Mantida com '+shortName(d.originalConsultant)}</p>
+        ${(() => {
+          const transf = d.action === 'transfer';
+          const de = shortName(d.originalConsultant), para = shortName(d.claimant);
+          const cor = transf ? ['#e3f2fd', '#1565c0'] : ['#e8f5e9', '#2e7d32'];
+          return `<div style="background:${cor[0]};border-radius:8px;padding:10px 14px;margin:8px 0">
+            <p style="font-size:12px;color:var(--mid);margin-bottom:4px">Estava com <strong>${de}</strong> · contestada por <strong>${para}</strong></p>
+            <p style="font-size:15px;font-weight:800;color:${cor[1]}">${transf
+              ? `🔄 Transferida: ${de} → ${para}`
+              : `✅ Mantida com ${de} (continua a mesma pessoa)`}</p>
+            <p style="font-size:12px;color:var(--mid);margin-top:4px">${transf
+              ? `A venda saiu de ${de} e agora é de ${para}.`
+              : `A contestação de ${para} não foi aceita.`}</p>
+          </div>`;
+        })()}
         <p class="dispute-reason"><strong>Motivo da contestação:</strong> ${d.reason}</p>
         <div class="dispute-decision"><strong>Decisão do coordenador:</strong> ${d.resolution}<br><span style="font-size:11px">por ${d.resolvedBy} em ${d.resolvedAt}</span></div>
         ${isCoord ? `<div class="dispute-actions">

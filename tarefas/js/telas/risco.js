@@ -1,8 +1,8 @@
 // Risco de abandono — admin importa e acompanha; consultora marca as mensagens da semana.
-import * as dados from '../dados.js?v=20261106191808';
-import { dividir, semanaDe, prazoSemanal } from '../regras.js?v=20261106191808';
-import { esc, dataCurta, seloStatus, toast, erro, vazio } from '../ui.js?v=20261106191808';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261106191808';
+import * as dados from '../dados.js?v=20261106192758';
+import { dividir, semanaDe, prazoSemanal } from '../regras.js?v=20261106192758';
+import { esc, dataCurta, seloStatus, toast, erro, vazio } from '../ui.js?v=20261106192758';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261106192758';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
