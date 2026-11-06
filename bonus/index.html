@@ -2283,32 +2283,33 @@ function renderDisputes(sales) {
   if (resolved.length) {
     html += `<h3 style="font-size:15px;font-weight:800;margin:20px 0 12px;color:var(--success)">Resolvidas (${resolved.length})</h3>`;
     resolved.forEach(d => {
+      const transf = d.action === 'transfer';
+      const de = shortName(d.originalConsultant), para = shortName(d.claimant);
+      const chip = 'display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:13px;';
+      const cap  = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--mid);margin-bottom:4px';
       html += `<div class="dispute-card resolved">
         <div class="dispute-meta">
           <span class="tag" style="background:#e8f5e9;color:#2e7d32">Resolvida</span>
           <strong>#${d.displayId}</strong>
           <span class="tag tag-type">${disputeTypeLabel(d.saleId)}</span>
           <span style="color:var(--mid);font-size:13px">${d.unit_label}</span>
+          ${isCoord ? `<button class="btn-sm btn-reject" style="margin-left:auto" onclick="reopenDispute(${disputes.indexOf(d)})" title="Desfaz a decisão e devolve a disputa para Em Aberto">↩ Reabrir</button>` : ''}
         </div>
-        ${(() => {
-          const transf = d.action === 'transfer';
-          const de = shortName(d.originalConsultant), para = shortName(d.claimant);
-          const cor = transf ? ['#e3f2fd', '#1565c0'] : ['#e8f5e9', '#2e7d32'];
-          return `<div style="background:${cor[0]};border-radius:8px;padding:10px 14px;margin:8px 0">
-            <p style="font-size:12px;color:var(--mid);margin-bottom:4px">Estava com <strong>${de}</strong> · contestada por <strong>${para}</strong></p>
-            <p style="font-size:15px;font-weight:800;color:${cor[1]}">${transf
-              ? `🔄 Transferida: ${de} → ${para}`
-              : `✅ Mantida com ${de} (continua a mesma pessoa)`}</p>
-            <p style="font-size:12px;color:var(--mid);margin-top:4px">${transf
-              ? `A venda saiu de ${de} e agora é de ${para}.`
-              : `A contestação de ${para} não foi aceita.`}</p>
-          </div>`;
-        })()}
-        <p class="dispute-reason"><strong>Motivo da contestação:</strong> ${d.reason}</p>
-        <div class="dispute-decision"><strong>Decisão do coordenador:</strong> ${d.resolution}<br><span style="font-size:11px">por ${d.resolvedBy} em ${d.resolvedAt}</span></div>
-        ${isCoord ? `<div class="dispute-actions">
-          <button class="btn-sm btn-reject" onclick="reopenDispute(${disputes.indexOf(d)})" title="Desfaz a decisão e devolve a disputa para Em Aberto">↩ Reabrir disputa</button>
-        </div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 14px">
+          ${transf ? `
+            <span style="${chip}background:#f0f2f5;color:var(--mid)"><small>De</small> <strong style="text-decoration:line-through">${de}</strong></span>
+            <span style="color:#1565c0;font-weight:900;font-size:16px">→</span>
+            <span style="${chip}background:#e3f2fd;color:#1565c0"><small>Para</small> <strong>${para}</strong></span>
+            <span class="tag" style="background:#1565c0;color:#fff">Transferida</span>` : `
+            <span style="${chip}background:#e8f5e9;color:#2e7d32"><small>Fica com</small> <strong>${de}</strong></span>
+            <span class="tag" style="background:#2e7d32;color:#fff">Mantida</span>
+            <span style="font-size:12px;color:var(--mid)">contestação de ${para} negada</span>`}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px 24px">
+          <div><div style="${cap}">Contestação de ${para}</div><div style="font-size:14px">${d.reason}</div></div>
+          <div><div style="${cap}">Decisão do coordenador</div><div style="font-size:14px">${d.resolution}</div>
+            <div style="font-size:11px;color:var(--mid);margin-top:2px">${d.resolvedBy} · ${d.resolvedAt}</div></div>
+        </div>
       </div>`;
     });
   }

@@ -1,14 +1,14 @@
 // Por que não fechou? — admin importa o mês; consultora justifica os seus e pode assumir os sem responsável.
-import * as dados from '../dados.js?v=20261106192758';
-import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261106192758';
-import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261106192758';
-import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261106192758';
+import * as dados from '../dados.js?v=20261106194830';
+import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261106194830';
+import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261106194830';
+import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261106194830';
 
 // Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
 async function confirmarExclusao(nome) {
   return confirmar('Excluir interessado', `Excluir "${nome}" desta lista? Use para cadastro duplicado. A exclusão fica registrada, mas não dá para desfazer por aqui.`, 'Excluir');
 }
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261106192758';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261106194830';
 
 const mesDe = (t) => nomeMesCap(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
 

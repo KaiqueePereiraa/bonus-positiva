@@ -1,7 +1,7 @@
 // Relatório do "Por que não fechou?" para apresentar à diretoria (cálculo puro; testado em tests/relatorio-nf.test.js).
 // itens: linhas de `itens` (controle nao_fechou) — inclui quem ainda não tem consultora.
 // importacoes: linhas de `importacoes` { id, unidade, referencia_inicio } das listas escolhidas.
-import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261106192758';
+import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261106194830';
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
