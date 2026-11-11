@@ -1,8 +1,8 @@
 // Visão geral — admin: cartões do mês + blocos dos 3 controles; consultora: resumo do que fazer.
-import * as dados from '../dados.js?v=20261106194830';
-import { semanaDe, mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261106194830';
-import { esc, dataCurta, diaSemana, seloStatus, pct, nomeMesCap, ROTA_CONTROLE, NOMES_CONTROLE } from '../ui.js?v=20261106194830';
-import { linhaProgresso } from './_comum.js?v=20261106194830';
+import * as dados from '../dados.js?v=20261111193201';
+import { semanaDe, mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261111193201';
+import { esc, dataCurta, diaSemana, seloStatus, pct, nomeMesCap, ROTA_CONTROLE, NOMES_CONTROLE } from '../ui.js?v=20261111193201';
+import { linhaProgresso } from './_comum.js?v=20261111193201';
 
 export async function render(el, ctx) {
   return ctx.ehAdmin ? admin(el, ctx) : consultora(el, ctx);
@@ -34,10 +34,12 @@ async function admin(el, ctx) {
   const refIni = `${ref.ano}-${String(ref.mes).padStart(2, '0')}-01`;
   const unidades = ctx.unidade ? ctx.unidades.filter((u) => u.id === ctx.unidade)
     : (ctx.unidadesAtivas().length ? ctx.unidadesAtivas() : ctx.unidades);
-  const [todas, impRisco, impNf] = await Promise.all([
+  const [todas, impRisco, impNf, impLista, listas] = await Promise.all([
     dados.tarefas({ desde: new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10), unidade: ctx.unidade || undefined }),
     dados.importacoes('risco', { limite: 30, unidade: ctx.unidade || undefined }),
-    dados.importacoes('nao_fechou', { limite: 30, unidade: ctx.unidade || undefined })]);
+    dados.importacoes('nao_fechou', { limite: 30, unidade: ctx.unidade || undefined }),
+    dados.importacoes('lista_fazer', { limite: 30, unidade: ctx.unidade || undefined }),
+    dados.listasFazer({ unidade: ctx.unidade || undefined }).catch(() => [])]);
 
   // cartões: tarefas com prazo no mês corrente até hoje + as abertas atrasadas
   const doPeriodo = todas.filter((t) => t.prazo >= inicioMes && t.prazo <= hoje);
@@ -58,6 +60,7 @@ async function admin(el, ctx) {
     const imN = impNf.find((i) => i.unidade === u.id && i.referencia_inicio === refIni);
     const nf = imN ? daUni.filter((t) => t.importacao_id === imN.id) : [];
     const nfFeitos = nf.reduce((s, t) => s + t.feitos, 0);
+    const listasU = impLista.filter((i) => i.unidade === u.id).slice(0, 3);
     return `<h2 style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;margin-top:6px">${esc(u.nome)}</h2>
     <div class="grade">
       <div class="cartao"><h2>Inadimplência <span class="mais"><a href="#/inadimplencia">Abrir →</a></span></h2>
@@ -83,6 +86,15 @@ async function admin(el, ctx) {
           <div class="linha-info"><span>Prazo final</span><b>${dataCurta(prazoNaoFechou(ref))}</b></div>
           <div style="margin-top:14px">${nf.map((t) => linhaProgresso(ctx.nomeDe(t.responsavel_id), t.feitos, t.total)).join('')}</div>`
         : '<p class="dica">A lista do mês ainda não foi importada.</p>'}
+      </div>
+      <div class="cartao"><h2>Lista a fazer <span class="mais"><a href="#/lista-fazer">Abrir →</a></span></h2>
+        ${listasU.length ? listasU.map((imp) => {
+          const ts = daUni.filter((t) => t.importacao_id === imp.id);
+          const f = ts.reduce((s, t) => s + t.feitos, 0);
+          const tot = ts.reduce((s, t) => s + t.total, 0);
+          const l = listas.find((x) => x.importacao_id === imp.id);
+          return `<div class="linha-info"><span>${esc(l?.titulo || 'Lista a fazer')} · prazo ${dataCurta(l?.prazo || imp.referencia_fim)}</span><b>${f}/${tot} · ${pct(f, tot)}%</b></div>`;
+        }).join('') : '<p class="dica">Nenhuma lista a fazer importada ainda.</p>'}
       </div>
     </div>`;
   }).join('');

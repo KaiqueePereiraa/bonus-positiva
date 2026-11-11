@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261106194830';
+import { sb } from '../../shared/sessao.js?v=20261111193201';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -65,8 +65,18 @@ export async function itensDasImportacoes(ids) {
   return ok(await sb.from('itens').select('*').eq('controle_id', 'nao_fechou').in('importacao_id', ids).order('ordem').limit(10000));
 }
 
+// Listas a fazer (título, explicação, prazo). A consultora só enxerga as listas em que tem contatos (RLS).
+export async function listasFazer({ unidade } = {}) {
+  let q = sb.from('listas_fazer').select('*').order('criada_em', { ascending: false });
+  if (unidade) q = q.eq('unidade', unidade);
+  return ok(await q);
+}
+export const editarListaFazer = async (id, campos) => ok(await sb.from('listas_fazer').update(campos).eq('id', id));
+
 // ── Ações da consultora ──
 export const marcar = (id) => rpc('marcar_enviada', { p_item: id });
+// Lista a fazer: marca como feito e guarda a observação (opcional); chamar de novo atualiza a observação.
+export const marcarListaItem = (id, observacao) => rpc('marcar_lista_item', { p_item: id, p_obs: observacao || null });
 export const desmarcar = (id) => rpc('desmarcar', { p_item: id });
 export const assumir = (id) => rpc('assumir_item', { p_item: id });
 export const salvarMotivo = (id, motivo, texto, observacao) =>
@@ -92,6 +102,9 @@ export const importarNaoFechou = (unidade, ano, mes, caminho, nome, registros) =
   rpc('importar_nao_fechou', { p_unidade: unidade, p_ano: ano, p_mes: mes, p_arquivo_path: caminho, p_arquivo_nome: nome, p_registros: registros });
 export const importarInadimplencia = (tarefaId, caminho, nome, registros) =>
   rpc('importar_inadimplencia', { p_tarefa: tarefaId, p_arquivo_path: caminho, p_arquivo_nome: nome, p_registros: registros });
+export const importarListaFazer = (unidade, titulo, instrucoes, prazo, mensagem, caminho, nome, registros) =>
+  rpc('importar_lista_fazer', { p_unidade: unidade, p_titulo: titulo, p_instrucoes: instrucoes, p_prazo: prazo, p_mensagem: mensagem || null,
+    p_arquivo_path: caminho, p_arquivo_nome: nome, p_registros: registros });
 export const desfazerImportacao = (id) => rpc('desfazer_importacao', { p_importacao: id });
 
 // ── Ações do admin ──

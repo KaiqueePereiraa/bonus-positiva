@@ -1,10 +1,10 @@
 // Relatórios — escolhe período, controle e consultoras; mostra na tela e exporta PDF, Excel ou CSV.
-import * as dados from '../dados.js?v=20261106194830';
-import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261106194830';
-import { barras, imagem } from '../graficos.js?v=20261106194830';
-import { csv, excel, pdf } from '../exportar.js?v=20261106194830';
-import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261106194830';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto } from './_analise.js?v=20261106194830';
+import * as dados from '../dados.js?v=20261111193201';
+import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261111193201';
+import { barras, imagem } from '../graficos.js?v=20261111193201';
+import { csv, excel, pdf } from '../exportar.js?v=20261111193201';
+import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261111193201';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto } from './_analise.js?v=20261111193201';
 
 let filtros;
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
@@ -94,12 +94,12 @@ async function exportar(tipo, a, ctx) {
 // Um registro por aluno/interessado das tarefas do relatório (sem telefone).
 async function linhasRegistros(a, ctx) {
   const ids = new Set(a.tarefas.map((t) => t.id));
-  const controles = filtros.controle ? [filtros.controle] : ['inadimplencia', 'risco', 'nao_fechou'];
+  const controles = filtros.controle ? [filtros.controle] : ['inadimplencia', 'risco', 'nao_fechou', 'lista_fazer'];
   const itens = (await Promise.all(controles.map((c) => dados.itensPeriodo({ controle: c, desde: filtros.desde, ate: filtros.ate, unidade: filtros.unidade || undefined }))))
     .flat().filter((i) => ids.has(i.tarefa_id));
   const motivo = (id) => ctx.motivos.find((m) => m.id === id)?.nome || '';
   return [['Controle', 'Unidade', 'Consultora', 'Prazo', 'ID EVO', 'Nome', 'Situação', 'Data da ação', 'Motivo', 'Detalhe do motivo', 'Observação'],
     ...itens.map((i) => [NOMES_CONTROLE[i.controle_id], ctx.nomeUnidade(i.tarefas?.unidade), ctx.nomeDe(i.responsavel_id), i.tarefas?.prazo, i.evo_id, i.nome,
-      i.feito_em ? (i.controle_id === 'nao_fechou' ? 'Preenchido' : 'Mensagem enviada') : 'Pendente',
+      i.feito_em ? (i.controle_id === 'nao_fechou' ? 'Preenchido' : i.controle_id === 'lista_fazer' ? 'Feito' : 'Mensagem enviada') : 'Pendente',
       i.feito_em ? dataHora(i.feito_em) : '', motivo(i.motivo_id), i.motivo_texto || '', i.observacao || ''])];
 }

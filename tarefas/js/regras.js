@@ -188,3 +188,14 @@ export function dividir(alunos, consultoras, ponteiro = 0) {
     proximoPonteiro: (p + extra) % k,
   };
 }
+
+// ── Lista a fazer ────────────────────────────────────────────────────────
+// Divisão igual entre n consultoras, na ordem do rodízio. A sobra começa por uma consultora diferente
+// a cada lista (offset = listas já importadas na unidade % n). Mesma regra da função importar_lista_fazer.
+export function dividirLista(total, n, offset = 0) {
+  const contagem = Array.from({ length: n }, () => 0);
+  if (n <= 0) return contagem;
+  const inicio = ((offset % n) + n) % n;
+  for (let i = 0; i < total; i++) contagem[(i + inicio) % n]++;
+  return contagem;
+}

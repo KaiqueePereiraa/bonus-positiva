@@ -2,7 +2,7 @@
 // lerXlsx/lerCsv produzem uma matriz (linhas x colunas de texto); matrizParaRegistros
 // aplica o mapeamento do controle e devolve registros prontos para a função de importação.
 
-import { normalizarCabecalho, normalizarTelefone } from './regras.js?v=20261106194830';
+import { normalizarCabecalho, normalizarTelefone } from './regras.js?v=20261111193201';
 
 // Sinônimos já normalizados (ver normalizarCabecalho).
 export const MAPEAMENTOS = {
@@ -45,6 +45,17 @@ export const MAPEAMENTOS = {
       celular: ['celular', 'no do celular'],
     },
   },
+  // Lista livre do coordenador: só o nome é obrigatório; ID e telefone ajudam; as demais colunas ficam como "extras".
+  lista_fazer: {
+    nome: 'Lista a fazer',
+    obrigatorias: { nome: ['nome', 'nome completo', 'cliente', 'aluno', 'contato'] },
+    opcionais: {
+      evo_id: ['id', 'id do cliente', 'matricula'],
+      sobrenome: ['sobrenome'],
+      celular: ['celular', 'no do celular', 'whatsapp', 'telefone celular'],
+      telefone: ['telefone', 'fone', 'no do telefone'],
+    },
+  },
 };
 
 const ROTULOS = { evo_id: 'ID', nome: 'Nome', celular: 'Celular', consultor_evo: 'Consultor' };
@@ -54,6 +65,7 @@ const ASSINATURAS = {
   inadimplencia: ['id do cliente', 'sobrenome'],
   risco: ['ultima presenca'],
   nao_fechou: ['data de cadastro', 'como conheceu', 'interesse'],
+  lista_fazer: [],   // lista livre: não é reconhecida (nem confundida) por colunas
 };
 
 // Converte o valor de uma célula do ExcelJS em texto.
@@ -118,7 +130,7 @@ function localizar(cabecalho, sinonimos) {
 
 function parecerSer(cabecalho, controleAtual) {
   for (const [id, cols] of Object.entries(ASSINATURAS)) {
-    if (id !== controleAtual && cols.some((c) => cabecalho.includes(c))) return MAPEAMENTOS[id].nome;
+    if (id !== controleAtual && cols.length && cols.some((c) => cabecalho.includes(c))) return MAPEAMENTOS[id].nome;
   }
   return null;
 }
@@ -150,7 +162,7 @@ export function matrizParaRegistros(matriz, controle) {
   }
   // Tem as colunas, mas é claramente o export de outro controle (ex.: risco subido como "não fechou").
   const outro = parecerSer(cabecalho, controle);
-  if (outro && !ASSINATURAS[controle].some((c) => cabecalho.includes(c))) {
+  if (controle !== 'lista_fazer' && outro && !ASSINATURAS[controle].some((c) => cabecalho.includes(c))) {
     return { registros: [], avisos: [], erro: `Este arquivo parece ser do controle "${outro}", não de ${mapa.nome}.` };
   }
   for (const [campo, sin] of Object.entries(mapa.opcionais)) idx[campo] = localizar(cabecalho, sin);
@@ -162,17 +174,20 @@ export function matrizParaRegistros(matriz, controle) {
 
   linhas.slice(1).forEach((l, n) => {
     const linhaPlanilha = n + 2;
+    const livre = controle === 'lista_fazer';
     const evo_id = val(l, 'evo_id');
     let nome = val(l, 'nome');
-    if (!evo_id || !nome) {
-      avisos.push(`Linha ${linhaPlanilha} ignorada: sem ${!evo_id ? 'ID' : 'nome'}.`);
+    if (!nome || (!livre && !evo_id)) {
+      avisos.push(`Linha ${linhaPlanilha} ignorada: sem ${!nome ? 'nome' : 'ID'}.`);
       return;
     }
-    if (vistos.has(evo_id)) {
-      avisos.push(`Linha ${linhaPlanilha} ignorada: ID ${evo_id} repetido.`);
-      return;
+    if (evo_id) {
+      if (vistos.has(evo_id)) {
+        avisos.push(`Linha ${linhaPlanilha} ignorada: ID ${evo_id} repetido.`);
+        return;
+      }
+      vistos.add(evo_id);
     }
-    vistos.add(evo_id);
 
     const sobrenome = val(l, 'sobrenome');
     if (sobrenome) nome = `${nome} ${sobrenome}`;
@@ -189,6 +204,16 @@ export function matrizParaRegistros(matriz, controle) {
       dados.idade = Number.isFinite(idade) ? idade : null;
       dados.como_conheceu = val(l, 'como_conheceu') || null;
       dados.interesse = val(l, 'interesse') || null;
+    }
+    if (livre) {
+      // demais colunas da planilha (ex.: "Última aula", "Plano"): a consultora vê junto do contato
+      const usadas = new Set(Object.values(idx).filter((i) => i >= 0));
+      const extras = {};
+      linhas[0].forEach((titulo, j) => {
+        const v = String(l[j] ?? '').trim();
+        if (!usadas.has(j) && String(titulo).trim() && v && Object.keys(extras).length < 12) extras[String(titulo).trim()] = v;
+      });
+      if (Object.keys(extras).length) dados.extras = extras;
     }
     registros.push({ evo_id, nome: nome.replace(/\s+/g, ' '), celular, dados });
   });

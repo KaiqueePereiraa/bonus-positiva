@@ -1,8 +1,8 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261106194830';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261106194830';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa } from '../regras.js?v=20261106194830';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261106194830';
+import * as dados from '../dados.js?v=20261111193201';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261111193201';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa } from '../regras.js?v=20261111193201';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261111193201';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -38,7 +38,7 @@ export function cabecalhoTarefa(t, ctx, { titulo, extra = '' }) {
     <h2>${esc(titulo)} <span data-c="selo">${seloStatus(t.status, t.prazo_proximo)}</span></h2>
     <div class="numeros" style="margin-bottom:16px">
       <div class="numero escuro"><small>Total</small><b data-c="total">${t.total}</b></div>
-      <div class="numero verde"><small>${t.controle_id === 'nao_fechou' ? 'Preenchidos' : 'Enviadas'}</small><b data-c="feitos">${t.feitos}</b></div>
+      <div class="numero verde"><small>${t.controle_id === 'nao_fechou' ? 'Preenchidos' : t.controle_id === 'lista_fazer' ? 'Feitos' : 'Enviadas'}</small><b data-c="feitos">${t.feitos}</b></div>
       <div class="numero ${t.total - t.feitos > 0 && t.status === 'atrasada' ? 'vermelho' : 'azul'}"><small>Pendentes</small><b data-c="pendentes">${t.total - t.feitos}</b></div>
       <div class="numero"><small>Prazo</small><b style="font-size:22px">${dataCurta(t.prazo)}</b><span>${diaSemana(t.prazo)}<span data-c="concluida">${t.concluida_em ? ` · concluída ${dataHora(t.concluida_em)}` : ''}</span></span></div>
     </div>

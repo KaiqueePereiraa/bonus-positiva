@@ -1,9 +1,9 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261106194830';
-import * as dados from './dados.js?v=20261106194830';
-import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261106194830';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261106194830';
-import { esc, erro, carregando } from './ui.js?v=20261106194830';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261111193201';
+import * as dados from './dados.js?v=20261111193201';
+import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261111193201';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261111193201';
+import { esc, erro, carregando } from './ui.js?v=20261111193201';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -11,6 +11,7 @@ const ICONES = {
   inad: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
   risco: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
   nf: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>',
+  lista: '<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/>',
   ind: '<path d="M18 20V10M12 20V4M6 20v-6"/>',
   ins: '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>',
   rel: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/>',
@@ -24,6 +25,7 @@ const ROTAS = {
   inadimplencia: ['Inadimplência', 'inadimplencia', 'inad', false],
   risco: ['Risco de abandono', 'risco', 'risco', false],
   'nao-fechou': ['Por que não fechou?', 'nao-fechou', 'nf', false],
+  'lista-fazer': ['Lista a fazer', 'lista-fazer', 'lista', false],
   indicadores: ['Indicadores', 'indicadores', 'ind', true],
   insights: ['Insights da Operação', 'insights', 'ins', true],
   relatorios: ['Relatórios', 'relatorios', 'rel', true],
@@ -112,7 +114,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261106194830`);
+    const tela = await import(`./telas/${modulo}.js?v=20261111193201`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -144,9 +146,9 @@ export async function calcularAvisos() {
       naoFechouPendente: ativas.filter((u) => !nf.some((i) => i.unidade === u.id && i.referencia_inicio === refIni)).map((u) => u.nome),
     });
   }
-  const [tarefas, pool] = await Promise.all([
-    dados.tarefas({ responsavel: perfil.id }), dados.semResponsavelVisiveis().catch(() => [])]);
-  return avisosConsultora({ tarefas, semResponsavel: pool.length, hoje });
+  const [tarefas, pool, listas] = await Promise.all([
+    dados.tarefas({ responsavel: perfil.id }), dados.semResponsavelVisiveis().catch(() => []), dados.listasFazer().catch(() => [])]);
+  return avisosConsultora({ tarefas, semResponsavel: pool.length, hoje, titulos: Object.fromEntries(listas.map((l) => [l.importacao_id, l.titulo])) });
 }
 
 async function atualizarSino() {

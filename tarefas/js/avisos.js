@@ -1,7 +1,7 @@
 // Avisos do sino, calculados na hora a partir do estado das tarefas (nada fica "velho").
 // As mesmas regras alimentam o resumo diário do WhatsApp (supabase/migrations/008_whatsapp.sql).
-import { diaDaSemana, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261106194830';
-import { dataCurta, nomeMes, ROTA_CONTROLE } from './ui.js?v=20261106194830';
+import { diaDaSemana, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261111193201';
+import { dataCurta, nomeMes, ROTA_CONTROLE } from './ui.js?v=20261111193201';
 
 const ABERTA = (t) => t.status !== 'concluida' && t.status !== 'concluida_atraso';
 const faltam = (t) => t.total - t.feitos;
@@ -9,7 +9,7 @@ const faltam = (t) => t.total - t.feitos;
 // desde: dia (AAAA-MM-DD) em que o aviso passou a valer — usado para "novo" no sino.
 const aviso = (id, nivel, texto, rota, desde) => ({ id, nivel, texto, rota, desde });
 
-export function avisosConsultora({ tarefas, semResponsavel = 0, hoje }) {
+export function avisosConsultora({ tarefas, semResponsavel = 0, hoje, titulos = {} }) {
   const lista = [];
   for (const t of tarefas.filter(ABERTA)) {
     const rota = `#/${ROTA_CONTROLE[t.controle_id]}/${t.id}`;
@@ -22,6 +22,11 @@ export function avisosConsultora({ tarefas, semResponsavel = 0, hoje }) {
       else if (t.prazo === hoje) lista.push(aviso(`ris-hoje-${t.id}`, 'urgente', `Último dia do risco de abandono: faltam ${faltam(t)} de ${t.total} mensagens.`, rota, hoje));
       else if (diaDaSemana(hoje) >= 3 && t.feitos < t.total) lista.push(aviso(`ris-qua-${t.id}`, 'alerta', `Risco de abandono: faltam ${faltam(t)} mensagens até ${dataCurta(t.prazo)}.`, rota, hoje));
       else lista.push(aviso(`ris-novo-${t.id}`, 'info', `Você tem ${t.total} alunos no risco de abandono desta semana (prazo ${dataCurta(t.prazo)}).`, rota, t.criada_em?.slice(0, 10) || hoje));
+    } else if (t.controle_id === 'lista_fazer') {
+      const nome = titulos[t.importacao_id] ? `"${titulos[t.importacao_id]}"` : 'A lista a fazer';
+      if (t.status === 'atrasada') lista.push(aviso(`lf-atr-${t.id}`, 'urgente', `${nome} está atrasada: faltam ${faltam(t)} de ${t.total} contatos.`, rota, t.prazo));
+      else if (t.prazo === hoje) lista.push(aviso(`lf-hoje-${t.id}`, 'urgente', `Último dia da lista ${nome}: faltam ${faltam(t)} de ${t.total} contatos.`, rota, hoje));
+      else lista.push(aviso(`lf-novo-${t.id}`, 'info', `Nova lista a fazer ${nome}: ${t.total} contatos até ${dataCurta(t.prazo)}.`, rota, t.criada_em?.slice(0, 10) || hoje));
     } else if (t.controle_id === 'nao_fechou') {
       const mes = nomeMes(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
       if (t.status === 'atrasada') lista.push(aviso(`nf-atr-${t.id}`, 'urgente', `"Por que não fechou?" de ${mes} está atrasado: faltam ${faltam(t)} motivos.`, rota, t.prazo));
