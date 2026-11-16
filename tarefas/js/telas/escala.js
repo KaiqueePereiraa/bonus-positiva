@@ -3,13 +3,13 @@
 //  • A consultora escalada pode pedir troca a uma colega, que aceita ou recusa (sem aprovação do coordenador).
 //  • O coordenador monta o ciclo (que se repete para sempre), define quem trabalha em cada feriado,
 //    edita um dia específico e acompanha o histórico de trocas.
-import * as dados from '../dados.js?v=20261116154923';
-import { somarDias } from '../regras.js?v=20261116154923';
-import { esc, dataCurta, dataHora, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116154923';
-import { agendaEscala, opcoesTroca, lerOpcaoTroca, rotuloData } from '../escala.js?v=20261116154923';
+import * as dados from '../dados.js?v=20261116155600';
+import { somarDias } from '../regras.js?v=20261116155600';
+import { esc, dataCurta, dataHora, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116155600';
+import { agendaEscala, opcoesTroca, lerOpcaoTroca, rotuloData } from '../escala.js?v=20261116155600';
+import { calendarioHtml, chipsDoDia, legendaHtml } from '../escala-visual.js?v=20261116155600';
 
 const SEMANAS_A_FRENTE = 10;
-const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const ehSabado = (d) => new Date(`${d}T12:00:00Z`).getUTCDay() === 6;
 const proximoSabado = (hoje) => { let d = hoje; while (!ehSabado(d)) d = somarDias(d, 1); return d; };
 const SELO = { pendente: ['laranja', 'Aguardando'], aceita: ['verde', 'Aceita'], recusada: ['vermelho', 'Recusada'], cancelada: ['cinza', 'Cancelada'] };
@@ -63,32 +63,15 @@ export async function render(el, ctx) {
       ${meusPedidos.map((t) => `<div class="linha-info" data-troca="${t.id}"><span style="color:var(--dark)">${esc(rotuloData(t.data_origem))} → ${esc(nome(t.destino_id))}${t.data_troca ? ` (em troca de ${esc(rotuloData(t.data_troca))})` : ''}</span>
         <span class="acoes">${seloTroca(t.status)}${t.status === 'pendente' && vale(t) ? ' <button class="btn sec peq" data-acao="cancelar">Cancelar</button>' : ''}</span></div>`).join('')}</div>` : '';
 
-  // ── calendário ──
-  const linhaDia = (d) => {
-    const passado = d.data < hoje;
-    const euTrabalho = d.pessoas.some((p) => p.id === eu);
-    const nomes = d.pessoas.length
-      ? d.pessoas.map((p) => (p.id === eu ? `<b>${esc(p.nome)}</b> <span class="etiqueta">você</span>` : esc(p.nome))).join(', ')
-      : '<span class="dica">ninguém escalado</span>';
-    const rot = cap(rotuloData(d.data));
-    const acoes = [];
-    if (!ctx.ehAdmin && euTrabalho && d.data > hoje) acoes.push(`<button class="btn sec peq" data-acao="pedir" data-data="${d.data}">Pedir troca</button>`);
-    if (ctx.ehAdmin && d.data >= hoje) acoes.push(`<button class="btn sec peq" data-acao="editar" data-data="${d.data}">Editar</button>`);
-    return `<tr style="${passado ? 'opacity:.55' : ''}"><td class="nome">${esc(rot)}${d.feriado ? ` <span class="etiqueta">${esc(d.feriado)}</span>` : ''}</td><td>${nomes}</td><td class="acoes">${acoes.join(' ')}</td></tr>`;
-  };
-  const cartaoBloco = (b) => {
-    const euNoBloco = b.dias.some((d) => d.data >= hoje && d.pessoas.some((p) => p.id === eu));
-    const titulo = b.tipo === 'feriado' ? `Feriado — ${esc(b.dias[0].feriado || '')}` : `Fim de semana ${dataCurta(b.dias[0].data)}–${dataCurta(b.dias[1].data)}`;
-    return `<div class="cartao"><h2>${titulo}${euNoBloco ? ' <span class="selo verde">Você trabalha</span>' : ''}</h2>
-      <div class="tabela-wrap"><table class="tabela"><tbody>${b.dias.map(linhaDia).join('')}</tbody></table></div></div>`;
-  };
   const semEscala = !linhas.length;
   const aviso = semEscala ? `<div class="cartao">${vazio(ctx.ehAdmin
     ? 'Ainda não há escala. Monte o ciclo dos fins de semana logo abaixo e escolha quem trabalha em cada feriado.'
     : 'O coordenador ainda não montou a escala.')}</div>` : '';
 
   el.innerHTML = `${cartaoPedidos}${cartaoMeus}${aviso}
-    ${blocos.filter((b) => b.dias.some((d) => d.data >= hoje)).map(cartaoBloco).join('')}
+    ${linhas.length ? `<div class="esc-barra"><div class="esc-legenda" aria-label="Cores de cada pessoa">${legendaHtml(blocos, { hoje, eu })}</div>
+      ${!ctx.ehAdmin && blocos.some((b) => b.dias.some((d) => d.data >= hoje && d.pessoas.some((p) => p.id === eu))) ? '<button class="btn sec peq" data-acao="so-meus" aria-pressed="false">Só os meus dias</button>' : ''}</div>` : ''}
+    <div class="esc-lista">${calendarioHtml(blocos, { hoje, eu, ehAdmin: ctx.ehAdmin })}</div>
     ${ctx.ehAdmin ? '<div id="ciclo-card"></div><div id="nomes-card"></div><div id="trocas-card"></div>' : ''}
     <p class="dica">Mostrando as próximas ${SEMANAS_A_FRENTE} semanas.${ctx.ehAdmin ? '' : ' Para trocar um dia, use "Pedir troca": a colega escolhida aceita ou recusa.'}</p>`;
 
@@ -100,14 +83,14 @@ export async function render(el, ctx) {
   const desenharCiclo = () => {
     const alvo = el.querySelector('#ciclo-card');
     if (!alvo || !ciclo) return;
-    const quem = (lista) => (lista.length ? lista.map((p) => esc(p.id ? nome(p.id) : p.nome)).join(', ') : '<span class="dica">ninguém</span>');
+    const quem = (lista) => `<div class="esc-chips">${chipsDoDia(lista.map((p) => ({ id: p.id || null, nome: p.id ? nome(p.id) : p.nome })))}</div>`;
     alvo.innerHTML = `<div class="cartao"><h2>Ciclo dos fins de semana</h2>
       <p class="dica" style="margin-bottom:14px">Monte quem fica no sábado e no domingo de cada fim de semana do ciclo. O ciclo se repete <b>sem fim</b>: depois do último volta para o 1º. Cada pessoa cai sempre no mesmo ponto.</p>
       <label class="campo" style="max-width:280px;margin-bottom:14px">Sábado do 1º fim de semana do ciclo<input type="date" id="ciclo-inicio" value="${esc(ciclo.inicio)}"></label>
       ${ciclo.semanas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Fim de semana</th><th>Sábado</th><th>Domingo</th></tr></thead><tbody>
         ${ciclo.semanas.map((s, i) => `<tr><td class="nome">${i + 1}º <span class="dica">${ciclo.inicio ? `(${dataCurta(somarDias(ciclo.inicio, 7 * i))})` : ''}</span></td>
-          <td>${quem(s.sabado)} <button class="btn sec peq" data-acao="ciclo-escolher" data-i="${i}" data-dia="sabado">Escolher</button></td>
-          <td>${quem(s.domingo)} <button class="btn sec peq" data-acao="ciclo-escolher" data-i="${i}" data-dia="domingo">Escolher</button></td></tr>`).join('')}
+          <td>${quem(s.sabado)}<button class="btn sec peq" data-acao="ciclo-escolher" data-i="${i}" data-dia="sabado">Escolher</button></td>
+          <td>${quem(s.domingo)}<button class="btn sec peq" data-acao="ciclo-escolher" data-i="${i}" data-dia="domingo">Escolher</button></td></tr>`).join('')}
         </tbody></table></div>` : '<p class="dica">Nenhum fim de semana no ciclo ainda. Adicione o primeiro.</p>'}
       <div class="linha-acoes" style="margin-top:14px"><button class="btn sec" data-acao="ciclo-add">+ Fim de semana</button>
         <button class="btn sec" data-acao="ciclo-rem" ${ciclo.semanas.length ? '' : 'disabled'}>Remover o último</button>
@@ -150,6 +133,14 @@ export async function render(el, ctx) {
     const acao = b.dataset.acao;
     const idTroca = b.closest('[data-troca]')?.dataset.troca;
 
+    if (acao === 'so-meus') {   // só mostra os cartões em que ela trabalha (nada é recarregado)
+      const lista = el.querySelector('.esc-lista');
+      const ligado = lista.classList.toggle('so-meus');
+      b.setAttribute('aria-pressed', String(ligado));
+      b.classList.toggle('ativo', ligado);
+      lista.querySelectorAll('.esc-mes').forEach((m) => { m.hidden = ligado && !m.querySelector('.esc-card.meu'); });
+      return;
+    }
     if (acao === 'aceitar') return rodar(() => dados.responderTrocaEscala(idTroca, true), 'Troca aceita. A escala já mudou.');
     if (acao === 'recusar') {
       if (!(await confirmar('Recusar troca', 'A colega será avisada de que você não pode trocar.', 'Recusar'))) return;

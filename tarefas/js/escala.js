@@ -1,6 +1,6 @@
 // Escala de fim de semana e feriados — funções puras (sem tela, sem banco): agrupam as linhas de
 // escala_periodo em blocos para exibir e montam as opções do pedido de troca.
-import { somarDias } from './regras.js?v=20261116154923';
+import { somarDias, semAcento } from './regras.js?v=20261116155600';
 
 const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
 const dow = (d) => new Date(`${d}T12:00:00Z`).getUTCDay();   // 0 = domingo … 6 = sábado
@@ -68,4 +68,43 @@ export function opcoesTroca({ blocos, eu, origem, hoje, consultoras }) {
 export function lerOpcaoTroca(valor) {
   const [destino, data] = String(valor || '').split('|');
   return { destino: destino || null, dataTroca: data || null };
+}
+
+// ── Visual ──
+
+// Cor de cada pessoa, no mesmo estilo da planilha da escala (Maria amarela, Isa verde, Rayny vermelha,
+// Adrielly preta, Vitória branca, Ana azul). Quem não está na lista ganha uma cor fixa pelo nome.
+const FIXAS = {
+  maria: { bg: '#FFE74C', fg: '#3A3000', bd: '#E6CB1E' },
+  isa: { bg: '#6DAA45', fg: '#FFFFFF', bd: '#6DAA45' },
+  isabelly: { bg: '#6DAA45', fg: '#FFFFFF', bd: '#6DAA45' },
+  rayny: { bg: '#E5393C', fg: '#FFFFFF', bd: '#E5393C' },
+  adrielly: { bg: '#1A1F26', fg: '#FFFFFF', bd: '#1A1F26' },
+  vitoria: { bg: '#FFFFFF', fg: '#212B37', bd: '#212B37' },
+  ana: { bg: '#2F6DB5', fg: '#FFFFFF', bd: '#2F6DB5' },
+};
+const PALETA = [
+  { bg: '#8E5BD6', fg: '#FFFFFF', bd: '#8E5BD6' }, { bg: '#E8833A', fg: '#FFFFFF', bd: '#E8833A' },
+  { bg: '#1FA3A3', fg: '#FFFFFF', bd: '#1FA3A3' }, { bg: '#D6457F', fg: '#FFFFFF', bd: '#D6457F' },
+  { bg: '#5B6472', fg: '#FFFFFF', bd: '#5B6472' }, { bg: '#A67C52', fg: '#FFFFFF', bd: '#A67C52' },
+];
+export function corPessoa(nome) {
+  const primeiro = semAcento(String(nome ?? '').trim().split(/\s+/)[0]).toLowerCase();
+  if (FIXAS[primeiro]) return FIXAS[primeiro];
+  let h = 0;
+  for (const ch of primeiro) h = (h * 31 + ch.charCodeAt(0)) % 997;
+  return PALETA[h % PALETA.length];
+}
+
+// Agrupa os blocos (já ordenados por data) por mês do primeiro dia: [{ ano, mes, blocos }]
+export function agruparPorMes(blocos) {
+  const grupos = [];
+  for (const b of blocos) {
+    const ano = +b.data.slice(0, 4);
+    const mes = +b.data.slice(5, 7);
+    let g = grupos[grupos.length - 1];
+    if (!g || g.ano !== ano || g.mes !== mes) { g = { ano, mes, blocos: [] }; grupos.push(g); }
+    g.blocos.push(b);
+  }
+  return grupos;
 }

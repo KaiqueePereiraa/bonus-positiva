@@ -1,8 +1,8 @@
 // Indicadores — cumprimento de prazos, volume por consultora, evolução e motivos de não fechamento.
-import { resumo, porConsultora, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes } from '../analises.js?v=20261116154923';
-import { barras, linha } from '../graficos.js?v=20261116154923';
-import { esc, vazio } from '../ui.js?v=20261116154923';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar } from './_analise.js?v=20261116154923';
+import { resumo, porConsultora, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes } from '../analises.js?v=20261116155600';
+import { barras, linha } from '../graficos.js?v=20261116155600';
+import { esc, vazio } from '../ui.js?v=20261116155600';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar } from './_analise.js?v=20261116155600';
 
 let filtros;
 
