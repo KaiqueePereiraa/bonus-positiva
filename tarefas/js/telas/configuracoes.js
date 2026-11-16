@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261116171142';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116171142';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116171142';
+import * as dados from '../dados.js?v=20261116172013';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116172013';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116172013';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -236,7 +236,6 @@ function blocoResultado(nomeUnidade, r) {
 
 async function evo(el, ctx) {
   const [cfg, ligadas, execs] = await Promise.all([dados.config(), dados.evoUnidades(), dados.evoExecucoes(25)]);
-  const filiaisConhecidas = execs.find((e) => e.tipo === 'filiais')?.resumo?.filiais || [];
   const idDe = (u) => ligadas.find((l) => l.unidade === u)?.id_branch ?? '';
   const palavras = Array.isArray(cfg.risco_contratos_excluidos) ? cfg.risco_contratos_excluidos : [];
   const nomeUni = (id) => ctx.nomeUnidade(id);
@@ -244,16 +243,16 @@ async function evo(el, ctx) {
   el.innerHTML = `
     <p class="dica" style="margin-bottom:14px">A chave da EVO (DNS e token) fica guardada só no Supabase, em uma função privada: não aparece no site, no GitHub nem para as consultoras, e só o administrador logado (ou o agendador do banco) consegue acioná-la. A Central só <b>lê</b> da EVO.</p>
 
-    <h2 style="font-size:14px;margin:6px 0 10px">1. Conexão e unidades</h2>
-    <div class="linha-acoes"><button class="btn" id="testar-evo">Testar conexão</button><button class="btn sec" id="achar-filiais">Buscar filiais da EVO</button></div>
+    <h2 style="font-size:14px;margin:6px 0 10px">1. Conexão de cada unidade</h2>
+    <p class="dica" style="margin-bottom:12px">Cada unidade usa a própria chave da EVO, guardada no Supabase em dois segredos:
+      <b>EVO_DNS_&lt;UNIDADE&gt;</b> e <b>EVO_TOKEN_&lt;UNIDADE&gt;</b> (Laranjeiras: <b>EVO_DNS</b> e <b>EVO_TOKEN</b>). Nomes certos:
+      ${ctx.unidades.map((u) => { const n = u.id === 'laranjeiras' ? ['EVO_DNS', 'EVO_TOKEN'] : [`EVO_DNS_${u.id.toUpperCase()}`, `EVO_TOKEN_${u.id.toUpperCase()}`]; return `${esc(u.nome.replace('Positiva ', ''))}: <b>${n[0]}</b> e <b>${n[1]}</b>`; }).join(' · ')}.</p>
+    <div class="linha-acoes"><button class="btn" id="testar-evo">Testar conexão das unidades</button><button class="btn sec" id="achar-filiais">Buscar filiais</button></div>
     <div id="res-conexao" style="margin:12px 0"></div>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade da Central</th><th>Filial na EVO</th><th></th></tr></thead><tbody>
-      ${ctx.unidades.map((u) => `<tr data-u="${u.id}"><td class="nome">${esc(u.nome)}</td>
-        <td><select class="ctrl" data-c="filial"><option value="">— não ligada —</option>${filiaisConhecidas.map((f) => `<option value="${f.id}" ${String(f.id) === String(idDe(u.id)) ? 'selected' : ''}>${esc(f.nome)} (${f.id})</option>`).join('')}
-          ${idDe(u.id) !== '' && !filiaisConhecidas.some((f) => String(f.id) === String(idDe(u.id))) ? `<option value="${idDe(u.id)}" selected>Filial ${idDe(u.id)}</option>` : ''}</select></td>
-        <td class="acoes"><button class="btn sec peq" data-acao="salvar-filial">Salvar</button></td></tr>`).join('')}
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade da Central</th><th>Filial na EVO</th></tr></thead><tbody>
+      ${ctx.unidades.map((u) => `<tr><td class="nome">${esc(u.nome)}</td><td>${idDe(u.id) !== '' ? `Filial ${esc(String(idDe(u.id)))} <span class="dica">(descoberta sozinha)</span>` : '<span class="dica">—</span>'}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="dica" style="margin-top:8px">Use "Buscar filiais" para a Central ligar as unidades sozinha pelos nomes; ajuste aqui se alguma ficar errada.</p>
+    <p class="dica" style="margin-top:8px">A filial só é usada quando a chave da unidade enxerga mais de uma filial; com chave própria por unidade costuma ficar tudo certo.</p>
 
     <h2 style="font-size:14px;margin:26px 0 10px">2. Rotinas automáticas</h2>
     <p class="dica" style="margin-bottom:12px">Todas começam <b>desligadas</b>. Primeiro use <b>Simular</b> (só conta, não grava nada) e confira os números com a EVO; depois ligue.</p>
@@ -284,21 +283,25 @@ async function evo(el, ctx) {
     try { return await fn(); } catch (err) { erro(err); return null; } finally { alvo.disabled = false; }
   };
 
+  const mostrarUnidades = (saida, unidades) => {
+    saida.innerHTML = unidades.map((x) => {
+      const ok = x.status === 'ok';
+      const cor = ok ? 'verde' : x.status === 'sem_chave' ? 'cinza' : 'vermelho';
+      const rot = ok ? (x.id_branch !== undefined ? `Filial ${x.id_branch ?? 'não definida'}` : 'Conectada') : x.status === 'sem_chave' ? 'Sem chave' : 'Recusada';
+      return `<div style="padding:8px 0;border-top:1px solid var(--line)"><b>${esc(nomeUni(x.unidade))}</b> <span class="selo ${cor}">${rot}</span>${x.erro ? `<p class="dica" style="margin-top:4px">${esc(x.erro)}</p>` : ''}</div>`;
+    }).join('');
+  };
   el.querySelector('#testar-evo').onclick = async (e) => {
     const saida = el.querySelector('#res-conexao');
     saida.innerHTML = '<p class="dica">Testando…</p>';
-    const r = await rodar(() => dados.testarEvo(), e.target).catch(() => null);
-    saida.innerHTML = r?.ok ? '<div class="faixa"><div><b>Conexão funcionando</b>O DNS e o token foram aceitos pela EVO.</div></div>'
-      : `<div class="faixa urgente"><div><b>A EVO não aceitou</b>${esc(r?.erro || 'Não foi possível testar.')}</div></div>`;
+    const r = await rodar(() => dados.testarEvo(), e.target);
+    if (r?.unidades) mostrarUnidades(saida, r.unidades); else saida.innerHTML = `<div class="faixa urgente"><div><b>Não foi possível testar</b>${esc(r?.erro || '')}</div></div>`;
   };
   el.querySelector('#achar-filiais').onclick = async (e) => {
     const saida = el.querySelector('#res-conexao');
     saida.innerHTML = '<p class="dica">Buscando filiais…</p>';
     const r = await rodar(() => dados.descobrirFiliaisEvo(), e.target);
-    if (!r) { saida.innerHTML = ''; return; }
-    if (!r.ok) { saida.innerHTML = `<div class="faixa urgente"><div><b>Não deu certo</b>${esc(r.erro || '')}</div></div>`; return; }
-    toast(`${r.filiais.length} filial(is) encontrada(s); ${Object.keys(r.ligadas).length} unidade(s) ligada(s).`);
-    evo(el, ctx);
+    if (r?.unidades) { mostrarUnidades(saida, r.unidades); toast('Filiais atualizadas.'); } else saida.innerHTML = '';
   };
 
   el.onclick = async (e) => {
@@ -323,8 +326,7 @@ async function evo(el, ctx) {
     const real = b.dataset.acao === 'rodar';
     if (real && !(await confirmar('Rodar agora', 'Isso envia a lista de verdade para as consultoras (e elas recebem o aviso no WhatsApp). Se já houver lista no período, a rotina não repete. Continuar?', 'Rodar agora'))) return;
     saida.innerHTML = '<p class="dica" style="margin-top:10px">Consultando a EVO… pode levar um minuto.</p>';
-    const alvos = ligadas.filter((l) => l.id_branch != null);
-    if (!alvos.length) { saida.innerHTML = '<p class="aviso-lista" style="margin-top:10px">Nenhuma unidade ligada a uma filial da EVO. Use "Buscar filiais" acima.</p>'; return; }
+    const alvos = ctx.unidades.map((u) => ({ unidade: u.id }));
     let html = '';
     for (const l of alvos) {
       const r = await rodar(() => dados.rodarEvo(id, l.unidade, !real), b);
