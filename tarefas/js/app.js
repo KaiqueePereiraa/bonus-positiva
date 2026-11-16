@@ -1,9 +1,9 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261116155600';
-import * as dados from './dados.js?v=20261116155600';
-import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261116155600';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261116155600';
-import { esc, erro, carregando } from './ui.js?v=20261116155600';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261116162337';
+import * as dados from './dados.js?v=20261116162337';
+import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261116162337';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261116162337';
+import { esc, erro, carregando } from './ui.js?v=20261116162337';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -27,7 +27,9 @@ const ROTAS = {
   risco: ['Risco de abandono', 'risco', 'risco', false],
   'nao-fechou': ['Por que não fechou?', 'nao-fechou', 'nf', false],
   'lista-fazer': ['Lista a fazer', 'lista-fazer', 'lista', false],
-  escala: ['Escala', 'escala', 'escala', false],
+  // EM PREPARAÇÃO (pedido do usuário, 16/11/2026): só o admin vê a Escala até ele dizer que está 100% pronta.
+  // Para abrir para as consultoras: trocar `true` por `false` aqui e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
+  escala: ['Escala', 'escala', 'escala', true],
   indicadores: ['Indicadores', 'indicadores', 'ind', true],
   insights: ['Insights da Operação', 'insights', 'ins', true],
   relatorios: ['Relatórios', 'relatorios', 'rel', true],
@@ -116,7 +118,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261116155600`);
+    const tela = await import(`./telas/${modulo}.js?v=20261116162337`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
