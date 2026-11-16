@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261116162337';
+import { sb } from '../../shared/sessao.js?v=20261116165249';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -134,6 +134,16 @@ export async function convidar(email, perfil) {
   if (error) {
     const detalhe = await error.context?.json?.().catch(() => null);
     throw new Error(detalhe?.erro || 'Não foi possível enviar o convite.');
+  }
+  return data;
+}
+
+// Testa a conexão com a EVO (Edge Function `evo`, só admin). A chave fica nos segredos da função; nada da EVO volta para cá.
+export async function testarEvo() {
+  const { data, error } = await sb.functions.invoke('evo', { body: { acao: 'ping' } });
+  if (error) {
+    const detalhe = await error.context?.json?.().catch(() => null);
+    throw new Error(detalhe?.erro || 'Não foi possível falar com a função da EVO.');
   }
   return data;
 }

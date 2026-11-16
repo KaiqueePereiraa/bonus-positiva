@@ -1,15 +1,15 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261116162337';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116162337';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal } from '../ui.js?v=20261116162337';
+import * as dados from '../dados.js?v=20261116165249';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116165249';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal } from '../ui.js?v=20261116165249';
 
-const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp']];
+const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
 export async function render(el, ctx, [aba = 'usuarios']) {
   el.innerHTML = `<div class="cartao"><div class="abas">${ABAS.map(([id, r]) => `<button data-aba="${id}" class="${id === aba ? 'ativo' : ''}">${r}</button>`).join('')}</div><div id="aba"></div></div>`;
   el.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/configuracoes/${b.dataset.aba}`; }));
   const alvo = el.querySelector('#aba');
-  const fn = { usuarios, rodizio, feriados, motivos, mensagens, whatsapp }[aba] || usuarios;
+  const fn = { usuarios, rodizio, feriados, motivos, mensagens, whatsapp, evo }[aba] || usuarios;
   await fn(alvo, ctx);
 }
 
@@ -201,5 +201,26 @@ async function whatsapp(el) {
     e.target.disabled = true;
     try { await dados.testarWhatsapp(); toast('Mensagem de teste enviada. Confira seu WhatsApp.'); setTimeout(() => whatsapp(el), 1500); }
     catch (err) { erro(err); e.target.disabled = false; }
+  };
+}
+
+// ── EVO (conexão privada) ──
+async function evo(el) {
+  el.innerHTML = `<p class="dica" style="margin-bottom:14px">A chave da EVO (DNS e token) fica guardada só no Supabase, em uma função privada: ela não aparece no site, no GitHub nem para as consultoras, e só o administrador logado consegue acioná-la. Por enquanto ela só <b>confirma se a conexão funciona</b>; nenhum dado da EVO é lido ou salvo.</p>
+    <div class="linha-acoes"><button class="btn" id="testar-evo">Testar conexão com a EVO</button></div>
+    <div id="resultado-evo" style="margin-top:14px"></div>`;
+  const saida = el.querySelector('#resultado-evo');
+  el.querySelector('#testar-evo').onclick = async (e) => {
+    e.target.disabled = true;
+    saida.innerHTML = '<p class="dica">Testando…</p>';
+    try {
+      const r = await dados.testarEvo();
+      saida.innerHTML = r.ok
+        ? '<div class="faixa"><div><b>Conexão funcionando</b>O DNS e o token foram aceitos pela EVO.</div></div>'
+        : `<div class="faixa urgente"><div><b>A EVO não aceitou</b>${esc(r.erro || 'Erro desconhecido.')}</div></div>`;
+    } catch (err) {
+      saida.innerHTML = `<div class="faixa urgente"><div><b>Não foi possível testar</b>${esc(err.message)}</div></div>`;
+    }
+    e.target.disabled = false;
   };
 }
