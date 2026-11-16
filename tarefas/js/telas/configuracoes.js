@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261116172013';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116172013';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116172013';
+import * as dados from '../dados.js?v=20261116174037';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116174037';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116174037';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -228,9 +228,17 @@ function blocoResultado(nomeUnidade, r) {
   const contratos = resumo.contratos_excluidos && Object.keys(resumo.contratos_excluidos).length
     ? `<p class="dica" style="margin-top:6px">Contratos excluídos: ${Object.entries(resumo.contratos_excluidos).map(([c, n]) => `${esc(c)} (${n})`).join(', ')}</p>` : '';
   const divisao = Array.isArray(resumo.divisao) ? `<p class="dica" style="margin-top:6px">Divisão entre as consultoras: ${resumo.divisao.join(' / ')}</p>` : '';
+  const c = resumo.comparacao;
+  const motivos = c ? Object.entries(c.motivos_so_na_manual || {}) : [];
+  const comparacao = c ? `<div class="faixa" style="margin-top:10px;display:block">
+      <b>Comparação com a lista subida à mão${c.lista_manual ? ` (${esc(dataLonga(String(c.lista_manual).slice(0, 10)))})` : ''}</b>
+      <p style="margin:4px 0">Na manual: <b>${c.na_manual}</b> · na automática: <b>${c.na_automatica}</b> · nas duas: <b>${c.em_comum}</b> · só na manual: <b>${c.so_na_manual}</b> · só na automática: <b>${c.so_na_automatica}</b></p>
+      ${motivos.length ? `<p style="margin:4px 0">Por que ${c.so_na_manual} da manual ficaram de fora: ${motivos.map(([m, n]) => `${esc(m)} (${n})`).join('; ')}</p>` : ''}
+      ${r.exemplos?.so_na_manual?.length ? `<p class="dica" style="margin:4px 0">Só na manual (ex.): ${r.exemplos.so_na_manual.map(esc).join(', ')}</p>` : ''}
+      ${r.exemplos?.so_na_automatica?.length ? `<p class="dica" style="margin:4px 0">Só na automática (ex.): ${r.exemplos.so_na_automatica.map(esc).join(', ')}</p>` : ''}</div>` : '';
   return `<div style="border-top:1px solid var(--line);padding:12px 0"><b>${esc(nomeUnidade)}</b> <span class="selo ${SELO_EXEC[r.status] || 'cinza'}">${esc(r.status)}</span>
     <p style="margin:6px 0">${esc(r.mensagem || '')}</p>
-    ${linhas ? `<table class="tabela" style="max-width:520px"><tbody>${linhas}</tbody></table>` : ''}${contratos}${divisao}
+    ${linhas ? `<table class="tabela" style="max-width:520px"><tbody>${linhas}</tbody></table>` : ''}${contratos}${divisao}${comparacao}
     ${r.amostra?.length ? `<p class="dica" style="margin-top:6px">Amostra (nome e inicial): ${r.amostra.map(esc).join(', ')}</p>` : ''}</div>`;
 }
 
