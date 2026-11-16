@@ -201,7 +201,7 @@ export function dividirLista(total, n, offset = 0) {
 }
 
 // ── Risco de abandono: alunos registrados como Gympass/convênios ou benefício colaborador ──
-export const CLASSES_RISCO = { gympass_convenios: 'Gympass / convênios', beneficio_colaborador: 'Benefício colaborador' };
+export const CLASSES_RISCO = { gympass_convenios: 'Gympass / convênios', beneficio_colaborador: 'Benefício colaborador', contrato_vip: 'Contrato VIP' };
 
 // Separa de uma lista importada os alunos já registrados (mesmo ID do EVO na unidade).
 // Devolve { mantidos, retirados: [{ ...registro, classe }] }; a ordem original é preservada.

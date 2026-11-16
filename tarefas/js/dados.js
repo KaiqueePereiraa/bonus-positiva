@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261116154455';
+import { sb } from '../../shared/sessao.js?v=20261116154923';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -163,6 +163,9 @@ export const escalaPeriodo = (ini, fim) => rpc('escala_periodo', { p_ini: ini, p
 export const escalaConfig = async () => ok(await sb.from('escala_config').select('*').eq('id', 1).maybeSingle());   // só admin
 export const escalaCiclo = async () => ok(await sb.from('escala_ciclo').select('*'));                              // só admin
 export const salvarCicloEscala = (inicio, semanas, ciclo) => rpc('escala_salvar_ciclo', { p_inicio: inicio, p_semanas: semanas, p_ciclo: ciclo });
+// Escala: troca o nome de quem não tem cadastro, em toda a escala — por um cadastro (vincular) ou por outro nome.
+export const substituirNomeEscala = (nome, pessoa, novoNome) =>
+  rpc('escala_substituir_nome', { p_nome: nome, p_pessoa: pessoa || null, p_novo_nome: novoNome || null });
 export const definirDiaEscala = (data, pessoas) => rpc('escala_definir_dia', { p_data: data, p_pessoas: pessoas });
 export const trocasEscala = async () => ok(await sb.from('escala_trocas').select('*').order('criada_em', { ascending: false }).limit(80));
 export const solicitarTrocaEscala = (destino, dataOrigem, dataTroca) =>

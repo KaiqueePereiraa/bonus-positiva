@@ -3,10 +3,10 @@
 //  • A consultora escalada pode pedir troca a uma colega, que aceita ou recusa (sem aprovação do coordenador).
 //  • O coordenador monta o ciclo (que se repete para sempre), define quem trabalha em cada feriado,
 //    edita um dia específico e acompanha o histórico de trocas.
-import * as dados from '../dados.js?v=20261116154455';
-import { somarDias } from '../regras.js?v=20261116154455';
-import { esc, dataCurta, dataHora, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116154455';
-import { agendaEscala, opcoesTroca, lerOpcaoTroca, rotuloData } from '../escala.js?v=20261116154455';
+import * as dados from '../dados.js?v=20261116154923';
+import { somarDias } from '../regras.js?v=20261116154923';
+import { esc, dataCurta, dataHora, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116154923';
+import { agendaEscala, opcoesTroca, lerOpcaoTroca, rotuloData } from '../escala.js?v=20261116154923';
 
 const SEMANAS_A_FRENTE = 10;
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
@@ -89,7 +89,7 @@ export async function render(el, ctx) {
 
   el.innerHTML = `${cartaoPedidos}${cartaoMeus}${aviso}
     ${blocos.filter((b) => b.dias.some((d) => d.data >= hoje)).map(cartaoBloco).join('')}
-    ${ctx.ehAdmin ? '<div id="ciclo-card"></div><div id="trocas-card"></div>' : ''}
+    ${ctx.ehAdmin ? '<div id="ciclo-card"></div><div id="nomes-card"></div><div id="trocas-card"></div>' : ''}
     <p class="dica">Mostrando as próximas ${SEMANAS_A_FRENTE} semanas.${ctx.ehAdmin ? '' : ' Para trocar um dia, use "Pedir troca": a colega escolhida aceita ou recusa.'}</p>`;
 
   const recarregar = () => { ctx.atualizarSino(); return render(el, ctx); };
@@ -120,6 +120,18 @@ export async function render(el, ctx) {
     ciclo = { inicio: cfg?.inicio || proximoSabado(hoje), semanas: Array.from({ length: n }, () => ({ sabado: [], domingo: [] })) };
     for (const c of linhasCiclo) if (c.semana < n) ciclo.semanas[c.semana][c.dia].push(c.pessoa_id ? { id: c.pessoa_id } : { nome: c.nome_livre });
     desenharCiclo();
+
+    // pessoas que aparecem só pelo nome (sem cadastro): ciclo + próximas datas (feriados e trocas incluídos)
+    const livres = new Map();
+    for (const c of linhasCiclo) if (c.nome_livre) livres.set(c.nome_livre.trim().toLowerCase(), c.nome_livre.trim());
+    for (const l of linhas) if (!l.pessoa_id && l.nome) livres.set(l.nome.trim().toLowerCase(), l.nome.trim());
+    if (livres.size) {
+      el.querySelector('#nomes-card').innerHTML = `<div class="cartao"><h2>Pessoas sem cadastro</h2>
+        <p class="dica" style="margin-bottom:12px">Aparecem na escala só pelo nome. Quando o cadastro delas for criado, use <b>Vincular</b>: elas passam a valer em toda a escala (ciclo, feriados e trocas) e já recebem lembrete no WhatsApp e podem pedir troca. <b>Trocar nome</b> serve para substituir quem está fixo no ciclo por outra pessoa sem cadastro. Para alguém que vai só em um fim de semana, use <b>Editar</b> naquele dia e digite o nome em "Outras pessoas".</p>
+        <div class="tabela-wrap"><table class="tabela"><tbody>${[...livres.values()].map((n) => `<tr><td class="nome">${esc(n)}</td>
+          <td class="acoes"><button class="btn sec peq" data-acao="vincular" data-nome="${esc(n)}">Vincular a um cadastro</button>
+          <button class="btn sec peq" data-acao="renomear" data-nome="${esc(n)}">Trocar nome</button></td></tr>`).join('')}</tbody></table></div></div>`;
+    }
 
     const alvo = el.querySelector('#trocas-card');
     const recentes = trocas.slice(0, 20);
@@ -163,6 +175,27 @@ export async function render(el, ctx) {
       const pessoas = await escolherPessoas(ctx, `Quem trabalha — ${rotuloData(data)}`, pessoasDoDia(data));
       if (!pessoas) return;
       return rodar(() => dados.definirDiaEscala(data, paraBanco(pessoas)), 'Escala do dia atualizada.');
+    }
+
+    if (acao === 'vincular') {
+      const livre = b.dataset.nome;
+      if (!consultoras.length) return toast('Ainda não há cadastro de consultora para vincular. Crie o cadastro em Configurações → Usuários.', 'erro');
+      const sugerida = consultoras.find((c) => c.nome.trim().toLowerCase().split(/\s+/)[0] === livre.trim().toLowerCase());
+      const r = await modal(`Vincular "${livre}" a um cadastro`, `<label class="campo">Cadastro
+          <select id="pessoa">${consultoras.map((c) => `<option value="${c.id}" ${c.id === sugerida?.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></label>
+        <p class="dica" style="margin-top:10px">Em todas as datas da escala, "${esc(livre)}" passa a ser essa pessoa.</p>`,
+        { ler: true, acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: false }, { rotulo: 'Vincular', valor: true }] });
+      if (!r?.valor) return;
+      return rodar(() => dados.substituirNomeEscala(livre, r.campos.pessoa, null), `${livre} agora está vinculada ao cadastro.`);
+    }
+    if (acao === 'renomear') {
+      const livre = b.dataset.nome;
+      const r = await modal(`Trocar o nome "${livre}"`, `<label class="campo">Novo nome<input id="novo" maxlength="60" placeholder="Ex.: Bia"></label>
+        <p class="dica" style="margin-top:10px">O novo nome substitui "${esc(livre)}" em todas as datas da escala.</p>`,
+        { ler: true, acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: false }, { rotulo: 'Trocar', valor: true }] });
+      if (!r?.valor) return;
+      if (!r.campos.novo.trim()) return toast('Digite o novo nome.', 'erro');
+      return rodar(() => dados.substituirNomeEscala(livre, null, r.campos.novo.trim()), 'Nome trocado em toda a escala.');
     }
 
     // ciclo

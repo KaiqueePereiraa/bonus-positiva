@@ -2,11 +2,11 @@
 //  • Excel completo: resumo, motivos, por unidade/consultora/origem/interesse/faixa etária, insights e TODOS os interessados;
 //  • PDF executivo: números, gráfico de motivos, tabelas e insights.
 // Telefones nunca entram.
-import * as dados from '../dados.js?v=20261116154455';
-import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261116154455';
-import { barras, imagem } from '../graficos.js?v=20261116154455';
-import { excel, pdf } from '../exportar.js?v=20261116154455';
-import { esc, toast, erro } from '../ui.js?v=20261116154455';
+import * as dados from '../dados.js?v=20261116154923';
+import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261116154923';
+import { barras, imagem } from '../graficos.js?v=20261116154923';
+import { excel, pdf } from '../exportar.js?v=20261116154923';
+import { esc, toast, erro } from '../ui.js?v=20261116154923';
 
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
 const slug = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
