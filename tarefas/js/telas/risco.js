@@ -1,8 +1,8 @@
 // Risco de abandono — admin importa e acompanha; consultora marca as mensagens da semana.
-import * as dados from '../dados.js?v=20261116150117';
-import { dividir, semanaDe, prazoSemanal } from '../regras.js?v=20261116150117';
-import { esc, dataCurta, seloStatus, toast, erro, vazio } from '../ui.js?v=20261116150117';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261116150117';
+import * as dados from '../dados.js?v=20261116154455';
+import { dividir, semanaDe, prazoSemanal, separarExcecoes, CLASSES_RISCO } from '../regras.js?v=20261116154455';
+import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261116154455';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261116154455';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
@@ -40,7 +40,7 @@ async function painelAdmin(el, ctx) {
   if (!unidade) { escolherUnidade(el, ctx, 'Risco de abandono'); return; }
   const hoje = ctx.hoje();
   const semana = semanaDe(hoje);
-  const [imports, tarefas] = await Promise.all([dados.importacoes('risco', { unidade }), dados.tarefas({ controle: 'risco', unidade })]);
+  const [imports, tarefas, excecoes] = await Promise.all([dados.importacoes('risco', { unidade }), dados.tarefas({ controle: 'risco', unidade }), dados.riscoExcecoes(unidade)]);
   const daSemana = imports.find((i) => i.referencia_inicio === semana.inicio);
   const tarefasSemana = daSemana ? tarefas.filter((t) => t.importacao_id === daSemana.id) : [];
   const feitos = tarefasSemana.reduce((s, t) => s + t.feitos, 0);
@@ -53,7 +53,22 @@ async function painelAdmin(el, ctx) {
         <div class="linha-acoes" style="margin-top:14px">${daSemana.arquivo_path ? '<button class="btn sec peq" id="baixar">Baixar planilha original</button>' : ''}${feitos === 0 ? '<button class="btn perigo peq" id="desfazer">Desfazer importação</button>' : ''}</div>`
         : `<p class="dica" style="margin-bottom:14px">A lista desta semana da ${esc(ctx.nomeUnidade(unidade))} ainda não foi importada. Ela será dividida entre ${ctx.consultorasDa(unidade).map((c) => esc(c.nome)).join(', ') || 'as consultoras da unidade'}. Prazo: <b>${dataCurta(prazoSemanal(hoje))}</b>.</p><div id="upload"></div><div id="previa"></div>`}
     </div>
-    <div class="cartao"><h2>Histórico</h2>${tarefas.length ? tabelaHistorico(tarefas.filter((t) => t.importacao_id !== daSemana?.id), ctx) : vazio('Nenhuma semana importada ainda.')}</div>`;
+    <div class="cartao"><h2>Histórico</h2>${tarefas.length ? tabelaHistorico(tarefas.filter((t) => t.importacao_id !== daSemana?.id), ctx) : vazio('Nenhuma semana importada ainda.')}</div>
+    <div class="cartao" id="excecoes"><h2>Fora da lista de risco (${excecoes.length})</h2>
+      <p class="dica" style="margin-bottom:12px">Alunos que a consultora registrou como Gympass/convênios ou benefício colaborador. Eles são retirados automaticamente das próximas listas importadas. Remova um registro se o aluno voltar a precisar de contato.</p>
+      ${excecoes.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Aluno</th><th>Tipo</th><th>Observação</th><th>Registrado</th><th></th></tr></thead><tbody>
+        ${excecoes.map((x) => `<tr data-id="${x.id}"><td class="nome">${esc(x.nome)}<span class="sub">ID ${esc(x.evo_id)}</span></td><td>${esc(CLASSES_RISCO[x.classe] || x.classe)}</td>
+          <td>${esc(x.observacao || '')}</td><td>${dataLonga(x.criado_em.slice(0, 10))}${x.criado_por ? `<span class="sub">${esc(ctx.nomeDe(x.criado_por))}</span>` : ''}</td>
+          <td class="acoes"><button class="btn sec peq" data-acao="remover-excecao">Remover</button></td></tr>`).join('')}</tbody></table></div>`
+        : vazio('Nenhum aluno registrado ainda.')}</div>`;
+
+  el.querySelector('#excecoes')?.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-acao="remover-excecao"]');
+    if (!b) return;
+    const x = excecoes.find((r) => r.id === b.closest('tr').dataset.id);
+    if (!x || !(await confirmar('Remover registro', `Tirar ${x.nome} do registro? Ele volta a aparecer nas próximas listas de risco de abandono.`, 'Remover'))) return;
+    try { await dados.removerExcecaoRisco(x.id); toast('Registro removido.'); painelAdmin(el, ctx); } catch (err) { erro(err); }
+  });
 
   if (daSemana) {
     el.querySelector('#baixar')?.addEventListener('click', () => baixarArquivo(daSemana.arquivo_path));
@@ -69,8 +84,14 @@ async function painelAdmin(el, ctx) {
 async function previa(el, ctx, arquivo, hoje, unidade) {
   const alvo = el.querySelector('#previa');
   alvo.innerHTML = '<p class="dica" style="margin-top:12px">Lendo planilha…</p>';
-  const { registros, avisos, erro: problema } = await lerPlanilha(arquivo, 'risco');
+  const { registros: todos, avisos, erro: problema } = await lerPlanilha(arquivo, 'risco');
   if (problema) { alvo.innerHTML = `<p class="aviso-lista" style="margin-top:12px">${esc(problema)}</p>`; return; }
+  // alunos já registrados como Gympass/convênios ou benefício colaborador não entram na lista
+  const { mantidos: registros, retirados } = separarExcecoes(todos, await dados.riscoExcecoes(unidade));
+  if (!registros.length) {
+    alvo.innerHTML = `<p class="aviso-lista" style="margin-top:12px">Todos os ${todos.length} alunos do arquivo já estão registrados como Gympass/convênios ou benefício colaborador. Não há ninguém para dividir.</p>`;
+    return;
+  }
   const daUnidade = ctx.consultorasDa(unidade);
   if (!daUnidade.length) { alvo.innerHTML = `<p class="aviso-lista">Cadastre as consultoras da ${esc(ctx.nomeUnidade(unidade))} (com ordem do rodízio) em Configurações antes de importar.</p>`; return; }
 
@@ -81,6 +102,8 @@ async function previa(el, ctx, arquivo, hoje, unidade) {
   alvo.innerHTML = `<div style="margin-top:16px">
     <h2 style="font-size:14px;margin-bottom:10px">Prévia da divisão — ${registros.length} alunos</h2>
     ${divisao.resumo.map((r) => `<div class="linha-info"><b>${esc(ctx.nomeDe(r.consultora_id))}</b><span>${r.total} alunos (${r.daEvo} já eram dela no EVO + ${r.recebidos} redistribuídos)</span></div>`).join('')}
+    ${retirados.length ? `<p class="dica" style="margin-top:10px"><b>${retirados.length} aluno(s) retirado(s)</b> por estarem registrados como Gympass/convênios ou benefício colaborador:
+      ${retirados.slice(0, 12).map((r) => `${esc(r.nome)} (${esc(CLASSES_RISCO[r.classe])})`).join(', ')}${retirados.length > 12 ? ` e mais ${retirados.length - 12}` : ''}.</p>` : ''}
     ${listaAvisos(avisos)}
     <div class="linha-acoes" style="margin-top:16px"><button class="btn verde" id="confirmar">Confirmar e distribuir</button><button class="btn sec" id="cancelar">Cancelar</button></div></div>`;
   alvo.querySelector('#cancelar').onclick = () => painelAdmin(el, ctx);

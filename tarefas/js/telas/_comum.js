@@ -1,8 +1,8 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261116150117';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261116150117';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa } from '../regras.js?v=20261116150117';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261116150117';
+import * as dados from '../dados.js?v=20261116154455';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261116154455';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261116154455';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261116154455';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -82,23 +82,34 @@ export async function listaContatos(el, ctx, tarefa) {
   const ehRisco = tarefa.controle_id === 'risco';
   const outras = ctx.consultorasDa(tarefa.unidade).filter((c) => c.id !== tarefa.responsavel_id);
 
+  // Risco de abandono: observação + tipo do aluno. Gympass/convênios e benefício colaborador ficam registrados
+  // e o aluno não entra mais nas próximas listas.
+  const obsRisco = (i) => {
+    const classe = i.dados?.classe || '';
+    if (!podeMexer) return `<td>${classe ? `<span class="etiqueta">${esc(CLASSES_RISCO[classe] || classe)}</span> ` : ''}${esc(i.observacao || '')}</td>`;
+    return `<td style="min-width:230px"><select class="ctrl" data-campo="classe" aria-label="Tipo do aluno" style="width:100%">
+        <option value="">Aluno comum</option>${Object.entries(CLASSES_RISCO).map(([k, v]) => `<option value="${k}" ${classe === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
+      <input class="ctrl" data-campo="obs" placeholder="Observação (opcional)" value="${esc(i.observacao || '')}" style="width:100%;margin-top:6px"></td>`;
+  };
+
   const linha = (i) => {
     const tel = normalizarTelefone(i.celular);
     const ultima = i.dados?.ultima_presenca ? dataLonga(i.dados.ultima_presenca.slice(0, 10)) : 'sem registro';
+    const classe = i.dados?.classe || '';
     return `<tr class="${i.feito_em ? 'feito' : ''}" data-id="${i.id}">
       <td class="nome">${esc(i.nome)}<span class="sub">ID ${esc(i.evo_id)}${i.repetido_semana_anterior ? ' · <span class="etiqueta">também na semana anterior</span>' : ''}</span></td>
       <td class="oculta-cel">${tel ? esc(`(${tel.slice(2, 4)}) ${tel.slice(4, -4)}-${tel.slice(-4)}`) : '<span class="dica">sem celular</span>'}</td>
-      ${ehRisco ? `<td class="oculta-cel">${esc(ultima)}</td>` : ''}
-      <td>${i.feito_em ? `<span class="selo verde">Enviada</span><span class="sub">${dataHora(i.feito_em)}${ctx.ehAdmin && i.feito_por && i.feito_por !== tarefa.responsavel_id ? ` por ${esc(ctx.nomeDe(i.feito_por))}` : ''}</span>` : '<span class="selo cinza">Pendente</span>'}</td>
+      ${ehRisco ? `<td class="oculta-cel">${esc(ultima)}</td>${obsRisco(i)}` : ''}
+      <td>${i.feito_em ? `<span class="selo verde">${classe ? 'Registrado' : 'Enviada'}</span><span class="sub">${dataHora(i.feito_em)}${ctx.ehAdmin && i.feito_por && i.feito_por !== tarefa.responsavel_id ? ` por ${esc(ctx.nomeDe(i.feito_por))}` : ''}</span>` : '<span class="selo cinza">Pendente</span>'}</td>
       <td class="acoes">${!podeMexer ? '' : i.feito_em
-        ? '<button class="btn sec peq" data-acao="desmarcar">Desmarcar</button>'
+        ? `${ehRisco ? '<button class="btn sec peq" data-acao="salvar">Salvar obs.</button> ' : ''}<button class="btn sec peq" data-acao="desmarcar">Desmarcar</button>`
         : `${tel ? '<button class="btn wa peq" data-acao="wa">WhatsApp</button> ' : ''}<button class="btn peq" data-acao="marcar">Marcar enviada</button>`}
         ${ctx.ehAdmin && ehRisco && !i.feito_em && outras.length ? `<select class="ctrl" data-acao="mover" aria-label="Mover para"><option value="">Mover…</option>${outras.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select>` : ''}
       </td></tr>`;
   };
 
   el.innerHTML = `<div class="tabela-wrap"><table class="tabela responsiva">
-    <thead><tr><th>Nome</th><th>Celular</th>${ehRisco ? '<th>Última presença</th>' : ''}<th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Nome</th><th>Celular</th>${ehRisco ? '<th>Última presença</th><th>Observação</th>' : ''}<th>Status</th><th></th></tr></thead>
     <tbody>${itens.map(linha).join('')}</tbody></table></div>`;
 
   // troca só a linha do item e atualiza o cabeçalho
@@ -121,16 +132,29 @@ export async function listaContatos(el, ctx, tarefa) {
   el.onclick = (e) => {
     const b = e.target.closest('button[data-acao]');
     if (!b) return;
-    const id = b.closest('tr').dataset.id;
+    const tr = b.closest('tr');
+    const id = tr.dataset.id;
+    const campos = () => ({ obs: tr.querySelector('[data-campo="obs"]')?.value ?? '', classe: tr.querySelector('[data-campo="classe"]')?.value ?? '' });
     if (b.dataset.acao === 'wa') {
+      if (ehRisco && campos().classe) { toast('Você escolheu Gympass/convênios ou benefício colaborador: use "Registrar" em vez do WhatsApp.', 'erro'); return; }
       const i = itens.find((x) => x.id === id);
       const url = linkWhatsApp(normalizarTelefone(i.celular), montarMensagem(modelo, { nome: i.nome }), { celular: ehCelular() });
       window.open(url, 'whatsapp');
-      agir(b, id, () => dados.marcar(id));
-    } else if (b.dataset.acao === 'marcar') agir(b, id, () => dados.marcar(id));
-    else if (b.dataset.acao === 'desmarcar') agir(b, id, () => dados.desmarcar(id), 'Marcação desfeita.');
+      agir(b, id, () => (ehRisco ? dados.marcarRisco(id, campos().obs, null) : dados.marcar(id)));
+    } else if (b.dataset.acao === 'marcar' || b.dataset.acao === 'salvar') {
+      if (!ehRisco) { agir(b, id, () => dados.marcar(id)); return; }
+      const { obs, classe } = campos();
+      agir(b, id, () => dados.marcarRisco(id, obs, classe),
+        classe ? 'Registrado. Este aluno não entra mais nas próximas listas.' : (b.dataset.acao === 'salvar' ? 'Anotado.' : undefined));
+    } else if (b.dataset.acao === 'desmarcar') agir(b, id, () => dados.desmarcar(id), 'Marcação desfeita.');
   };
   el.onchange = (e) => {
+    const c = e.target.closest('select[data-campo="classe"]');
+    if (c) {   // o botão principal muda de texto quando o aluno é Gympass/convênios ou benefício colaborador
+      const btn = c.closest('tr').querySelector('button[data-acao="marcar"]');
+      if (btn) btn.textContent = c.value ? 'Registrar' : 'Marcar enviada';
+      return;
+    }
     const s = e.target.closest('select[data-acao="mover"]');
     if (!s || !s.value) return;
     const id = s.closest('tr').dataset.id;

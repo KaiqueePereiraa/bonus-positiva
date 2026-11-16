@@ -199,3 +199,19 @@ export function dividirLista(total, n, offset = 0) {
   for (let i = 0; i < total; i++) contagem[(i + inicio) % n]++;
   return contagem;
 }
+
+// ── Risco de abandono: alunos registrados como Gympass/convênios ou benefício colaborador ──
+export const CLASSES_RISCO = { gympass_convenios: 'Gympass / convênios', beneficio_colaborador: 'Benefício colaborador' };
+
+// Separa de uma lista importada os alunos já registrados (mesmo ID do EVO na unidade).
+// Devolve { mantidos, retirados: [{ ...registro, classe }] }; a ordem original é preservada.
+export function separarExcecoes(registros, excecoes) {
+  const porId = new Map(excecoes.map((e) => [String(e.evo_id).trim(), e.classe]));
+  const mantidos = [];
+  const retirados = [];
+  for (const r of registros) {
+    const classe = porId.get(String(r.evo_id).trim());
+    if (classe) retirados.push({ ...r, classe }); else mantidos.push(r);
+  }
+  return { mantidos, retirados };
+}

@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261116150117';
+import { sb } from '../../shared/sessao.js?v=20261116154455';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -77,6 +77,13 @@ export const editarListaFazer = async (id, campos) => ok(await sb.from('listas_f
 export const marcar = (id) => rpc('marcar_enviada', { p_item: id });
 // Lista a fazer: marca como feito e guarda a observação (opcional); chamar de novo atualiza a observação.
 export const marcarListaItem = (id, observacao) => rpc('marcar_lista_item', { p_item: id, p_obs: observacao || null });
+// Risco de abandono: marca com observação e tipo do aluno (gympass_convenios | beneficio_colaborador | vazio).
+// Com tipo, o aluno fica registrado e sai das próximas listas; chamar de novo atualiza.
+export const marcarRisco = (id, observacao, classe) =>
+  rpc('marcar_risco_item', { p_item: id, p_observacao: observacao || null, p_classe: classe || null });
+export const riscoExcecoes = async (unidade) =>
+  ok(await sb.from('risco_excecoes').select('*').eq('unidade', unidade).order('criado_em', { ascending: false }));
+export const removerExcecaoRisco = (id) => rpc('remover_excecao_risco', { p_id: id });
 export const desmarcar = (id) => rpc('desmarcar', { p_item: id });
 export const assumir = (id) => rpc('assumir_item', { p_item: id });
 export const salvarMotivo = (id, motivo, texto, observacao) =>
@@ -150,6 +157,18 @@ export const salvarConfig = async (chave, valor) => ok(await sb.from('config_cen
 export const salvarMotivoCadastro = async (m) => ok(await sb.from('motivos').upsert(m));
 export const salvarFeriado = async (f) => ok(await sb.from('feriados').upsert(f));
 export const removerFeriado = async (data) => ok(await sb.from('feriados').delete().eq('data', data));
+
+// ── Escala de fim de semana e feriados (migration 017) ──
+export const escalaPeriodo = (ini, fim) => rpc('escala_periodo', { p_ini: ini, p_fim: fim });
+export const escalaConfig = async () => ok(await sb.from('escala_config').select('*').eq('id', 1).maybeSingle());   // só admin
+export const escalaCiclo = async () => ok(await sb.from('escala_ciclo').select('*'));                              // só admin
+export const salvarCicloEscala = (inicio, semanas, ciclo) => rpc('escala_salvar_ciclo', { p_inicio: inicio, p_semanas: semanas, p_ciclo: ciclo });
+export const definirDiaEscala = (data, pessoas) => rpc('escala_definir_dia', { p_data: data, p_pessoas: pessoas });
+export const trocasEscala = async () => ok(await sb.from('escala_trocas').select('*').order('criada_em', { ascending: false }).limit(80));
+export const solicitarTrocaEscala = (destino, dataOrigem, dataTroca) =>
+  rpc('solicitar_troca_escala', { p_destino: destino, p_data_origem: dataOrigem, p_data_troca: dataTroca || null });
+export const responderTrocaEscala = (id, aceitar) => rpc('responder_troca_escala', { p_troca: id, p_aceitar: aceitar });
+export const cancelarTrocaEscala = (id) => rpc('cancelar_troca_escala', { p_troca: id });
 
 export const testarWhatsapp = () => rpc('testar_whatsapp');
 export const enviosWhatsapp = async () =>

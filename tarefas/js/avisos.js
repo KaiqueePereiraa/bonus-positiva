@@ -1,7 +1,7 @@
 // Avisos do sino, calculados na hora a partir do estado das tarefas (nada fica "velho").
 // As mesmas regras alimentam o resumo diário do WhatsApp (supabase/migrations/008_whatsapp.sql).
-import { diaDaSemana, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261116150117';
-import { dataCurta, nomeMes, ROTA_CONTROLE } from './ui.js?v=20261116150117';
+import { diaDaSemana, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261116154455';
+import { dataCurta, nomeMes, ROTA_CONTROLE } from './ui.js?v=20261116154455';
 
 const ABERTA = (t) => t.status !== 'concluida' && t.status !== 'concluida_atraso';
 const faltam = (t) => t.total - t.feitos;
@@ -9,8 +9,12 @@ const faltam = (t) => t.total - t.feitos;
 // desde: dia (AAAA-MM-DD) em que o aviso passou a valer — usado para "novo" no sino.
 const aviso = (id, nivel, texto, rota, desde) => ({ id, nivel, texto, rota, desde });
 
-export function avisosConsultora({ tarefas, semResponsavel = 0, hoje, titulos = {} }) {
+export function avisosConsultora({ tarefas, semResponsavel = 0, hoje, titulos = {}, pedidosTroca = [] }) {
   const lista = [];
+  // pedidos de troca de escala que esperam a resposta dela: { id, quem, data } (a tela de Escala responde)
+  for (const p of pedidosTroca) {
+    lista.push(aviso(`escala-troca-${p.id}`, 'urgente', `${p.quem} pediu para trocar a escala de ${dataCurta(p.data)}. Aceite ou recuse em Escala.`, '#/escala', hoje));
+  }
   for (const t of tarefas.filter(ABERTA)) {
     const rota = `#/${ROTA_CONTROLE[t.controle_id]}/${t.id}`;
     if (t.controle_id === 'inadimplencia') {
