@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261116175830';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116175830';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116175830';
+import * as dados from '../dados.js?v=20261116195651';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116195651';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116195651';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -216,7 +216,7 @@ const ROTINAS_EVO = [
 const ROTULOS_RESUMO = {
   debitos_lidos: 'Débitos lidos na EVO', da_unidade: 'Da unidade', clientes_em_atraso: 'Clientes em atraso', inativos_ignorados: 'Inativos ignorados',
   sem_celular: 'Sem celular', na_lista: 'Na lista', clientes_ativos: 'Clientes ativos', vieram_ultimos_15_dias: 'Vieram nos últimos 15 dias',
-  sem_vir: 'Sem vir há mais de 15 dias', excluidos_por_registro: 'Fora: registrados (Gympass/benefício/VIP)', excluidos_por_contrato: 'Fora: contrato excluído',
+  sem_vir: 'Sem vir há mais de 15 dias', excluidos_por_registro: 'Fora: registrados (Gympass/benefício/VIP)', excluidos_por_categoria: 'Fora: contrato com categoria na EVO', excluidos_por_contrato: 'Fora: contrato excluído',
   excluidos_gympass_totalpass: 'Fora: Gympass/Totalpass na ficha', suspensos: 'Fora: contrato suspenso/trancado', cadastro_recente: 'Fora: cadastro recente', sem_ultimo_acesso: 'Sem último acesso na EVO',
   prospects_lidos: 'Oportunidades lidas', ja_viraram_cliente: 'Já viraram cliente', sem_nome: 'Sem nome', mes: 'Mês',
 };
@@ -225,8 +225,9 @@ const SELO_EXEC = { ok: 'verde', ignorado: 'cinza', erro: 'vermelho' };
 function blocoResultado(nomeUnidade, r) {
   const resumo = r.resumo || {};
   const linhas = Object.entries(ROTULOS_RESUMO).filter(([k]) => k in resumo).map(([k, rot]) => `<tr><td>${esc(rot)}</td><td style="text-align:right"><b>${esc(String(resumo[k]))}</b></td></tr>`).join('');
-  const contratos = resumo.contratos_excluidos && Object.keys(resumo.contratos_excluidos).length
-    ? `<p class="dica" style="margin-top:6px">Contratos excluídos: ${Object.entries(resumo.contratos_excluidos).map(([c, n]) => `${esc(c)} (${n})`).join(', ')}</p>` : '';
+  const lista = (rot, obj) => obj && Object.keys(obj).length
+    ? `<p class="dica" style="margin-top:6px">${rot}: ${Object.entries(obj).map(([c, n]) => `${esc(c)} (${n})`).join(', ')}</p>` : '';
+  const contratos = lista('Categorias excluídas', resumo.categorias_excluidas) + lista('Contratos excluídos pelas palavras', resumo.contratos_excluidos);
   const divisao = Array.isArray(resumo.divisao) ? `<p class="dica" style="margin-top:6px">Divisão entre as consultoras: ${resumo.divisao.join(' / ')}</p>` : '';
   const c = resumo.comparacao;
   const motivos = c ? Object.entries(c.motivos_so_na_manual || {}) : [];
@@ -277,7 +278,7 @@ async function evo(el, ctx) {
     <label class="campo" style="max-width:640px">Palavras do nome do contrato, separadas por vírgula
       <input id="palavras" value="${esc(palavras.join(', '))}" placeholder="gympass, totalpass, vip, colaborador"></label>
     <div class="linha-acoes" style="margin-top:8px"><button class="btn sec peq" id="salvar-palavras">Salvar palavras</button></div>
-    <p class="dica" style="margin-top:6px">Quem tem contrato com uma dessas palavras, ou foi registrado pela consultora (Gympass/convênios, benefício colaborador, contrato VIP), não entra na lista. A simulação mostra quais contratos foram excluídos.</p>
+    <p class="dica" style="margin-top:6px">Ficam de fora automaticamente os contratos com categoria na EVO (VIP, Colaborador, Personal, Wellhub, Totalpass, Classpass, Freepass, Locação, Gogood, GuruPass — só \"Nenhuma\" entra). Também sai quem tem contrato com uma dessas palavras, ou foi registrado pela consultora (Gympass/convênios, benefício colaborador, contrato VIP), não entra na lista. A simulação mostra quais contratos foram excluídos.</p>
 
     <h2 style="font-size:14px;margin:26px 0 10px">4. Últimas execuções</h2>
     ${execs.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Quando</th><th>Rotina</th><th>Unidade</th><th>Origem</th><th>Resultado</th></tr></thead><tbody>
