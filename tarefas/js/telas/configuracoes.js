@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261116165249';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116165249';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal } from '../ui.js?v=20261116165249';
+import * as dados from '../dados.js?v=20261116171142';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116171142';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116171142';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -204,23 +204,139 @@ async function whatsapp(el) {
   };
 }
 
-// ── EVO (conexão privada) ──
-async function evo(el) {
-  el.innerHTML = `<p class="dica" style="margin-bottom:14px">A chave da EVO (DNS e token) fica guardada só no Supabase, em uma função privada: ela não aparece no site, no GitHub nem para as consultoras, e só o administrador logado consegue acioná-la. Por enquanto ela só <b>confirma se a conexão funciona</b>; nenhum dado da EVO é lido ou salvo.</p>
-    <div class="linha-acoes"><button class="btn" id="testar-evo">Testar conexão com a EVO</button></div>
-    <div id="resultado-evo" style="margin-top:14px"></div>`;
-  const saida = el.querySelector('#resultado-evo');
+// ── EVO (conexão privada e rotinas automáticas) ──
+const ROTINAS_EVO = [
+  { id: 'inadimplencia', titulo: 'Inadimplentes', quando: 'Toda quinta-feira (no dia útil antes da sexta da inadimplência)',
+    texto: 'Busca na EVO os clientes ATIVOS com dívida em aberto e em atraso e sobe a lista na tarefa da inadimplência da sexta. Inativos não aparecem. Se a responsável já subiu a planilha à mão, não mexe.' },
+  { id: 'risco', titulo: 'Risco de abandono', quando: 'Toda segunda-feira',
+    texto: 'Busca os clientes ativos com mais de 15 dias sem vir, tira quem está registrado (Gympass, benefício colaborador, contrato VIP) e os contratos listados abaixo, e divide entre as consultoras da unidade.' },
+  { id: 'nao_fechou', titulo: 'Por que não fechou?', quando: 'Todo dia 1º do mês',
+    texto: 'Busca as oportunidades (cadastros) do mês anterior que não viraram cliente e sobe a lista do mês para as consultoras justificarem.' },
+];
+const ROTULOS_RESUMO = {
+  debitos_lidos: 'Débitos lidos na EVO', da_unidade: 'Da unidade', clientes_em_atraso: 'Clientes em atraso', inativos_ignorados: 'Inativos ignorados',
+  sem_celular: 'Sem celular', na_lista: 'Na lista', clientes_ativos: 'Clientes ativos', vieram_ultimos_15_dias: 'Vieram nos últimos 15 dias',
+  sem_vir: 'Sem vir há mais de 15 dias', excluidos_por_registro: 'Fora: registrados (Gympass/benefício/VIP)', excluidos_por_contrato: 'Fora: contrato excluído',
+  excluidos_gympass_totalpass: 'Fora: Gympass/Totalpass na ficha', vieram_depois: 'Vieram (acesso não listado)', cadastro_recente: 'Cadastro recente', sem_detalhe: 'Sem ficha',
+  prospects_lidos: 'Oportunidades lidas', ja_viraram_cliente: 'Já viraram cliente', sem_nome: 'Sem nome', mes: 'Mês',
+};
+const SELO_EXEC = { ok: 'verde', ignorado: 'cinza', erro: 'vermelho' };
+
+function blocoResultado(nomeUnidade, r) {
+  const resumo = r.resumo || {};
+  const linhas = Object.entries(ROTULOS_RESUMO).filter(([k]) => k in resumo).map(([k, rot]) => `<tr><td>${esc(rot)}</td><td style="text-align:right"><b>${esc(String(resumo[k]))}</b></td></tr>`).join('');
+  const contratos = resumo.contratos_excluidos && Object.keys(resumo.contratos_excluidos).length
+    ? `<p class="dica" style="margin-top:6px">Contratos excluídos: ${Object.entries(resumo.contratos_excluidos).map(([c, n]) => `${esc(c)} (${n})`).join(', ')}</p>` : '';
+  const divisao = Array.isArray(resumo.divisao) ? `<p class="dica" style="margin-top:6px">Divisão entre as consultoras: ${resumo.divisao.join(' / ')}</p>` : '';
+  return `<div style="border-top:1px solid var(--line);padding:12px 0"><b>${esc(nomeUnidade)}</b> <span class="selo ${SELO_EXEC[r.status] || 'cinza'}">${esc(r.status)}</span>
+    <p style="margin:6px 0">${esc(r.mensagem || '')}</p>
+    ${linhas ? `<table class="tabela" style="max-width:520px"><tbody>${linhas}</tbody></table>` : ''}${contratos}${divisao}
+    ${r.amostra?.length ? `<p class="dica" style="margin-top:6px">Amostra (nome e inicial): ${r.amostra.map(esc).join(', ')}</p>` : ''}</div>`;
+}
+
+async function evo(el, ctx) {
+  const [cfg, ligadas, execs] = await Promise.all([dados.config(), dados.evoUnidades(), dados.evoExecucoes(25)]);
+  const filiaisConhecidas = execs.find((e) => e.tipo === 'filiais')?.resumo?.filiais || [];
+  const idDe = (u) => ligadas.find((l) => l.unidade === u)?.id_branch ?? '';
+  const palavras = Array.isArray(cfg.risco_contratos_excluidos) ? cfg.risco_contratos_excluidos : [];
+  const nomeUni = (id) => ctx.nomeUnidade(id);
+
+  el.innerHTML = `
+    <p class="dica" style="margin-bottom:14px">A chave da EVO (DNS e token) fica guardada só no Supabase, em uma função privada: não aparece no site, no GitHub nem para as consultoras, e só o administrador logado (ou o agendador do banco) consegue acioná-la. A Central só <b>lê</b> da EVO.</p>
+
+    <h2 style="font-size:14px;margin:6px 0 10px">1. Conexão e unidades</h2>
+    <div class="linha-acoes"><button class="btn" id="testar-evo">Testar conexão</button><button class="btn sec" id="achar-filiais">Buscar filiais da EVO</button></div>
+    <div id="res-conexao" style="margin:12px 0"></div>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade da Central</th><th>Filial na EVO</th><th></th></tr></thead><tbody>
+      ${ctx.unidades.map((u) => `<tr data-u="${u.id}"><td class="nome">${esc(u.nome)}</td>
+        <td><select class="ctrl" data-c="filial"><option value="">— não ligada —</option>${filiaisConhecidas.map((f) => `<option value="${f.id}" ${String(f.id) === String(idDe(u.id)) ? 'selected' : ''}>${esc(f.nome)} (${f.id})</option>`).join('')}
+          ${idDe(u.id) !== '' && !filiaisConhecidas.some((f) => String(f.id) === String(idDe(u.id))) ? `<option value="${idDe(u.id)}" selected>Filial ${idDe(u.id)}</option>` : ''}</select></td>
+        <td class="acoes"><button class="btn sec peq" data-acao="salvar-filial">Salvar</button></td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="dica" style="margin-top:8px">Use "Buscar filiais" para a Central ligar as unidades sozinha pelos nomes; ajuste aqui se alguma ficar errada.</p>
+
+    <h2 style="font-size:14px;margin:26px 0 10px">2. Rotinas automáticas</h2>
+    <p class="dica" style="margin-bottom:12px">Todas começam <b>desligadas</b>. Primeiro use <b>Simular</b> (só conta, não grava nada) e confira os números com a EVO; depois ligue.</p>
+    ${ROTINAS_EVO.map((r) => `<div class="cartao" style="margin-bottom:14px;box-shadow:none;border:1px solid var(--line)" data-rotina="${r.id}">
+      <h2 style="margin-bottom:6px">${esc(r.titulo)} <span class="selo ${cfg[`evo_auto_${r.id}`] === true ? 'verde' : 'cinza'}">${cfg[`evo_auto_${r.id}`] === true ? 'Ligada' : 'Desligada'}</span></h2>
+      <p class="dica"><b>${esc(r.quando)}.</b> ${esc(r.texto)}</p>
+      <div class="linha-acoes" style="margin-top:10px">
+        <button class="btn sec peq" data-acao="simular">Simular agora</button>
+        <button class="btn peq" data-acao="rodar">Rodar agora (envia a lista)</button>
+        <button class="btn ${cfg[`evo_auto_${r.id}`] === true ? 'perigo' : 'verde'} peq" data-acao="alternar">${cfg[`evo_auto_${r.id}`] === true ? 'Desligar automático' : 'Ligar automático'}</button>
+      </div><div class="res-rotina"></div></div>`).join('')}
+
+    <h2 style="font-size:14px;margin:26px 0 10px">3. Contratos que ficam fora do risco de abandono</h2>
+    <label class="campo" style="max-width:640px">Palavras do nome do contrato, separadas por vírgula
+      <input id="palavras" value="${esc(palavras.join(', '))}" placeholder="gympass, totalpass, vip, colaborador"></label>
+    <div class="linha-acoes" style="margin-top:8px"><button class="btn sec peq" id="salvar-palavras">Salvar palavras</button></div>
+    <p class="dica" style="margin-top:6px">Quem tem contrato com uma dessas palavras, ou foi registrado pela consultora (Gympass/convênios, benefício colaborador, contrato VIP), não entra na lista. A simulação mostra quais contratos foram excluídos.</p>
+
+    <h2 style="font-size:14px;margin:26px 0 10px">4. Últimas execuções</h2>
+    ${execs.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Quando</th><th>Rotina</th><th>Unidade</th><th>Origem</th><th>Resultado</th></tr></thead><tbody>
+      ${execs.map((e) => `<tr><td>${dataHora(e.criado_em)}</td><td>${esc(e.tipo === 'filiais' ? 'Buscar filiais' : (ROTINAS_EVO.find((r) => r.id === e.tipo)?.titulo || e.tipo))}${e.simulacao ? ' <span class="etiqueta">simulação</span>' : ''}</td>
+        <td>${e.unidade ? esc(nomeUni(e.unidade)) : '—'}</td><td>${esc(e.origem)}</td>
+        <td><span class="selo ${SELO_EXEC[e.status] || 'cinza'}">${esc(e.status)}</span><span class="sub">${esc(e.erro || e.resumo?.mensagem || '')}</span></td></tr>`).join('')}</tbody></table></div>`
+      : vazio('Nenhuma execução ainda.')}`;
+
+  const rodar = async (fn, alvo, rotulo) => {
+    alvo.disabled = true;
+    try { return await fn(); } catch (err) { erro(err); return null; } finally { alvo.disabled = false; }
+  };
+
   el.querySelector('#testar-evo').onclick = async (e) => {
-    e.target.disabled = true;
+    const saida = el.querySelector('#res-conexao');
     saida.innerHTML = '<p class="dica">Testando…</p>';
-    try {
-      const r = await dados.testarEvo();
-      saida.innerHTML = r.ok
-        ? '<div class="faixa"><div><b>Conexão funcionando</b>O DNS e o token foram aceitos pela EVO.</div></div>'
-        : `<div class="faixa urgente"><div><b>A EVO não aceitou</b>${esc(r.erro || 'Erro desconhecido.')}</div></div>`;
-    } catch (err) {
-      saida.innerHTML = `<div class="faixa urgente"><div><b>Não foi possível testar</b>${esc(err.message)}</div></div>`;
+    const r = await rodar(() => dados.testarEvo(), e.target).catch(() => null);
+    saida.innerHTML = r?.ok ? '<div class="faixa"><div><b>Conexão funcionando</b>O DNS e o token foram aceitos pela EVO.</div></div>'
+      : `<div class="faixa urgente"><div><b>A EVO não aceitou</b>${esc(r?.erro || 'Não foi possível testar.')}</div></div>`;
+  };
+  el.querySelector('#achar-filiais').onclick = async (e) => {
+    const saida = el.querySelector('#res-conexao');
+    saida.innerHTML = '<p class="dica">Buscando filiais…</p>';
+    const r = await rodar(() => dados.descobrirFiliaisEvo(), e.target);
+    if (!r) { saida.innerHTML = ''; return; }
+    if (!r.ok) { saida.innerHTML = `<div class="faixa urgente"><div><b>Não deu certo</b>${esc(r.erro || '')}</div></div>`; return; }
+    toast(`${r.filiais.length} filial(is) encontrada(s); ${Object.keys(r.ligadas).length} unidade(s) ligada(s).`);
+    evo(el, ctx);
+  };
+
+  el.onclick = async (e) => {
+    const b = e.target.closest('button[data-acao]');
+    if (!b) return;
+    if (b.dataset.acao === 'salvar-filial') {
+      const tr = b.closest('tr');
+      const v = tr.querySelector('[data-c="filial"]').value;
+      try { await dados.ligarUnidadeEvo(tr.dataset.u, v ? +v : null); toast('Ligação salva.'); } catch (err) { erro(err); }
+      return;
     }
-    e.target.disabled = false;
+    const cartao = b.closest('[data-rotina]');
+    if (!cartao) return;
+    const id = cartao.dataset.rotina;
+    const saida = cartao.querySelector('.res-rotina');
+    if (b.dataset.acao === 'alternar') {
+      const ligar = cfg[`evo_auto_${id}`] !== true;
+      if (ligar && !(await confirmar('Ligar automático', `A rotina de ${ROTINAS_EVO.find((r) => r.id === id).titulo} passará a rodar sozinha no horário combinado e as consultoras receberão aviso no WhatsApp quando uma lista nova entrar. Já fez a simulação?`, 'Ligar'))) return;
+      try { await dados.salvarConfig(`evo_auto_${id}`, ligar); toast(ligar ? 'Rotina ligada.' : 'Rotina desligada.'); evo(el, ctx); } catch (err) { erro(err); }
+      return;
+    }
+    const real = b.dataset.acao === 'rodar';
+    if (real && !(await confirmar('Rodar agora', 'Isso envia a lista de verdade para as consultoras (e elas recebem o aviso no WhatsApp). Se já houver lista no período, a rotina não repete. Continuar?', 'Rodar agora'))) return;
+    saida.innerHTML = '<p class="dica" style="margin-top:10px">Consultando a EVO… pode levar um minuto.</p>';
+    const alvos = ligadas.filter((l) => l.id_branch != null);
+    if (!alvos.length) { saida.innerHTML = '<p class="aviso-lista" style="margin-top:10px">Nenhuma unidade ligada a uma filial da EVO. Use "Buscar filiais" acima.</p>'; return; }
+    let html = '';
+    for (const l of alvos) {
+      const r = await rodar(() => dados.rodarEvo(id, l.unidade, !real), b);
+      html += r?.resultados?.length ? r.resultados.map((x) => blocoResultado(nomeUni(l.unidade), x)).join('')
+        : `<div style="border-top:1px solid var(--line);padding:12px 0"><b>${esc(nomeUni(l.unidade))}</b> <span class="selo vermelho">erro</span><p style="margin:6px 0">${esc(r?.erro || 'Não foi possível consultar a EVO.')}</p></div>`;
+      saida.innerHTML = `<div style="margin-top:10px">${html}</div>`;
+    }
+    if (real) { ctx.atualizarSino(); toast('Concluído.'); }
+  };
+
+  el.querySelector('#salvar-palavras').onclick = async () => {
+    const lista = el.querySelector('#palavras').value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+    try { await dados.salvarConfig('risco_contratos_excluidos', lista); toast('Palavras salvas.'); } catch (err) { erro(err); }
   };
 }

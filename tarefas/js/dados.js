@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261116165249';
+import { sb } from '../../shared/sessao.js?v=20261116171142';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -138,15 +138,24 @@ export async function convidar(email, perfil) {
   return data;
 }
 
-// Testa a conexão com a EVO (Edge Function `evo`, só admin). A chave fica nos segredos da função; nada da EVO volta para cá.
-export async function testarEvo() {
-  const { data, error } = await sb.functions.invoke('evo', { body: { acao: 'ping' } });
+// Conexão privada com a EVO (Edge Function `evo`, só admin). O DNS e o token ficam nos segredos da função;
+// daqui só saem pedidos e só voltam contagens (nunca dados de alunos nem a chave).
+export async function evoAcao(acao, extra = {}) {
+  const { data, error } = await sb.functions.invoke('evo', { body: { acao, ...extra } });
   if (error) {
     const detalhe = await error.context?.json?.().catch(() => null);
     throw new Error(detalhe?.erro || 'Não foi possível falar com a função da EVO.');
   }
   return data;
 }
+export const testarEvo = () => evoAcao('ping');
+export const descobrirFiliaisEvo = () => evoAcao('filiais');
+// simular = true (padrão) só conta; false roda de verdade e envia a lista
+export const rodarEvo = (tipo, unidade, simular = true) => evoAcao('rodar', { tipo, unidade, simular });
+export const evoUnidades = async () => ok(await sb.from('evo_unidades').select('*'));
+export const evoExecucoes = async (limite = 25) =>
+  ok(await sb.from('evo_execucoes').select('*').order('criado_em', { ascending: false }).limit(limite));
+export const ligarUnidadeEvo = (unidade, idBranch) => rpc('evo_ligar_unidade', { p_unidade: unidade, p_id_branch: idBranch ?? null });
 
 // Novo link para criar/trocar a senha (mesmo e-mail do "Esqueci minha senha"; o convite vence em 24h).
 export async function enviarLinkAcesso(email) {
