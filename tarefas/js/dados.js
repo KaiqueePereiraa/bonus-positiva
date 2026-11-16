@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261111193201';
+import { sb } from '../../shared/sessao.js?v=20261116150117';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -105,6 +105,11 @@ export const importarInadimplencia = (tarefaId, caminho, nome, registros) =>
 export const importarListaFazer = (unidade, titulo, instrucoes, prazo, mensagem, caminho, nome, registros) =>
   rpc('importar_lista_fazer', { p_unidade: unidade, p_titulo: titulo, p_instrucoes: instrucoes, p_prazo: prazo, p_mensagem: mensagem || null,
     p_arquivo_path: caminho, p_arquivo_nome: nome, p_registros: registros });
+// Lista própria da consultora (só dela, sem divisão): migration 016.
+export const importarListaFazerPropria = (titulo, instrucoes, prazo, mensagem, caminho, nome, registros) =>
+  rpc('importar_lista_fazer_propria', { p_titulo: titulo, p_instrucoes: instrucoes, p_prazo: prazo, p_mensagem: mensagem || null,
+    p_arquivo_path: caminho, p_arquivo_nome: nome, p_registros: registros });
+export const desfazerListaPropria = (id) => rpc('desfazer_lista_propria', { p_importacao: id });
 export const desfazerImportacao = (id) => rpc('desfazer_importacao', { p_importacao: id });
 
 // ── Ações do admin ──

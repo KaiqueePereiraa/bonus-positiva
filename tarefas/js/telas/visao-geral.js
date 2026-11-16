@@ -1,8 +1,8 @@
 // Visão geral — admin: cartões do mês + blocos dos 3 controles; consultora: resumo do que fazer.
-import * as dados from '../dados.js?v=20261111193201';
-import { semanaDe, mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261111193201';
-import { esc, dataCurta, diaSemana, seloStatus, pct, nomeMesCap, ROTA_CONTROLE, NOMES_CONTROLE } from '../ui.js?v=20261111193201';
-import { linhaProgresso } from './_comum.js?v=20261111193201';
+import * as dados from '../dados.js?v=20261116150117';
+import { semanaDe, mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261116150117';
+import { esc, dataCurta, diaSemana, seloStatus, pct, nomeMesCap, ROTA_CONTROLE, NOMES_CONTROLE } from '../ui.js?v=20261116150117';
+import { linhaProgresso } from './_comum.js?v=20261116150117';
 
 export async function render(el, ctx) {
   return ctx.ehAdmin ? admin(el, ctx) : consultora(el, ctx);

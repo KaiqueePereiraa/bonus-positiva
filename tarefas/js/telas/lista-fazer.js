@@ -1,9 +1,10 @@
 // Lista a fazer — o coordenador sobe uma lista de contatos com a explicação do que fazer; ela é dividida
 // igualmente entre as consultoras da unidade e cada uma marca o que já fez (com observação opcional).
-import * as dados from '../dados.js?v=20261111193201';
-import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261111193201';
-import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261111193201';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261111193201';
+// A consultora também pode subir uma lista PRÓPRIA (só dela, sem divisão) para se organizar.
+import * as dados from '../dados.js?v=20261116150117';
+import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261116150117';
+import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261116150117';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261116150117';
 
 const texto = (s) => esc(s).replaceAll('\n', '<br>');
 const FAIXA_VERDE = 'background:#F4FAEC;border-color:#D5EDB8;color:var(--dark)';
@@ -12,6 +13,27 @@ const aberta = (t) => !t.status.startsWith('concluida');
 
 // Bloco "O que fazer" — a explicação que o coordenador escreveu, sempre visível para a consultora.
 const blocoInstrucoes = (l) => (l ? `<div class="faixa" style="${FAIXA_VERDE}"><div><b>O que é esta lista e o que fazer</b>${texto(l.instrucoes)}</div></div>` : '');
+
+// Campos da lista (título, o que fazer, prazo, mensagem) — iguais para o coordenador e para a consultora.
+const TEXTOS_ADMIN = {
+  instrucoes: 'O que é esta lista e o que as consultoras precisam fazer',
+  exemplo: 'Ex.: Lista de alunos que cancelaram nos últimos 3 meses. Entrar em contato, perguntar o motivo e oferecer uma aula gratuita para voltar. Anotar na observação o que a pessoa respondeu.',
+};
+const TEXTOS_PROPRIA = {
+  instrucoes: 'O que você precisa fazer com esta lista',
+  exemplo: 'Ex.: Alunos que pararam de vir há 15 dias. Chamar no WhatsApp, perguntar se aconteceu algo e convidar para voltar essa semana.',
+};
+const formulario = (hoje, t) => `<div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px">
+        <label class="campo">Título da lista<input data-f="titulo" maxlength="80" placeholder="Ex.: Reativar ex-alunos de outubro"></label>
+        <label class="campo">${t.instrucoes}
+          <textarea data-f="instrucoes" rows="5" placeholder="${t.exemplo}"></textarea></label>
+        <div style="display:flex;gap:14px;flex-wrap:wrap">
+          <label class="campo" style="min-width:180px">Prazo<input type="date" data-f="prazo" min="${hoje}" value="${somarDias(hoje, 3)}"></label>
+          <label class="campo" style="flex:1;min-width:260px">Mensagem de WhatsApp (opcional)
+            <textarea data-f="mensagem" rows="2" placeholder="Oi {nome}, tudo bem? Aqui é da Positiva…"></textarea></label>
+        </div>
+        <p class="dica" style="margin-top:-6px">Na mensagem, {nome} vira o primeiro nome do contato. Sem mensagem, o botão abre o WhatsApp com a conversa em branco.</p>
+      </div>`;
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
@@ -102,22 +124,37 @@ async function detalhe(el, ctx, id) {
 // ── Consultora ──
 async function painelConsultora(el, ctx) {
   const [tarefas, listas] = await Promise.all([dados.tarefas({ controle: 'lista_fazer', responsavel: ctx.perfil.id }), dados.listasFazer()]);
-  if (!tarefas.length) {
-    el.innerHTML = `<div class="cartao">${vazio('Você ainda não tem nenhuma lista a fazer. Quando o coordenador subir uma, ela aparece aqui com as instruções.')}</div>`;
-    return;
-  }
+  const hoje = ctx.hoje();
   const cartao = (t) => {
     const l = listas.find((x) => x.importacao_id === t.importacao_id);
-    return `<div class="cartao"><h2>${esc(l?.titulo || 'Lista a fazer')} ${seloStatus(t.status, t.prazo_proximo)}
+    const propria = l?.criado_por === ctx.perfil.id;
+    return `<div class="cartao"><h2>${esc(l?.titulo || 'Lista a fazer')} ${propria ? '<span class="etiqueta">sua lista</span> ' : ''}${seloStatus(t.status, t.prazo_proximo)}
         <span class="mais"><a href="#/lista-fazer/${t.id}">${aberta(t) ? 'Executar' : 'Ver'} →</a></span></h2>
       ${l ? `<p class="dica" style="margin-bottom:12px">${texto(l.instrucoes.length > 220 ? `${l.instrucoes.slice(0, 220)}…` : l.instrucoes)}</p>` : ''}
       <div class="linha-info"><span>Prazo</span><b>${dataCurta(t.prazo)}</b></div>
-      <div class="progresso" style="margin-top:10px">${barra(t.feitos, t.total)}</div></div>`;
+      <div class="progresso" style="margin-top:10px">${barra(t.feitos, t.total)}</div>
+      ${propria && t.feitos === 0 ? `<div class="linha-acoes" style="margin-top:12px"><button class="btn perigo peq" data-acao="desfazer" data-tarefa="${t.id}">Desfazer lista</button></div>` : ''}</div>`;
   };
   const abertas = tarefas.filter(aberta).sort((a, b) => a.prazo.localeCompare(b.prazo));
   const concluidas = tarefas.filter((t) => !aberta(t));
-  el.innerHTML = `${abertas.map(cartao).join('') || '<div class="cartao"><p class="dica">Nenhuma lista pendente. Tudo em dia!</p></div>'}
+  const nova = ctx.perfil.unidade
+    ? `<div class="cartao"><h2>Minha própria lista</h2>
+        <p class="dica" style="margin-bottom:14px">Quer organizar um trabalho seu? Suba uma lista de contatos e explique o que quer fazer. Ela fica só com você (não é dividida com as colegas) e aparece aqui para você ir marcando.</p>
+        ${formulario(hoje, TEXTOS_PROPRIA)}<div id="upload"></div><div id="previa"></div></div>`
+    : '<div class="cartao"><p class="aviso-lista">Seu cadastro está sem unidade, então não dá para subir uma lista. Fale com o coordenador.</p></div>';
+  el.innerHTML = `${abertas.map(cartao).join('') || `<div class="cartao"><p class="dica">${tarefas.length ? 'Nenhuma lista pendente. Tudo em dia!' : 'Você ainda não tem nenhuma lista a fazer. Quando o coordenador subir uma, ela aparece aqui com as instruções — e você também pode subir a sua abaixo.'}</p></div>`}
+    ${nova}
     ${concluidas.length ? `<h2 style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;margin:8px 0">Concluídas</h2>${concluidas.map(cartao).join('')}` : ''}`;
+
+  el.onclick = async (e) => {
+    const b = e.target.closest('button[data-acao="desfazer"]');
+    if (!b) return;
+    const t = tarefas.find((x) => x.id === b.dataset.tarefa);
+    const l = listas.find((x) => x.importacao_id === t?.importacao_id);
+    if (!t || !(await confirmarDesfazer({ arquivo_nome: l?.titulo, linhas: t.total }))) return;
+    try { await dados.desfazerListaPropria(t.importacao_id); toast('Lista desfeita.'); ctx.atualizarSino(); painelConsultora(el, ctx); } catch (err) { erro(err); }
+  };
+  if (ctx.perfil.unidade) areaUpload(el.querySelector('#upload'), 'Importar minha lista de contatos', (arquivo) => previa(el, ctx, arquivo, { propria: true }));
 }
 
 // ── Coordenador ──
@@ -134,7 +171,8 @@ async function painelAdmin(el, ctx) {
     const ts = tarefas.filter((t) => t.importacao_id === imp.id);
     const feitos = ts.reduce((s, t) => s + t.feitos, 0);
     const total = ts.reduce((s, t) => s + t.total, 0);
-    return `<div class="cartao" data-imp="${imp.id}"><h2>${esc(l?.titulo || imp.arquivo_nome || 'Lista a fazer')} <span class="mais">prazo ${dataCurta(l?.prazo || imp.referencia_fim)}</span></h2>
+    const propria = l?.criado_por && l.criado_por !== ctx.perfil.id;
+    return `<div class="cartao" data-imp="${imp.id}"><h2>${esc(l?.titulo || imp.arquivo_nome || 'Lista a fazer')}${propria ? ` <span class="etiqueta">lista própria de ${esc(ctx.nomeDe(l.criado_por))}</span>` : ''} <span class="mais">prazo ${dataCurta(l?.prazo || imp.referencia_fim)}</span></h2>
       ${l ? `<p class="dica" style="margin-bottom:12px">${texto(l.instrucoes)}</p>` : ''}
       ${ts.map((t) => `<a href="#/lista-fazer/${t.id}" style="text-decoration:none;color:inherit">${linhaProgresso(ctx.nomeDe(t.responsavel_id), t.feitos, t.total, t.status)}</a>`).join('')}
       <p class="dica" style="margin-top:8px">Equipe: ${feitos}/${total} contatos feitos${ts.some((t) => t.status === 'atrasada') ? ' · há tarefas atrasadas' : ''}. Clique numa consultora para ver os contatos e mover algum.</p>
@@ -148,17 +186,7 @@ async function painelAdmin(el, ctx) {
   el.innerHTML = `
     <div class="cartao"><h2>Nova lista — ${esc(ctx.nomeUnidade(unidade))}</h2>
       ${daUnidade.length ? `<p class="dica" style="margin-bottom:14px">Suba uma lista de contatos e explique o que as consultoras devem fazer. Ela é dividida igualmente entre ${daUnidade.map((c) => esc(c.nome)).join(', ')}.</p>
-      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px">
-        <label class="campo">Título da lista<input data-f="titulo" maxlength="80" placeholder="Ex.: Reativar ex-alunos de outubro"></label>
-        <label class="campo">O que é esta lista e o que as consultoras precisam fazer
-          <textarea data-f="instrucoes" rows="5" placeholder="Ex.: Lista de alunos que cancelaram nos últimos 3 meses. Entrar em contato, perguntar o motivo e oferecer uma aula gratuita para voltar. Anotar na observação o que a pessoa respondeu."></textarea></label>
-        <div style="display:flex;gap:14px;flex-wrap:wrap">
-          <label class="campo" style="min-width:180px">Prazo<input type="date" data-f="prazo" min="${hoje}" value="${somarDias(hoje, 3)}"></label>
-          <label class="campo" style="flex:1;min-width:260px">Mensagem de WhatsApp (opcional)
-            <textarea data-f="mensagem" rows="2" placeholder="Oi {nome}, tudo bem? Aqui é da Positiva…"></textarea></label>
-        </div>
-        <p class="dica" style="margin-top:-6px">Na mensagem, {nome} vira o primeiro nome do contato. Sem mensagem, o botão abre o WhatsApp com a conversa em branco.</p>
-      </div>
+      ${formulario(hoje, TEXTOS_ADMIN)}
       <div id="upload"></div><div id="previa"></div>`
       : '<p class="aviso-lista">Cadastre as consultoras desta unidade (com ordem do rodízio) em Configurações antes de importar.</p>'}
     </div>
@@ -193,29 +221,36 @@ async function painelAdmin(el, ctx) {
 
 const lerCampos = (el) => Object.fromEntries([...el.querySelectorAll('[data-f]')].map((c) => [c.dataset.f, c.value.trim()]));
 
-async function previa(el, ctx, arquivo, { unidade, daUnidade, offset }) {
+async function previa(el, ctx, arquivo, { unidade, daUnidade, offset, propria = false }) {
   const alvo = el.querySelector('#previa');
   alvo.innerHTML = '<p class="dica" style="margin-top:12px">Lendo planilha…</p>';
   const { registros, avisos, erro: problema } = await lerPlanilha(arquivo, 'lista_fazer');
   if (problema) { alvo.innerHTML = `<p class="aviso-lista" style="margin-top:12px">${esc(problema)}</p>`; return; }
 
-  const contagem = dividirLista(registros.length, daUnidade.length, offset);
+  const contagem = propria ? [registros.length] : dividirLista(registros.length, daUnidade.length, offset);
   const semCelular = registros.filter((r) => !r.celular).length;
   alvo.innerHTML = `<div style="margin-top:16px">
-    <h2 style="font-size:14px;margin-bottom:10px">Prévia da divisão — ${registros.length} contatos</h2>
-    ${daUnidade.map((c, k) => `<div class="linha-info"><b>${esc(c.nome)}</b><span>${contagem[k]} contatos</span></div>`).join('')}
+    <h2 style="font-size:14px;margin-bottom:10px">${propria ? `Prévia — ${registros.length} contatos, todos para você` : `Prévia da divisão — ${registros.length} contatos`}</h2>
+    ${propria ? '' : daUnidade.map((c, k) => `<div class="linha-info"><b>${esc(c.nome)}</b><span>${contagem[k]} contatos</span></div>`).join('')}
     ${semCelular ? `<p class="dica">${semCelular} contato(s) sem celular válido: a consultora vê o nome, mas sem o botão de WhatsApp.</p>` : ''}
     ${listaAvisos(avisos)}
-    <div class="linha-acoes" style="margin-top:16px"><button class="btn verde" id="confirmar">Confirmar e distribuir</button><button class="btn sec" id="cancelar">Cancelar</button></div></div>`;
+    <div class="linha-acoes" style="margin-top:16px"><button class="btn verde" id="confirmar">${propria ? 'Confirmar e criar minha lista' : 'Confirmar e distribuir'}</button><button class="btn sec" id="cancelar">Cancelar</button></div></div>`;
   alvo.querySelector('#cancelar').onclick = () => { alvo.innerHTML = ''; };
   alvo.querySelector('#confirmar').onclick = async (e) => {
     const c = lerCampos(el);
     if (!c.titulo) return toast('Dê um título para a lista.', 'erro');
-    if (!c.instrucoes) return toast('Explique o que é a lista e o que as consultoras precisam fazer.', 'erro');
+    if (!c.instrucoes) return toast(propria ? 'Escreva o que você precisa fazer com esta lista.' : 'Explique o que é a lista e o que as consultoras precisam fazer.', 'erro');
     if (!c.prazo || c.prazo < ctx.hoje()) return toast('Escolha um prazo a partir de hoje.', 'erro');
     e.target.disabled = true;
     try {
       const caminho = await dados.enviarArquivo('lista_fazer', ctx.perfil.id, arquivo);
+      if (propria) {
+        await dados.importarListaFazerPropria(c.titulo, c.instrucoes, c.prazo, c.mensagem, caminho, arquivo.name, registros);
+        toast('Lista criada. Ela já aparece acima para você marcar.');
+        ctx.atualizarSino();
+        painelConsultora(el, ctx);
+        return;
+      }
       await dados.importarListaFazer(unidade, c.titulo, c.instrucoes, c.prazo, c.mensagem, caminho, arquivo.name, registros);
       toast(`Lista dividida entre ${contagem.filter((n) => n > 0).length} consultoras.`);
       ctx.atualizarSino();
