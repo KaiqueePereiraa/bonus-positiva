@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261117172941';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117172941';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117172941';
+import * as dados from '../dados.js?v=20261117183018';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117183018';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117183018';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -238,7 +238,7 @@ const ROTULOS_RESUMO = {
   prospects_lidos: 'Oportunidades lidas', ja_viraram_cliente: 'Já viraram cliente', ja_aluno_mesmo_nome: 'Fora: já é aluno ativo (mesmo nome)',
   oportunidades_repetidas: 'Fora: oportunidade repetida (mesmo celular)', aluno_mesmo_celular: 'Marcados: celular de aluno ativo', sem_nome: 'Sem nome', mes: 'Mês',
   aguardando_resultado: 'Contatos aguardando resultado', pagou: 'Pagaram', nao_pagou: 'Não pagaram (30 dias)', voltou: 'Voltaram a treinar',
-  nao_voltou: 'Não voltaram (21 dias)', matriculou: 'Matricularam', nao_matriculou: 'Não matricularam (35 dias)', valor_recuperado: 'R$ recuperado',
+  nao_voltou: 'Não voltaram em 10 dias', matriculou: 'Matricularam', nao_matriculou: 'Não matricularam (35 dias)', valor_recuperado: 'R$ recuperado',
   a_gravar: 'Resultados novos', gravados: 'Gravados', renovou: 'Renovaram', nao_renovou: 'Não renovaram (35 dias)',
   contratos_na_janela: 'Contratos vencendo nas duas semanas', ja_renovaram: 'Fora: já renovaram', especiais: 'Fora: contratos especiais',
   registrados: 'Fora: registrados', em_cobranca: 'Fora: na inadimplência', fora_da_janela: 'Vencem nesta semana (já tiveram contato)',

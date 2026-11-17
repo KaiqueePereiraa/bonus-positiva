@@ -1,12 +1,12 @@
 // Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que importa (gestão por exceção), em frases
 // simples, cada uma com "o que fazer". Os números vêm prontos do banco (painel_gestor), sem dados de alunos.
-import * as dados from '../dados.js?v=20261117172941';
-import { esc, vazio, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117172941';
-import { somarDias, semanaDe } from '../regras.js?v=20261117172941';
+import * as dados from '../dados.js?v=20261117183018';
+import { esc, vazio, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117183018';
+import { somarDias, semanaDe } from '../regras.js?v=20261117183018';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', vendas_dia: 'Vendas do dia', relacionamento: 'Relacionamento' };
-import { sinais, atencao, quadrante, reais, mediana } from '../painel-regras.js?v=20261117172941';
+import { sinais, atencao, quadrante, reais, mediana } from '../painel-regras.js?v=20261117183018';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
