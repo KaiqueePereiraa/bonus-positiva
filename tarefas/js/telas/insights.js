@@ -1,8 +1,8 @@
 // Insights da Operação — frases geradas por regras sobre os dados reais (sem IA, sem inventar).
-import * as dados from '../dados.js?v=20261116224731';
-import { gerarInsights } from '../analises.js?v=20261116224731';
-import { somarDias } from '../regras.js?v=20261116224731';
-import { esc } from '../ui.js?v=20261116224731';
+import * as dados from '../dados.js?v=20261116225256';
+import { gerarInsights } from '../analises.js?v=20261116225256';
+import { somarDias } from '../regras.js?v=20261116225256';
+import { esc } from '../ui.js?v=20261116225256';
 
 const GRUPOS = { comercial: 'Comercial', produtividade: 'Produtividade', prazos: 'Prazos' };
 

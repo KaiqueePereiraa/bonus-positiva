@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261116224731';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116224731';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116224731';
+import * as dados from '../dados.js?v=20261116225256';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116225256';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116225256';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -287,7 +287,6 @@ async function evo(el, ctx) {
       <div class="linha-acoes" style="margin-top:10px">
         <button class="btn sec peq" data-acao="simular">Simular agora</button>
         <button class="btn peq" data-acao="rodar">Rodar agora (envia a lista)</button>
-        ${r.id === 'risco' ? '<button class="btn sec peq" data-acao="trocar" title="Troca a lista desta semana (subida à mão) pela automática, levando o que já foi feito">Trocar a lista desta semana pela automática</button>' : ''}
         <button class="btn ${cfg[`evo_auto_${r.id}`] === true ? 'perigo' : 'verde'} peq" data-acao="alternar">${cfg[`evo_auto_${r.id}`] === true ? 'Desligar automático' : 'Ligar automático'}</button>
       </div><div class="res-rotina"></div></div>`).join('')}
 
