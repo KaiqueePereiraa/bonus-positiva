@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261116225256';
+import { sb } from '../../shared/sessao.js?v=20261117102508';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -159,6 +159,9 @@ export async function evoAcao(acao, extra = {}) {
   return data;
 }
 export const testarEvo = () => evoAcao('ping');
+// Painel do gestor e Retorno do mês (números agregados, só admin)
+export const painelGestor = () => rpc('painel_gestor', {});
+export const retornoMes = (ano, mes) => rpc('retorno_mes', { p_ano: ano, p_mes: mes });
 export const descobrirFiliaisEvo = () => evoAcao('filiais');
 // simular = true (padrão) só conta; false roda de verdade e envia a lista
 export const rodarEvo = (tipo, unidade, simular = true, substituir = false) => evoAcao('rodar', { tipo, unidade, simular, ...(substituir ? { substituir: true } : {}) });

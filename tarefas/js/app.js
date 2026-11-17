@@ -1,9 +1,9 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261116225256';
-import * as dados from './dados.js?v=20261116225256';
-import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261116225256';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261116225256';
-import { esc, erro, carregando } from './ui.js?v=20261116225256';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117102508';
+import * as dados from './dados.js?v=20261117102508';
+import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261117102508';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117102508';
+import { esc, erro, carregando } from './ui.js?v=20261117102508';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -21,6 +21,7 @@ const ICONES = {
 
 // rota → [título, módulo, ícone, só admin?]
 const ROTAS = {
+  painel: ['Painel do gestor', 'painel', 'ind', true],
   'visao-geral': ['Visão geral', 'visao-geral', 'visao', false],
   'minhas-tarefas': ['Minhas tarefas', 'minhas-tarefas', 'tarefas', false],
   inadimplencia: ['Inadimplência', 'inadimplencia', 'inad', false],
@@ -32,6 +33,7 @@ const ROTAS = {
   escala: ['Escala', 'escala', 'escala', true],
   indicadores: ['Indicadores', 'indicadores', 'ind', true],
   insights: ['Insights da Operação', 'insights', 'ins', true],
+  retorno: ['Retorno do mês', 'retorno', 'rel', true],
   relatorios: ['Relatórios', 'relatorios', 'rel', true],
   configuracoes: ['Configurações', 'configuracoes', 'conf', true],
 };
@@ -80,7 +82,7 @@ async function carregarBase() {
 
 function montarMenu() {
   const itens = Object.entries(ROTAS).filter(([rota, r]) => (!r[3] || ehAdmin) && !(ehAdmin && rota === 'minhas-tarefas'));
-  const corte = itens.findIndex(([, r]) => r[3]);
+  const corte = itens.findIndex(([rota, r]) => r[3] && rota !== 'painel');
   $('menu').innerHTML = itens.map(([rota, [titulo, , ic]], i) =>
     `${i === corte ? '<li class="sep" role="separator"></li>' : ''}<li><a href="#/${rota}" data-rota="${rota}">${icone(ic)}<span>${esc(titulo)}</span></a></li>`).join('');
   $('nome-usuario').textContent = perfil.nome || perfil.email;
@@ -107,7 +109,7 @@ function montarMenu() {
 let renderAtual = 0;
 async function navegar() {
   const [rota = '', ...params] = location.hash.replace(/^#\/?/, '').split('/');
-  const padrao = ehAdmin ? 'visao-geral' : 'minhas-tarefas';
+  const padrao = ehAdmin ? 'painel' : 'minhas-tarefas';
   const def = ROTAS[rota];
   if (!def || (def[3] && !ehAdmin)) { location.replace(`#/${padrao}`); return; }
   const [titulo, modulo] = def;
@@ -118,7 +120,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261116225256`);
+    const tela = await import(`./telas/${modulo}.js?v=20261117102508`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
