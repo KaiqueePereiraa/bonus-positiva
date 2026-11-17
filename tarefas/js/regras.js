@@ -105,9 +105,9 @@ export function mesReferenciaSugerido(hoje) {
 }
 
 // Prazo do "Por que não fechou?": dia 7 do mês seguinte à referência (fixo).
-export function prazoNaoFechou({ ano, mes }) {
+export function prazoNaoFechou({ ano, mes }, feriados = new Set()) {
   const [a, m] = mes === 12 ? [ano + 1, 1] : [ano, mes + 1];
-  return `${a}-${String(m).padStart(2, '0')}-07`;
+  return diaUtilAteh(`${a}-${String(m).padStart(2, '0')}-07`, feriados);   // dia 7 no fim de semana → dia útil anterior
 }
 
 // ── Status ───────────────────────────────────────────────────────────────
@@ -201,7 +201,7 @@ export function dividirLista(total, n, offset = 0) {
 }
 
 // ── Risco de abandono: alunos registrados como Gympass/convênios ou benefício colaborador ──
-export const CLASSES_RISCO = { gympass_convenios: 'Gympass / convênios', beneficio_colaborador: 'Benefício colaborador', contrato_vip: 'Contrato VIP' };
+export const CLASSES_RISCO = { gympass_convenios: 'Gympass / convênios', beneficio_colaborador: 'Benefício colaborador', contrato_vip: 'Contrato VIP', nao_quer_contato: 'Não quer mais contato' };
 
 // Separa de uma lista importada os alunos já registrados (mesmo ID do EVO na unidade).
 // Devolve { mantidos, retirados: [{ ...registro, classe }] }; a ordem original é preservada.

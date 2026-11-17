@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261117102508';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117102508';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117102508';
+import * as dados from '../dados.js?v=20261117103025';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117103025';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117103025';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -227,7 +227,7 @@ const ROTINAS_EVO = [
 const ROTULOS_RESUMO = {
   debitos_lidos: 'Débitos lidos na EVO', da_unidade: 'Da unidade', clientes_em_atraso: 'Clientes em atraso', inativos_ignorados: 'Inativos ignorados',
   sem_celular: 'Sem celular', na_lista: 'Na lista', clientes_ativos: 'Clientes ativos', vieram_ultimos_15_dias: 'Vieram nos últimos 15 dias',
-  sem_vir: 'Sem vir há mais de 15 dias', excluidos_por_registro: 'Fora: registrados (Gympass/benefício/VIP)', excluidos_por_categoria: 'Fora: contrato com categoria na EVO', excluidos_por_contrato: 'Fora: contrato excluído',
+  sem_vir: 'Sem vir há mais de 15 dias', excluidos_por_registro: 'Fora: registrados (Gympass/benefício/VIP/não quer contato)', excluidos_em_cobranca: 'Fora: já na lista de inadimplência', excluidos_por_categoria: 'Fora: contrato com categoria na EVO', excluidos_por_contrato: 'Fora: contrato excluído',
   excluidos_gympass_totalpass: 'Fora: Gympass/Totalpass na ficha', suspensos: 'Fora: contrato suspenso/trancado', cadastro_recente: 'Fora: cadastro recente', sem_ultimo_acesso: 'Sem último acesso na EVO',
   prospects_lidos: 'Oportunidades lidas', ja_viraram_cliente: 'Já viraram cliente', ja_aluno_mesmo_nome: 'Fora: já é aluno ativo (mesmo nome)',
   oportunidades_repetidas: 'Fora: oportunidade repetida (mesmo celular)', aluno_mesmo_celular: 'Marcados: celular de aluno ativo', sem_nome: 'Sem nome', mes: 'Mês',
