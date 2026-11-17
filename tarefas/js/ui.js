@@ -41,8 +41,8 @@ export function barra(feitos, total, { rotulo = true } = {}) {
     <div class="barra-fill" style="width:${p}%"></div></div>${rotulo ? `<span class="barra-num">${feitos}/${total} · ${p}%</span>` : ''}`;
 }
 
-export const NOMES_CONTROLE = { inadimplencia: 'Inadimplência', risco: 'Risco de abandono', nao_fechou: 'Por que não fechou?', lista_fazer: 'Lista a fazer' };
-export const ROTA_CONTROLE = { inadimplencia: 'inadimplencia', risco: 'risco', nao_fechou: 'nao-fechou', lista_fazer: 'lista-fazer' };
+export const NOMES_CONTROLE = { inadimplencia: 'Inadimplência', risco: 'Risco de abandono', nao_fechou: 'Por que não fechou?', lista_fazer: 'Lista a fazer', renovacao_vencer: 'Renovação: a vencer', renovacao_venceu: 'Renovação: venceu e não renovou' };
+export const ROTA_CONTROLE = { inadimplencia: 'inadimplencia', risco: 'risco', nao_fechou: 'nao-fechou', lista_fazer: 'lista-fazer', renovacao_vencer: 'renovacao', renovacao_venceu: 'renovacao' };
 
 // ── Avisos rápidos ──
 let toastTimer;

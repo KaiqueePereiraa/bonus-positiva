@@ -1,9 +1,9 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117103317';
-import * as dados from './dados.js?v=20261117103317';
-import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261117103317';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117103317';
-import { esc, erro, carregando, modal, toast } from './ui.js?v=20261117103317';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117104218';
+import * as dados from './dados.js?v=20261117104218';
+import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261117104218';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117104218';
+import { esc, erro, carregando, modal, toast } from './ui.js?v=20261117104218';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -28,6 +28,7 @@ const ROTAS = {
   inadimplencia: ['Inadimplência', 'inadimplencia', 'inad', false],
   risco: ['Risco de abandono', 'risco', 'risco', false],
   'nao-fechou': ['Por que não fechou?', 'nao-fechou', 'nf', false],
+  renovacao: ['Renovação', 'renovacao', 'escala', false],
   'lista-fazer': ['Lista a fazer', 'lista-fazer', 'lista', false],
   // EM PREPARAÇÃO (pedido do usuário, 16/11/2026): só o admin vê a Escala até ele dizer que está 100% pronta.
   // Para abrir para as consultoras: trocar `true` por `false` aqui e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
@@ -122,7 +123,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261117103317`);
+    const tela = await import(`./telas/${modulo}.js?v=20261117104218`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

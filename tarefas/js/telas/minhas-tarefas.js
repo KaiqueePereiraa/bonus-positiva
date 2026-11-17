@@ -1,7 +1,7 @@
 // Quadro da consultora: Para fazer · Em andamento · Concluídas · Atrasadas.
-import * as dados from '../dados.js?v=20261117103317';
-import { colunaQuadro, somarDias } from '../regras.js?v=20261117103317';
-import { esc, dataCurta, diaSemana, seloStatus, barra, STATUS, NOMES_CONTROLE, ROTA_CONTROLE, nomeMesCap } from '../ui.js?v=20261117103317';
+import * as dados from '../dados.js?v=20261117104218';
+import { colunaQuadro, somarDias } from '../regras.js?v=20261117104218';
+import { esc, dataCurta, diaSemana, seloStatus, barra, STATUS, NOMES_CONTROLE, ROTA_CONTROLE, nomeMesCap } from '../ui.js?v=20261117104218';
 
 const COLUNAS = [['para_fazer', 'Para fazer'], ['em_andamento', 'Em andamento'], ['concluidas', 'Concluídas'], ['atrasadas', 'Atrasadas']];
 
@@ -9,7 +9,7 @@ const titulo = (t, listas = []) => (t.controle_id === 'lista_fazer'
   ? listas.find((l) => l.importacao_id === t.importacao_id)?.titulo || NOMES_CONTROLE.lista_fazer
   : t.controle_id === 'nao_fechou'
   ? `${NOMES_CONTROLE.nao_fechou} — ${nomeMesCap(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7))}`
-  : t.controle_id === 'risco' ? `${NOMES_CONTROLE.risco} — semana ${dataCurta(t.periodo_inicio)}` : `${NOMES_CONTROLE.inadimplencia} — ${dataCurta(t.prazo)}`);
+  : t.controle_id === 'risco' || t.controle_id.startsWith('renovacao_') ? `${NOMES_CONTROLE[t.controle_id]} — semana ${dataCurta(t.periodo_inicio)}` : `${NOMES_CONTROLE.inadimplencia} — ${dataCurta(t.prazo)}`);
 
 export async function render(el, ctx) {
   const hoje = ctx.hoje();

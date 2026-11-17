@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261117103317';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117103317';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117103317';
+import * as dados from '../dados.js?v=20261117104218';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117104218';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117104218';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -221,6 +221,8 @@ const ROTINAS_EVO = [
     texto: 'Busca os clientes ativos com mais de 15 dias sem vir, tira quem está registrado (Gympass, benefício colaborador, contrato VIP) e os contratos listados abaixo, e divide entre as consultoras da unidade.' },
   { id: 'nao_fechou', titulo: 'Por que não fechou?', quando: 'Todo dia 1º do mês',
     texto: 'Busca as oportunidades (cadastros) do mês anterior que não viraram cliente, tira quem já é aluno ativo (mesmo nome) e as oportunidades repetidas (mesmo celular), marca quem tem o celular de um aluno ativo e sobe a lista do mês para as consultoras justificarem.' },
+  { id: 'renovacao', titulo: 'Renovação de contratos', quando: 'Toda segunda-feira',
+    texto: 'Monta duas listas: "a vencer" (contratos que vencem na próxima semana — na primeira vez, também nesta) e "venceu e não renovou" (venceram na semana passada). Tira quem já renovou, contratos com categoria (VIP, Colaborador, Wellhub…), registrados e quem está na inadimplência, e divide entre as consultoras.' },
   { id: 'resultados', titulo: 'Resultado dos contatos', quando: 'Todo dia, de madrugada',
     texto: 'Toda madrugada confere na EVO: quem ainda está esperando contato e JÁ pagou, voltou a treinar ou se matriculou sai da lista sozinho (ninguém manda mensagem à toa). E para quem já recebeu contato, registra se deu certo — aparece em Indicadores, no desempenho e no retorno do mês. Não manda mensagem para ninguém.' },
 ];
@@ -233,7 +235,10 @@ const ROTULOS_RESUMO = {
   oportunidades_repetidas: 'Fora: oportunidade repetida (mesmo celular)', aluno_mesmo_celular: 'Marcados: celular de aluno ativo', sem_nome: 'Sem nome', mes: 'Mês',
   aguardando_resultado: 'Contatos aguardando resultado', pagou: 'Pagaram', nao_pagou: 'Não pagaram (30 dias)', voltou: 'Voltaram a treinar',
   nao_voltou: 'Não voltaram (21 dias)', matriculou: 'Matricularam', nao_matriculou: 'Não matricularam (35 dias)', valor_recuperado: 'R$ recuperado',
-  a_gravar: 'Resultados novos', gravados: 'Gravados', tirados_da_lista: 'Saíram das listas (já resolveram sozinhos)',
+  a_gravar: 'Resultados novos', gravados: 'Gravados', renovou: 'Renovaram', nao_renovou: 'Não renovaram (35 dias)',
+  contratos_na_janela: 'Contratos vencendo nas duas semanas', ja_renovaram: 'Fora: já renovaram', especiais: 'Fora: contratos especiais',
+  registrados: 'Fora: registrados', em_cobranca: 'Fora: na inadimplência', fora_da_janela: 'Vencem nesta semana (já tiveram contato)',
+  a_vencer: 'Lista "a vencer"', venceu_sem_renovar: 'Lista "venceu e não renovou"', excluidos_em_cobranca: 'Fora: já na lista de inadimplência', tirados_da_lista: 'Saíram das listas (já resolveram sozinhos)',
   pagou_sem_contato: 'Pagaram antes do contato', voltou_sem_contato: 'Voltaram antes do contato', matriculou_sem_contato: 'Matricularam antes do contato',
 };
 const SELO_EXEC = { ok: 'verde', ignorado: 'cinza', erro: 'vermelho' };

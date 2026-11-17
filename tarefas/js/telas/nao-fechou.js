@@ -1,14 +1,14 @@
 // Por que não fechou? — admin importa o mês; consultora justifica os seus e pode assumir os sem responsável.
-import * as dados from '../dados.js?v=20261117103317';
-import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261117103317';
-import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261117103317';
-import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261117103317';
+import * as dados from '../dados.js?v=20261117104218';
+import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261117104218';
+import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261117104218';
+import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261117104218';
 
 // Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
 async function confirmarExclusao(nome) {
   return confirmar('Excluir interessado', `Excluir "${nome}" desta lista? Use para cadastro duplicado. A exclusão fica registrada, mas não dá para desfazer por aqui.`, 'Excluir');
 }
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261117103317';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261117104218';
 
 const mesDe = (t) => nomeMesCap(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
 
@@ -20,7 +20,7 @@ export async function render(el, ctx, [tarefaId]) {
 // ── Formulário de motivos (consultora e admin) ──
 function linhaMotivo(i, ctx, editavel) {
   const d = i.dados || {};
-  const info = [d.data_cadastro && `cadastro ${dataLonga(d.data_cadastro)}`, d.interesse, d.como_conheceu && `via ${d.como_conheceu}`, d.idade != null && `${d.idade} anos`].filter(Boolean).join(' · ');
+  const info = [d.contrato, d.vencimento && `venceu/vence ${dataLonga(d.vencimento)}`, d.data_cadastro && `cadastro ${dataLonga(d.data_cadastro)}`, d.interesse, d.como_conheceu && `via ${d.como_conheceu}`, d.idade != null && `${d.idade} anos`].filter(Boolean).join(' · ');
   const motivo = ctx.motivos.find((m) => m.id === i.motivo_id);
   const opcoes = ctx.motivos.filter((m) => (m.controle_id || 'nao_fechou') === i.controle_id && (m.ativo || m.id === i.motivo_id));
   const alerta = d.aluno_mesmo_celular
@@ -42,7 +42,7 @@ function linhaMotivo(i, ctx, editavel) {
 }
 
 // Salvar atualiza só a linha e o cabeçalho (a página não pula para o topo).
-async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }) {
+export async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }) {
   if (!itens.length) { el.innerHTML = vazio('Nenhum interessado aqui.'); return; }
   el.innerHTML = `<div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Interessado</th><th>Motivo</th><th>Observação</th><th></th></tr></thead>
     <tbody>${itens.map((i) => linhaMotivo(i, ctx, editavel)).join('')}</tbody></table></div>`;
