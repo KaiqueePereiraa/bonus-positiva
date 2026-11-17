@@ -1,8 +1,8 @@
 // Risco de abandono — admin importa e acompanha; consultora marca as mensagens da semana.
-import * as dados from '../dados.js?v=20261116221616';
-import { dividir, semanaDe, prazoSemanal, separarExcecoes, CLASSES_RISCO } from '../regras.js?v=20261116221616';
-import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261116221616';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261116221616';
+import * as dados from '../dados.js?v=20261116224731';
+import { dividir, semanaDe, prazoSemanal, separarExcecoes, CLASSES_RISCO } from '../regras.js?v=20261116224731';
+import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261116224731';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261116224731';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
@@ -51,7 +51,7 @@ async function painelAdmin(el, ctx) {
       ${daSemana ? `${tarefasSemana.map((t) => `<a href="#/risco/${t.id}" style="text-decoration:none;color:inherit">${linhaProgresso(ctx.nomeDe(t.responsavel_id), t.feitos, t.total, t.status)}</a>`).join('')}
         <p class="dica" style="margin-top:8px">Equipe: ${feitos}/${total} mensagens. Clique numa consultora para ver a lista e mover alunos.</p>
         <div class="linha-acoes" style="margin-top:14px">${daSemana.arquivo_path ? '<button class="btn sec peq" id="baixar">Baixar planilha original</button>' : ''}${feitos === 0 ? '<button class="btn perigo peq" id="desfazer">Desfazer importação</button>' : ''}</div>`
-        : `<p class="dica" style="margin-bottom:14px">A lista desta semana da ${esc(ctx.nomeUnidade(unidade))} ainda não foi importada. Ela será dividida entre ${ctx.consultorasDa(unidade).map((c) => esc(c.nome)).join(', ') || 'as consultoras da unidade'}. Prazo: <b>${dataCurta(prazoSemanal(hoje))}</b>.</p><div id="upload"></div><div id="previa"></div>`}
+        : `<p class="dica" style="margin-bottom:14px">A lista desta semana da ${esc(ctx.nomeUnidade(unidade))} ainda não chegou. Ela entra sozinha da EVO toda segunda de madrugada e é dividida entre ${ctx.consultorasDa(unidade).map((c) => esc(c.nome)).join(', ') || 'as consultoras da unidade'}. Prazo: <b>${dataCurta(prazoSemanal(hoje))}</b>.</p>${'<p class="dica">As listas agora chegam sozinhas da EVO — não há mais envio de planilha. A automação fica em <b>Configurações → EVO</b>.</p>'}`}
     </div>
     <div class="cartao"><h2>Histórico</h2>${tarefas.length ? tabelaHistorico(tarefas.filter((t) => t.importacao_id !== daSemana?.id), ctx) : vazio('Nenhuma semana importada ainda.')}</div>
     <div class="cartao" id="excecoes"><h2>Fora da lista de risco (${excecoes.length})</h2>
@@ -78,7 +78,8 @@ async function painelAdmin(el, ctx) {
     });
     return;
   }
-  areaUpload(el.querySelector('#upload'), `Importar lista de risco de abandono — ${ctx.nomeUnidade(unidade)}`, (arq) => previa(el, ctx, arq, hoje, unidade));
+  // listas só automáticas (sem envio de planilha): a prévia antiga fica guardada só para consulta do código
+  void previa; void areaUpload;
 }
 
 async function previa(el, ctx, arquivo, hoje, unidade) {

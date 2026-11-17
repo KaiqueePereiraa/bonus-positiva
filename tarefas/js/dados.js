@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261116221616';
+import { sb } from '../../shared/sessao.js?v=20261116224731';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -161,7 +161,7 @@ export async function evoAcao(acao, extra = {}) {
 export const testarEvo = () => evoAcao('ping');
 export const descobrirFiliaisEvo = () => evoAcao('filiais');
 // simular = true (padrão) só conta; false roda de verdade e envia a lista
-export const rodarEvo = (tipo, unidade, simular = true) => evoAcao('rodar', { tipo, unidade, simular });
+export const rodarEvo = (tipo, unidade, simular = true, substituir = false) => evoAcao('rodar', { tipo, unidade, simular, ...(substituir ? { substituir: true } : {}) });
 export const evoUnidades = async () => ok(await sb.from('evo_unidades').select('*'));
 export const evoExecucoes = async (limite = 25) =>
   ok(await sb.from('evo_execucoes').select('*').order('criado_em', { ascending: false }).limit(limite));

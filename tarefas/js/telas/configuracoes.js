@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261116221616';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116221616';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116221616';
+import * as dados from '../dados.js?v=20261116224731';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116224731';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116224731';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -287,6 +287,7 @@ async function evo(el, ctx) {
       <div class="linha-acoes" style="margin-top:10px">
         <button class="btn sec peq" data-acao="simular">Simular agora</button>
         <button class="btn peq" data-acao="rodar">Rodar agora (envia a lista)</button>
+        ${r.id === 'risco' ? '<button class="btn sec peq" data-acao="trocar" title="Troca a lista desta semana (subida à mão) pela automática, levando o que já foi feito">Trocar a lista desta semana pela automática</button>' : ''}
         <button class="btn ${cfg[`evo_auto_${r.id}`] === true ? 'perigo' : 'verde'} peq" data-acao="alternar">${cfg[`evo_auto_${r.id}`] === true ? 'Desligar automático' : 'Ligar automático'}</button>
       </div><div class="res-rotina"></div></div>`).join('')}
 
@@ -348,13 +349,15 @@ async function evo(el, ctx) {
       try { await dados.salvarConfig(`evo_auto_${id}`, ligar); toast(ligar ? 'Rotina ligada.' : 'Rotina desligada.'); evo(el, ctx); } catch (err) { erro(err); }
       return;
     }
-    const real = b.dataset.acao === 'rodar';
-    if (real && !(await confirmar('Rodar agora', 'Isso envia a lista de verdade para as consultoras (e elas recebem o aviso no WhatsApp). Se já houver lista no período, a rotina não repete. Continuar?', 'Rodar agora'))) return;
+    const trocar = b.dataset.acao === 'trocar';
+    const real = b.dataset.acao === 'rodar' || trocar;
+    if (trocar && !(await confirmar('Trocar pela lista automática', 'A lista de risco desta semana de cada unidade será trocada pela automática da EVO. Quem já recebeu contato continua marcado (com observação e tipo do aluno) e fica com a consultora que fez o contato; quem já foi contatado e não veio na automática continua aparecendo como feito. As consultoras recebem o aviso da lista nova. Continuar?', 'Trocar'))) return;
+    if (!trocar && real && !(await confirmar('Rodar agora', 'Isso envia a lista de verdade para as consultoras (e elas recebem o aviso no WhatsApp). Se já houver lista no período, a rotina não repete. Continuar?', 'Rodar agora'))) return;
     saida.innerHTML = '<p class="dica" style="margin-top:10px">Consultando a EVO… pode levar um minuto.</p>';
     const alvos = ctx.unidades.map((u) => ({ unidade: u.id }));
     let html = '';
     for (const l of alvos) {
-      const r = await rodar(() => dados.rodarEvo(id, l.unidade, !real), b);
+      const r = await rodar(() => dados.rodarEvo(id, l.unidade, !real, trocar), b);
       html += r?.resultados?.length ? r.resultados.map((x) => blocoResultado(nomeUni(l.unidade), x)).join('')
         : `<div style="border-top:1px solid var(--line);padding:12px 0"><b>${esc(nomeUni(l.unidade))}</b> <span class="selo vermelho">erro</span><p style="margin:6px 0">${esc(r?.erro || 'Não foi possível consultar a EVO.')}</p></div>`;
       saida.innerHTML = `<div style="margin-top:10px">${html}</div>`;

@@ -1,7 +1,7 @@
 // Inadimplência — rodízio semanal; a responsável sobe o export do EVO e marca quem recebeu mensagem.
-import * as dados from '../dados.js?v=20261116221616';
-import { esc, dataCurta, diaSemana, seloStatus, toast, erro, vazio, modal } from '../ui.js?v=20261116221616';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, baixarArquivo } from './_comum.js?v=20261116221616';
+import * as dados from '../dados.js?v=20261116224731';
+import { esc, dataCurta, diaSemana, seloStatus, toast, erro, vazio, modal } from '../ui.js?v=20261116224731';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, baixarArquivo } from './_comum.js?v=20261116224731';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
@@ -97,12 +97,13 @@ async function detalhe(el, ctx, id) {
     });
   };
 
+  // listas só automáticas: a da EVO entra sozinha na véspera (quem já está há mais de 3 dias com saldo em aberto)
+  void mostrarUpload;
   if (!t.total) {
-    if (ehMinha) mostrarUpload('Enviar planilha de inadimplentes');
-    else corpo.innerHTML = vazio('A responsável ainda não enviou a planilha.');
+    corpo.innerHTML = vazio('A lista desta data entra sozinha da EVO no dia útil anterior, de madrugada. Não é preciso enviar planilha.');
     return;
   }
-  el.querySelector('#substituir')?.addEventListener('click', () => mostrarUpload('Enviar nova planilha (substitui a atual)'));
+  el.querySelector('#substituir')?.remove();
   corpo.innerHTML = '<h2>Inadimplentes</h2><div id="lista"></div>';
   await listaContatos(corpo.querySelector('#lista'), ctx, t);
 }
