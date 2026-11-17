@@ -1,10 +1,10 @@
 // Relatórios — escolhe período, controle e consultoras; mostra na tela e exporta PDF, Excel ou CSV.
-import * as dados from '../dados.js?v=20261116195651';
-import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261116195651';
-import { barras, imagem } from '../graficos.js?v=20261116195651';
-import { csv, excel, pdf } from '../exportar.js?v=20261116195651';
-import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261116195651';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto } from './_analise.js?v=20261116195651';
+import * as dados from '../dados.js?v=20261116221616';
+import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261116221616';
+import { barras, imagem } from '../graficos.js?v=20261116221616';
+import { csv, excel, pdf } from '../exportar.js?v=20261116221616';
+import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261116221616';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto } from './_analise.js?v=20261116221616';
 
 let filtros;
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
@@ -59,7 +59,7 @@ async function montar(el, ctx) {
     </tbody></table>
     ${motivos.length ? `<h2>Motivos de não fechamento</h2><div data-grafico="motivos"></div>
       <table><thead><tr><th>Motivo</th><th>Qtd.</th><th>%</th></tr></thead><tbody>${motivos.map((m) => `<tr><td>${esc(m.nome)}</td><td>${m.n}</td><td>${m.pct}%</td></tr>`).join('')}</tbody></table>` : ''}
-    ${insights.length ? `<h2>Principais insights</h2>${insights.map((i) => `<div class="insight">${esc(i.texto)}<small>Base: ${esc(i.base)}</small></div>`).join('')}` : ''}`;
+    ${insights.length ? `<h2>Principais insights</h2>${insights.map((i) => `<div class="insight">${esc(i.texto)}${i.acao ? `<br><b>O que fazer:</b> ${esc(i.acao)}` : ''}<small>Base: ${esc(i.base)}</small></div>`).join('')}` : ''}`;
 
   el.innerHTML = `<div class="cartao relatorio"><h2>${esc(titulo)} · ${periodoTexto(filtros, ctx)}</h2>${corpo.replace('<div data-grafico="motivos"></div>',
     `<div class="grafico" style="height:${Math.max(200, motivos.length * 32)}px;margin-bottom:12px"><canvas id="g-rel-motivos"></canvas></div>`)}</div>`;

@@ -1,8 +1,8 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261116195651';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261116195651';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261116195651';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261116195651';
+import * as dados from '../dados.js?v=20261116221616';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261116221616';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261116221616';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261116221616';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -92,8 +92,18 @@ export async function listaContatos(el, ctx, tarefa) {
       <input class="ctrl" data-campo="obs" placeholder="Observação (opcional)" value="${esc(i.observacao || '')}" style="width:100%;margin-top:6px"></td>`;
   };
 
+  // resolvido sozinho (conferido na EVO de madrugada): não precisa mais de contato
+  const SOZINHO = { pagou_sem_contato: 'Já pagou', voltou_sem_contato: 'Já voltou a treinar', matriculou_sem_contato: 'Já se matriculou' };
   const linha = (i) => {
     const tel = normalizarTelefone(i.celular);
+    if (SOZINHO[i.resultado]) {
+      return `<tr class="feito" data-id="${i.id}">
+      <td class="nome">${esc(i.nome)}<span class="sub">ID ${esc(i.evo_id)}</span></td>
+      <td class="oculta-cel">${tel ? esc(`(${tel.slice(2, 4)}) ${tel.slice(4, -4)}-${tel.slice(-4)}`) : ''}</td>
+      ${ehRisco ? `<td class="oculta-cel">${esc(i.dados?.ultima_presenca ? dataLonga(i.dados.ultima_presenca.slice(0, 10)) : 'sem registro')}</td><td></td>` : ''}
+      <td><span class="selo azul" title="Conferido automaticamente na EVO antes do contato">${SOZINHO[i.resultado]}</span><span class="sub">antes do contato · EVO</span></td>
+      <td class="acoes"></td></tr>`;
+    }
     const ultima = i.dados?.ultima_presenca ? dataLonga(i.dados.ultima_presenca.slice(0, 10)) : 'sem registro';
     const classe = i.dados?.classe || '';
     return `<tr class="${i.feito_em ? 'feito' : ''}" data-id="${i.id}">

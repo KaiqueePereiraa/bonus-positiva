@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261116195651';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116195651';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116195651';
+import * as dados from '../dados.js?v=20261116221616';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261116221616';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261116221616';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -137,9 +137,17 @@ async function feriados(el) {
 }
 
 // ── Motivos ──
+// listas que pedem motivo (só aparecem as que já existem no banco)
+const LISTAS_MOTIVO = [['nao_fechou', 'Por que não fechou?'], ['renovacao_venceu', 'Renovação: venceu e não renovou']];
+let listaMotivo = 'nao_fechou';
+
 async function motivos(el, ctx) {
-  const lista = await dados.motivos();
-  el.innerHTML = `<p class="dica" style="margin-bottom:14px">Motivo não usado mais deve ser <b>desativado</b> (não some dos meses anteriores). "Exige texto" obriga a consultora a escrever o motivo.</p>
+  const existentes = new Set(Object.keys(ctx.controles || {}));
+  const listas = LISTAS_MOTIVO.filter(([id]) => id === 'nao_fechou' || existentes.has(id));
+  const lista = (await dados.motivos()).filter((m) => (m.controle_id || 'nao_fechou') === listaMotivo);
+  el.innerHTML = `${listas.length > 1 ? `<div class="filtros" style="margin-bottom:12px"><label class="campo">Lista<select class="ctrl" id="lista-motivo">
+      ${listas.map(([id, nome]) => `<option value="${id}" ${id === listaMotivo ? 'selected' : ''}>${esc(nome)}</option>`).join('')}</select></label></div>` : ''}
+    <p class="dica" style="margin-bottom:14px">Motivo não usado mais deve ser <b>desativado</b> (não some dos meses anteriores). "Exige texto" obriga a consultora a escrever o motivo.</p>
     <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Ordem</th><th>Motivo</th><th>Exige texto</th><th>Ativo</th><th></th></tr></thead><tbody>
     ${lista.map((m) => `<tr data-id="${m.id}"><td><input class="ctrl" type="number" data-c="ordem" value="${m.ordem}" style="width:70px"></td>
       <td><input class="ctrl" data-c="nome" value="${esc(m.nome)}" style="width:100%"></td>
@@ -155,11 +163,12 @@ async function motivos(el, ctx) {
     if (!b) return;
     const tr = b.closest('tr');
     const v = (c) => tr.querySelector(`[data-c="${c}"]`);
-    const m = { nome: v('nome').value.trim(), ordem: +v('ordem').value || 0, exige_texto: v('exige_texto').checked, ativo: v('ativo').checked };
+    const m = { controle_id: listaMotivo, nome: v('nome').value.trim(), ordem: +v('ordem').value || 0, exige_texto: v('exige_texto').checked, ativo: v('ativo').checked };
     if (!m.nome) return toast('Informe o nome do motivo.', 'erro');
     if (tr.dataset.id) m.id = +tr.dataset.id;
     try { await dados.salvarMotivoCadastro(m); ctx.motivos = await dados.motivos(); toast('Motivo salvo.'); motivos(el, ctx); } catch (err) { erro(err); }
   };
+  el.querySelector('#lista-motivo')?.addEventListener('change', (e) => { listaMotivo = e.target.value; motivos(el, ctx); });
 }
 
 // ── Mensagens padrão do WhatsApp (para os alunos) ──
@@ -207,18 +216,25 @@ async function whatsapp(el) {
 // ── EVO (conexão privada e rotinas automáticas) ──
 const ROTINAS_EVO = [
   { id: 'inadimplencia', titulo: 'Inadimplentes', quando: 'Toda quinta-feira (no dia útil antes da sexta da inadimplência)',
-    texto: 'Busca na EVO os clientes ATIVOS com dívida em aberto e em atraso e sobe a lista na tarefa da inadimplência da sexta. Inativos não aparecem. Se a responsável já subiu a planilha à mão, não mexe.' },
+    texto: 'Busca na EVO os clientes ATIVOS com dívida em aberto há MAIS DE 3 DIAS (prazo para a pessoa se ajustar) e sobe a lista na tarefa da inadimplência da sexta. Inativos não aparecem. Se a responsável já subiu a planilha à mão, não mexe.' },
   { id: 'risco', titulo: 'Risco de abandono', quando: 'Toda segunda-feira',
     texto: 'Busca os clientes ativos com mais de 15 dias sem vir, tira quem está registrado (Gympass, benefício colaborador, contrato VIP) e os contratos listados abaixo, e divide entre as consultoras da unidade.' },
   { id: 'nao_fechou', titulo: 'Por que não fechou?', quando: 'Todo dia 1º do mês',
-    texto: 'Busca as oportunidades (cadastros) do mês anterior que não viraram cliente e sobe a lista do mês para as consultoras justificarem.' },
+    texto: 'Busca as oportunidades (cadastros) do mês anterior que não viraram cliente, tira quem já é aluno ativo (mesmo nome) e as oportunidades repetidas (mesmo celular), marca quem tem o celular de um aluno ativo e sobe a lista do mês para as consultoras justificarem.' },
+  { id: 'resultados', titulo: 'Resultado dos contatos', quando: 'Todo dia, de madrugada',
+    texto: 'Toda madrugada confere na EVO: quem ainda está esperando contato e JÁ pagou, voltou a treinar ou se matriculou sai da lista sozinho (ninguém manda mensagem à toa). E para quem já recebeu contato, registra se deu certo — aparece em Indicadores, no desempenho e no retorno do mês. Não manda mensagem para ninguém.' },
 ];
 const ROTULOS_RESUMO = {
   debitos_lidos: 'Débitos lidos na EVO', da_unidade: 'Da unidade', clientes_em_atraso: 'Clientes em atraso', inativos_ignorados: 'Inativos ignorados',
   sem_celular: 'Sem celular', na_lista: 'Na lista', clientes_ativos: 'Clientes ativos', vieram_ultimos_15_dias: 'Vieram nos últimos 15 dias',
   sem_vir: 'Sem vir há mais de 15 dias', excluidos_por_registro: 'Fora: registrados (Gympass/benefício/VIP)', excluidos_por_categoria: 'Fora: contrato com categoria na EVO', excluidos_por_contrato: 'Fora: contrato excluído',
   excluidos_gympass_totalpass: 'Fora: Gympass/Totalpass na ficha', suspensos: 'Fora: contrato suspenso/trancado', cadastro_recente: 'Fora: cadastro recente', sem_ultimo_acesso: 'Sem último acesso na EVO',
-  prospects_lidos: 'Oportunidades lidas', ja_viraram_cliente: 'Já viraram cliente', sem_nome: 'Sem nome', mes: 'Mês',
+  prospects_lidos: 'Oportunidades lidas', ja_viraram_cliente: 'Já viraram cliente', ja_aluno_mesmo_nome: 'Fora: já é aluno ativo (mesmo nome)',
+  oportunidades_repetidas: 'Fora: oportunidade repetida (mesmo celular)', aluno_mesmo_celular: 'Marcados: celular de aluno ativo', sem_nome: 'Sem nome', mes: 'Mês',
+  aguardando_resultado: 'Contatos aguardando resultado', pagou: 'Pagaram', nao_pagou: 'Não pagaram (30 dias)', voltou: 'Voltaram a treinar',
+  nao_voltou: 'Não voltaram (21 dias)', matriculou: 'Matricularam', nao_matriculou: 'Não matricularam (35 dias)', valor_recuperado: 'R$ recuperado',
+  a_gravar: 'Resultados novos', gravados: 'Gravados', tirados_da_lista: 'Saíram das listas (já resolveram sozinhos)',
+  pagou_sem_contato: 'Pagaram antes do contato', voltou_sem_contato: 'Voltaram antes do contato', matriculou_sem_contato: 'Matricularam antes do contato',
 };
 const SELO_EXEC = { ok: 'verde', ignorado: 'cinza', erro: 'vermelho' };
 
@@ -328,7 +344,7 @@ async function evo(el, ctx) {
     const saida = cartao.querySelector('.res-rotina');
     if (b.dataset.acao === 'alternar') {
       const ligar = cfg[`evo_auto_${id}`] !== true;
-      if (ligar && !(await confirmar('Ligar automático', `A rotina de ${ROTINAS_EVO.find((r) => r.id === id).titulo} passará a rodar sozinha no horário combinado e as consultoras receberão aviso no WhatsApp quando uma lista nova entrar. Já fez a simulação?`, 'Ligar'))) return;
+      if (ligar && !(await confirmar('Ligar automático', `A rotina de ${ROTINAS_EVO.find((r) => r.id === id).titulo} passará a rodar sozinha no horário combinado${id === 'resultados' ? '' : ' e as consultoras receberão aviso no WhatsApp quando uma lista nova entrar'}. Já fez a simulação?`, 'Ligar'))) return;
       try { await dados.salvarConfig(`evo_auto_${id}`, ligar); toast(ligar ? 'Rotina ligada.' : 'Rotina desligada.'); evo(el, ctx); } catch (err) { erro(err); }
       return;
     }

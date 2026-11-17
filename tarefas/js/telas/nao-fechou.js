@@ -1,14 +1,14 @@
 // Por que não fechou? — admin importa o mês; consultora justifica os seus e pode assumir os sem responsável.
-import * as dados from '../dados.js?v=20261116195651';
-import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261116195651';
-import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261116195651';
-import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261116195651';
+import * as dados from '../dados.js?v=20261116221616';
+import { mesReferenciaSugerido, prazoNaoFechou } from '../regras.js?v=20261116221616';
+import { esc, dataCurta, dataLonga, nomeMesCap, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261116221616';
+import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261116221616';
 
 // Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
 async function confirmarExclusao(nome) {
   return confirmar('Excluir interessado', `Excluir "${nome}" desta lista? Use para cadastro duplicado. A exclusão fica registrada, mas não dá para desfazer por aqui.`, 'Excluir');
 }
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261116195651';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, recarregarNoLugar, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261116221616';
 
 const mesDe = (t) => nomeMesCap(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
 
@@ -22,9 +22,15 @@ function linhaMotivo(i, ctx, editavel) {
   const d = i.dados || {};
   const info = [d.data_cadastro && `cadastro ${dataLonga(d.data_cadastro)}`, d.interesse, d.como_conheceu && `via ${d.como_conheceu}`, d.idade != null && `${d.idade} anos`].filter(Boolean).join(' · ');
   const motivo = ctx.motivos.find((m) => m.id === i.motivo_id);
-  const opcoes = ctx.motivos.filter((m) => m.ativo || m.id === i.motivo_id);
+  const opcoes = ctx.motivos.filter((m) => (m.controle_id || 'nao_fechou') === i.controle_id && (m.ativo || m.id === i.motivo_id));
+  const alerta = d.aluno_mesmo_celular
+    ? `<span class="selo laranja" title="Este celular está na ficha de um aluno ativo. Confira se é cadastro duplicado ou um novo aluno da mesma família.">Celular de aluno ativo: ${esc(d.aluno_mesmo_celular)}</span>` : '';
+  if (i.resultado === 'matriculou_sem_contato') {
+    return `<tr data-id="${i.id}" class="feito"><td class="nome">${esc(i.nome)}<span class="sub">${esc(info || `ID ${i.evo_id}`)}</span></td>
+      <td colspan="2"><span class="selo azul" title="Conferido automaticamente na EVO">Já se matriculou</span><span class="sub">antes do contato · EVO</span></td><td class="acoes"></td></tr>`;
+  }
   return `<tr data-id="${i.id}" class="${i.feito_em ? 'feito' : ''}">
-    <td class="nome">${esc(i.nome)}<span class="sub">${esc(info || `ID ${i.evo_id}`)}</span></td>
+    <td class="nome">${esc(i.nome)}<span class="sub">${esc(info || `ID ${i.evo_id}`)}</span>${alerta}</td>
     <td style="min-width:220px">${editavel ? `<select class="ctrl" data-campo="motivo" style="width:100%"><option value="">Escolha o motivo…</option>
         ${opcoes.map((m) => `<option value="${m.id}" ${m.id === i.motivo_id ? 'selected' : ''}>${esc(m.nome)}</option>`).join('')}</select>
         <input class="ctrl" data-campo="texto" placeholder="Qual foi o motivo?" value="${esc(i.motivo_texto || '')}" style="width:100%;margin-top:6px" ${motivo?.exige_texto ? '' : 'hidden'}>`

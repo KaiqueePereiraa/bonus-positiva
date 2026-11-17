@@ -1,8 +1,9 @@
 // Indicadores — cumprimento de prazos, volume por consultora, evolução e motivos de não fechamento.
-import { resumo, porConsultora, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes } from '../analises.js?v=20261116195651';
-import { barras, linha } from '../graficos.js?v=20261116195651';
-import { esc, vazio } from '../ui.js?v=20261116195651';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar } from './_analise.js?v=20261116195651';
+import { resumo, porConsultora, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, resultadosPorConsultora } from '../analises.js?v=20261116221616';
+import * as dados from '../dados.js?v=20261116221616';
+import { barras, linha } from '../graficos.js?v=20261116221616';
+import { esc, vazio } from '../ui.js?v=20261116221616';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar } from './_analise.js?v=20261116221616';
 
 let filtros;
 
@@ -22,7 +23,9 @@ const p = (a, b) => (b ? `${Math.round((a / b) * 100)}%` : '—');
 
 async function desenhar(el, ctx) {
   el.innerHTML = '<div class="vazio">Calculando…</div>';
-  const { tarefas, itensNf } = await carregar(filtros);
+  const [{ tarefas, itensNf }, contatosTodos] = await Promise.all([carregar(filtros),
+    dados.itensComResultado({ desde: filtros.desde, ate: filtros.ate, unidade: filtros.unidade || undefined }).catch(() => [])]);
+  const contatos = contatosTodos.filter((i) => (!filtros.consultora || i.responsavel_id === filtros.consultora) && (!filtros.controle || i.controle_id === filtros.controle));
   const hoje = ctx.hoje();
   const r = resumo(tarefas);
   const pessoas = pessoasDoFiltro(filtros, ctx);
@@ -32,6 +35,11 @@ async function desenhar(el, ctx) {
   const motivos = contarMotivos(itensNf, ctx.motivos);
   const matriz = motivosPorConsultora(itensNf, ctx.motivos, pessoas);
   const porMes = motivosPorMes(itensNf, ctx.motivos);
+  const reais = gruposReais(itensNf.filter((i) => i.motivo_id && i.feito_em), ctx.motivos);
+  const res = resultadoDe(contatos);
+  const resPessoas = resultadosPorConsultora(contatos, pessoas);
+  const reais$ = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const celRes = (x) => (x.contatos ? `<b>${x.decididos ? `${x.taxa}%` : '—'}</b><span class="sub">${x.positivos} de ${x.decididos}${x.aguardando ? ` · ${x.aguardando} aguardando` : ''}</span>` : '<span class="dica">—</span>');
 
   if (!tarefas.length) { el.innerHTML = `<div class="cartao">${vazio('Nenhuma tarefa no período e filtros escolhidos.')}</div>`; return; }
 
@@ -42,6 +50,18 @@ async function desenhar(el, ctx) {
       ${numero('Atrasadas', r.atrasadas, r.atrasadas ? 'vermelho' : '', 'em aberto')}
       ${numero('Cumprimento dos prazos', `${r.cumprimento}%`, 'verde', `${r.noPrazo} de ${r.decididas} vencidas`)}
       ${numero('Itens feitos', `${r.pctItens}%`, 'azul', `${r.feitos} de ${r.itens}`)}
+    </div>
+
+    <div class="cartao"><h2>Resultado dos contatos <span class="selo cinza">conferido na EVO</span></h2>
+      <p class="dica" style="margin-bottom:12px">Não basta enviar: aqui aparece o que aconteceu depois do contato. Pagou = a dívida saiu da EVO; voltou = entrou na academia depois do contato; matriculou = a oportunidade virou cliente. A taxa conta só os contatos que já têm resultado (inadimplência espera até 30 dias, risco 21, não fechou 35).</p>
+      <div class="numeros">
+        ${numero('Inadimplência: pagaram', res.inadimplencia.decididos ? `${res.inadimplencia.taxa}%` : '—', 'verde', `${res.inadimplencia.positivos} de ${res.inadimplencia.decididos} · ${reais$(res.inadimplencia.valor)} recuperados`)}
+        ${numero('Risco: voltaram', res.risco.decididos ? `${res.risco.taxa}%` : '—', 'azul', `${res.risco.positivos} de ${res.risco.decididos}${res.risco.aguardando ? ` · ${res.risco.aguardando} aguardando` : ''}`)}
+        ${numero('Não fechou: matricularam', res.nao_fechou.decididos ? `${res.nao_fechou.taxa}%` : '—', 'escuro', `${res.nao_fechou.positivos} de ${res.nao_fechou.decididos}${res.nao_fechou.aguardando ? ` · ${res.nao_fechou.aguardando} aguardando` : ''}`)}
+      </div>
+      ${resPessoas.length ? `<div class="tabela-wrap" style="margin-top:12px"><table class="tabela"><thead><tr><th>Consultora</th><th>Inadimplência: pagaram</th><th>R$ recuperado</th><th>Risco: voltaram</th><th>Não fechou: matricularam</th></tr></thead><tbody>
+        ${resPessoas.map((l) => `<tr><td class="nome">${esc(l.nome)}</td><td>${celRes(l.inadimplencia)}</td><td>${l.inadimplencia.valor ? reais$(l.inadimplencia.valor) : '—'}</td><td>${celRes(l.risco)}</td><td>${celRes(l.nao_fechou)}</td></tr>`).join('')}
+      </tbody></table></div>` : vazio('Os resultados aparecem quando a conferência automática com a EVO estiver ligada (Configurações → EVO → Resultado dos contatos).')}
     </div>
 
     <div class="cartao"><h2>Por consultora</h2>
@@ -70,6 +90,11 @@ async function desenhar(el, ctx) {
       ${motivos.length ? `<div class="grade"><div class="grafico" style="height:${Math.max(220, motivos.length * 34)}px"><canvas id="g-motivos" aria-label="Motivos de não fechamento"></canvas></div>
         <table class="tabela"><thead><tr><th>Motivo</th><th>Qtd.</th><th>%</th></tr></thead><tbody>${motivos.map((m) => `<tr><td>${esc(m.nome)}</td><td>${m.n}</td><td>${m.pct}%</td></tr>`).join('')}</tbody></table></div>` : vazio('Nenhuma justificativa preenchida no período.')}
     </div>
+    ${reais.length ? `<div class="cartao"><h2>O que aconteceu de fato</h2>
+      <p class="dica" style="margin-bottom:12px">Junta o motivo escolhido com o que a consultora escreveu (inclusive em "Outro motivo"), para mostrar a causa real.</p>
+      <div class="tabela-wrap"><table class="tabela"><thead><tr><th>O que aconteceu</th><th>Qtd.</th><th>%</th><th>O que fazer</th></tr></thead><tbody>
+      ${reais.map((g) => `<tr><td>${esc(g.nome)}${g.deOutro ? `<span class="sub">${g.deOutro} vindos de "Outro motivo"</span>` : ''}</td><td>${g.n}</td><td>${g.pct}%</td><td class="dica">${esc(g.acao || '')}</td></tr>`).join('')}
+      </tbody></table></div></div>` : ''}
     ${matriz.linhas.length ? `<div class="cartao"><h2>Motivos por consultora</h2><div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th>${matriz.motivos.map((m) => `<th>${esc(m.nome)}</th>`).join('')}<th>Total</th></tr></thead><tbody>
       ${matriz.linhas.map((l) => `<tr><td class="nome">${esc(l.nome)}</td>${l.valores.map((v) => `<td>${v || ''}</td>`).join('')}<td><b>${l.total}</b></td></tr>`).join('')}</tbody></table></div></div>` : ''}
     ${porMes.length > 1 ? `<div class="cartao"><h2>Evolução mensal dos motivos (%)</h2><div class="tabela-wrap"><table class="tabela"><thead><tr><th>Motivo</th>${porMes.map((m) => `<th>${m.rotulo}</th>`).join('')}</tr></thead><tbody>
