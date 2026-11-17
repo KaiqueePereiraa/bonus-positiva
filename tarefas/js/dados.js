@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261117105912';
+import { sb } from '../../shared/sessao.js?v=20261117133208';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -52,7 +52,7 @@ export async function importacoes(controle, { limite = 20, unidade } = {}) {
 // Contatos feitos no período (inadimplência, risco, não fechou) com o resultado conferido na EVO.
 export async function itensComResultado({ desde, ate, unidade }) {
   let q = sb.from('itens').select('id, controle_id, responsavel_id, feito_em, resultado, resultado_valor, tarefas!inner(unidade, cancelada_em)')
-    .is('tarefas.cancelada_em', null).in('controle_id', ['inadimplencia', 'risco', 'nao_fechou']).not('feito_em', 'is', null);
+    .is('tarefas.cancelada_em', null).in('controle_id', ['inadimplencia', 'risco', 'nao_fechou', 'renovacao_vencer', 'renovacao_venceu', 'experimental_pos', 'lead_novo', 'cancelou', 'ex_alunos']).not('feito_em', 'is', null);
   if (desde) q = q.gte('feito_em', `${desde}T00:00:00-03:00`);
   if (ate) q = q.lte('feito_em', `${ate}T23:59:59-03:00`);
   if (unidade) q = q.eq('tarefas.unidade', unidade);

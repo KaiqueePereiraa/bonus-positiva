@@ -2,7 +2,7 @@
 // tarefa: linha de tarefas_status { controle_id, responsavel_id, prazo, periodo_inicio, status, total, feitos }
 // item:   linha de itens (do "Por que não fechou?") com motivo_id, dados, tarefas.periodo_inicio
 
-import { semanaDe } from './regras.js?v=20261117105912';
+import { semanaDe } from './regras.js?v=20261117133208';
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -96,7 +96,8 @@ export function cruzamento(itens, motivos, campo, { minimo = 5 } = {}) {
 
 // ── Resultado dos contatos (conferido na EVO) ──
 // Taxa = positivos ÷ contatos que já têm resultado; os que ainda estão na janela aparecem como "aguardando".
-const POSITIVO = { inadimplencia: 'pagou', risco: 'voltou', nao_fechou: 'matriculou' };
+export const POSITIVO = { inadimplencia: 'pagou', risco: 'voltou', nao_fechou: 'matriculou', renovacao_vencer: 'renovou', renovacao_venceu: 'renovou',
+  experimental_pos: 'matriculou', lead_novo: 'matriculou', cancelou: 'matriculou', ex_alunos: 'matriculou' };
 export function resultadoDe(itens) {
   const r = {};
   for (const c of Object.keys(POSITIVO)) {

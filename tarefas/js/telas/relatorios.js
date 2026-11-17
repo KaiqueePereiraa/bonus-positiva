@@ -1,10 +1,10 @@
 // Relatórios — escolhe período, controle e consultoras; mostra na tela e exporta PDF, Excel ou CSV.
-import * as dados from '../dados.js?v=20261117105912';
-import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261117105912';
-import { barras, imagem } from '../graficos.js?v=20261117105912';
-import { csv, excel, pdf } from '../exportar.js?v=20261117105912';
-import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261117105912';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto } from './_analise.js?v=20261117105912';
+import * as dados from '../dados.js?v=20261117133208';
+import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261117133208';
+import { barras, imagem } from '../graficos.js?v=20261117133208';
+import { csv, excel, pdf } from '../exportar.js?v=20261117133208';
+import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261117133208';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto, ligarPeriodos } from './_analise.js?v=20261117133208';
 
 let filtros;
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
@@ -22,6 +22,7 @@ export async function render(el, ctx) {
     if (e.target.dataset.f === 'unidade') { lerFiltros(el, filtros); filtros.consultora = ''; render(el, ctx); return; }
     atualizar();
   });
+  ligarPeriodos(el, filtros, ctx, () => { atual = null; montar(el.querySelector('#previa'), ctx).then((a) => { atual = a; }); });
   el.querySelector('.linha-acoes').addEventListener('click', async (e) => {
     const b = e.target.closest('[data-exp]');
     if (!b || !atual) return;

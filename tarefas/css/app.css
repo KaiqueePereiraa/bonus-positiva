@@ -13,8 +13,11 @@
 .menu a svg{flex:none;opacity:.85}
 .menu a:hover{background:rgba(255,255,255,.06);color:var(--white)}
 .menu a.ativo{background:rgba(190,245,117,.12);color:var(--green)}
-.menu a .cont{margin-left:auto;background:var(--danger);color:var(--white);font-size:11px;font-weight:800;border-radius:10px;padding:1px 7px}
 .menu .sep{height:1px;background:rgba(255,255,255,.08);margin:10px 6px}
+.menu .grupo{font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#7E8794;padding:16px 12px 6px}
+.menu .grupo:first-child{padding-top:4px}
+.menu a .cont{margin-left:auto;background:rgba(255,255,255,.12);color:var(--white);font-size:11px;font-weight:800;border-radius:10px;padding:2px 8px;min-width:22px;text-align:center}
+.menu a.ativo .cont{background:var(--green);color:var(--dark)}
 .lateral .pe{padding:14px 16px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:12px}
 .lateral .pe .quem{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex:none}
@@ -26,7 +29,10 @@
 
 .principal{min-width:0;display:flex;flex-direction:column}
 .topo{display:flex;align-items:center;gap:14px;padding:18px 32px;background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-.topo h1{font-size:20px;font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topo .titulos{flex:1;min-width:0}
+.topo h1{font-size:20px;font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topo #subtitulo{margin:2px 0 0;font-size:13px;color:var(--mid);line-height:1.35}
+.topo #subtitulo:empty{display:none}
 .btn-menu{display:none;background:none;border:none;cursor:pointer;color:var(--dark);padding:4px}
 .sel-unidade{max-width:240px;font-weight:700}
 .sino{position:relative;background:var(--bg);border:none;width:42px;height:42px;border-radius:12px;cursor:pointer;color:var(--dark);display:flex;align-items:center;justify-content:center}
@@ -146,6 +152,27 @@ textarea.ctrl{resize:vertical;min-height:38px;width:100%}
 .toast.visivel{opacity:1;transform:translate(-50%,0)}
 .toast.erro{background:#B42318}
 
+/* ── Carregando (esqueleto) ── */
+.esqueleto{display:flex;flex-direction:column;gap:18px}
+.esqueleto i{display:block;height:110px;border-radius:var(--radius);background:linear-gradient(90deg,#E9ECF0 0,#F4F6F8 40%,#E9ECF0 80%);background-size:200% 100%;animation:brilho 1.2s ease-in-out infinite}
+.esqueleto i:first-child{height:70px}
+@keyframes brilho{from{background-position:100% 0}to{background-position:-100% 0}}
+.conteudo>*{animation:entrar .18s ease-out}
+@keyframes entrar{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.esqueleto i,.conteudo>*{animation:none}}
+
+/* ── Períodos rápidos e filtros escondidos ── */
+.periodos{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.periodos .btn.ativo{background:var(--dark);color:var(--white);box-shadow:none}
+details.mais-filtros{margin-top:12px}
+details.mais-filtros>summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--navy)}
+details.mais-filtros .filtros{margin-top:12px}
+
+/* ── Meu dia ── */
+.btn.grande{padding:16px 22px;font-size:16px;border-radius:14px;width:100%;max-width:420px}
+.guia{background:linear-gradient(135deg,#F4FAEC,#fff);border:1px solid #D5EDB8}
+.guia ol{margin:6px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.45}
+
 /* ── Gráficos ── */
 .grafico{position:relative;height:280px}
 
@@ -158,6 +185,7 @@ textarea.ctrl{resize:vertical;min-height:38px;width:100%}
   .btn-menu{display:block}
   .topo{padding:12px 16px}
   .topo h1{font-size:16px}
+  .topo #subtitulo{display:none}
   .sel-unidade{max-width:130px;font-size:12px;padding:7px 8px}
   .conteudo{padding:18px 16px 40px;gap:16px}
   .cartao{padding:16px}
@@ -172,7 +200,7 @@ textarea.ctrl{resize:vertical;min-height:38px;width:100%}
   .tabela.responsiva td.acoes{grid-column:2;grid-row:1 / span 3;align-self:center;display:flex;flex-direction:column;gap:6px}
   .tabela.responsiva td.oculta-cel{display:none}
 }
-\n
+
 /* ── Escala (calendário em cartões) ── */
 .esc-mes>h3{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.9px;color:var(--mid);margin:4px 2px 12px}
 .esc-mes>h3::after{content:"";flex:1;height:1px;background:var(--line)}

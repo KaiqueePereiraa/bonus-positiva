@@ -101,6 +101,6 @@ export const confirmar = (titulo, texto, rotuloOk = 'Confirmar') =>
   modal(titulo, `<p>${esc(texto)}</p>`, { acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: false }, { rotulo: rotuloOk, valor: true }] });
 
 export const vazio = (texto) => `<div class="vazio">${esc(texto)}</div>`;
-export const carregando = () => '<div class="vazio">Carregando…</div>';
+export const carregando = () => '<div class="esqueleto" aria-busy="true" aria-label="Carregando"><i></i><i></i><i></i></div>';
 
 export const ehCelular = () => matchMedia('(max-width: 760px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent);

@@ -54,15 +54,20 @@ export function sinais(unidades) {
 }
 
 // "Precisa da sua atenção": só o que pede uma ação do gestor
-export function atencao(p, unidades, hora = 12) {
+// desligadas: rotinas automáticas da EVO ainda desligadas (nomes), para o gestor simular e ligar
+export function atencao(p, unidades, hora = 12, desligadas = []) {
   const lista = [];
+  if (desligadas.length) {
+    lista.push({ texto: `${desligadas.length === 1 ? 'Uma lista automática ainda está desligada' : `${desligadas.length} listas automáticas ainda estão desligadas`}: ${desligadas.join(', ')}.`,
+      acao: 'Em Configurações → EVO, clique em "Simular agora", confira os números e depois em "Ligar automático".', rota: '#/configuracoes' });
+  }
   for (const u of unidades) {
     if (!u.consultoras?.length) {
       lista.push({ texto: `${u.nome} está sem consultoras cadastradas: as listas não são distribuídas.`, acao: 'Cadastre as consultoras e a ordem do rodízio.', rota: '#/configuracoes' });
       continue;
     }
     for (const c of u.consultoras) {
-      if (c.atrasados > 0) lista.push({ texto: `${c.nome} tem ${plural(c.atrasados, 'contato atrasado', 'contatos atrasados')}.`, acao: 'Converse e combine quando ela coloca em dia.', rota: '#/visao-geral' });
+      if (c.atrasados > 0) lista.push({ texto: `${c.nome} tem ${plural(c.atrasados, 'contato atrasado', 'contatos atrasados')}.`, acao: 'Converse e combine quando ela coloca em dia.', rota: '#/desempenho' });
       else if (hora >= 14 && c.minimo >= 3 && c.feitos_hoje * 2 < c.minimo) lista.push({ texto: `${c.nome} fez ${c.feitos_hoje} de ${c.minimo} contatos do mínimo de hoje.`, acao: 'Veja se algo está travando o dia dela.' });
       if (c.pct_semana_passada != null && c.pct_semana_passada < 80) lista.push({ texto: `${c.nome} fez ${c.pct_semana_passada}% das listas da semana passada.` });
     }

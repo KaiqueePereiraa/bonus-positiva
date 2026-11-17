@@ -1,9 +1,9 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117105912';
-import * as dados from './dados.js?v=20261117105912';
-import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261117105912';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117105912';
-import { esc, erro, carregando, modal, toast } from './ui.js?v=20261117105912';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117133208';
+import * as dados from './dados.js?v=20261117133208';
+import { hojeSP } from './regras.js?v=20261117133208';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117133208';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261117133208';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -19,29 +19,32 @@ const ICONES = {
   conf: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
 };
 
-// rota → [título, módulo, ícone, só admin?]
+// Rotas. quem: 'admin' | 'consultora' | 'todos'. grupo: onde fica no menu (null = fora do menu, só por link).
+// frase: aparece embaixo do título e diz, em uma linha, o que fazer na tela.
+const GRUPOS = { inicio: '', listas: 'Listas de contato', acompanhar: 'Acompanhar', ajustes: 'Ajustes' };
 const ROTAS = {
-  painel: ['Painel do gestor', 'painel', 'ind', true],
-  'visao-geral': ['Visão geral', 'visao-geral', 'visao', false],
-  'meu-dia': ['Meu dia', 'meu-dia', 'tarefas', false],
-  'minhas-tarefas': ['Minhas tarefas', 'minhas-tarefas', 'tarefas', false],
-  inadimplencia: ['Inadimplência', 'inadimplencia', 'inad', false],
-  risco: ['Risco de abandono', 'risco', 'risco', false],
-  'nao-fechou': ['Por que não fechou?', 'nao-fechou', 'nf', false],
-  vendas: ['Vendas do dia', 'vendas', 'nf', false],
-  renovacao: ['Renovação', 'renovacao', 'escala', false],
-  relacionamento: ['Relacionamento', 'relacionamento', 'lista', false],
-  'lista-fazer': ['Lista a fazer', 'lista-fazer', 'lista', false],
+  painel: { titulo: 'Painel do gestor', modulo: 'painel', icone: 'ind', quem: 'admin', grupo: 'inicio', frase: 'O que pede sua atenção hoje e como a equipe está. Comece pelos cartões coloridos.' },
+  'meu-dia': { titulo: 'Meu dia', modulo: 'meu-dia', icone: 'tarefas', quem: 'consultora', grupo: 'inicio', frase: 'O que fazer hoje, na ordem certa. Toque em "Começar" e siga a lista.' },
+  'minhas-tarefas': { titulo: 'Todas as minhas tarefas', modulo: 'minhas-tarefas', icone: 'tarefas', quem: 'consultora', grupo: null, frase: 'Todas as suas listas, separadas por situação.' },
+  inadimplencia: { titulo: 'Inadimplência', modulo: 'inadimplencia', icone: 'inad', quem: 'todos', grupo: 'listas', frase: 'Quem está com a mensalidade atrasada. Mande a mensagem pelo botão do WhatsApp.' },
+  risco: { titulo: 'Risco de abandono', modulo: 'risco', icone: 'risco', quem: 'todos', grupo: 'listas', frase: 'Alunos que pararam de vir. Pergunte o motivo e convide para voltar.' },
+  renovacao: { titulo: 'Renovação', modulo: 'renovacao', icone: 'escala', quem: 'todos', grupo: 'listas', frase: 'Contratos vencendo ou vencidos. Ofereça a renovação ou registre o motivo.' },
+  relacionamento: { titulo: 'Relacionamento', modulo: 'relacionamento', icone: 'lista', quem: 'todos', grupo: 'listas', frase: 'Alunos novos, quem cancelou e ex-alunos. Um contato atencioso faz a pessoa ficar ou voltar.' },
+  vendas: { titulo: 'Vendas do dia', modulo: 'vendas', icone: 'nf', quem: 'todos', grupo: 'listas', frase: 'Experimentais e interessados novos. O contato é hoje: interessado esfria rápido.' },
+  'nao-fechou': { titulo: 'Por que não fechou?', modulo: 'nao-fechou', icone: 'nf', quem: 'todos', grupo: 'listas', frase: 'Interessados do mês que não se matricularam. Escolha o motivo de cada um.' },
+  'lista-fazer': { titulo: 'Lista a fazer', modulo: 'lista-fazer', icone: 'lista', quem: 'todos', grupo: 'listas', frase: 'Listas extras montadas pelo gestor.' },
+  desempenho: { titulo: 'Desempenho', modulo: 'desempenho', icone: 'ind', quem: 'todos', grupo: 'acompanhar', frase: 'Quem cumpriu o mínimo de contatos e quantos deram resultado.' },
+  indicadores: { titulo: 'Resultados', modulo: 'indicadores', icone: 'ins', quem: 'admin', grupo: 'acompanhar', frase: 'O que os contatos trouxeram de verdade e o que os números dizem.' },
+  retorno: { titulo: 'Retorno do mês', modulo: 'retorno', icone: 'rel', quem: 'admin', grupo: 'acompanhar', frase: 'Quanto a equipe trouxe de volta em R$ com a Central.' },
+  relatorios: { titulo: 'Relatórios', modulo: 'relatorios', icone: 'rel', quem: 'admin', grupo: 'acompanhar', frase: 'Escolha o período e baixe em PDF, Excel ou CSV.' },
   // EM PREPARAÇÃO (pedido do usuário, 16/11/2026): só o admin vê a Escala até ele dizer que está 100% pronta.
-  // Para abrir para as consultoras: trocar `true` por `false` aqui e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
-  escala: ['Escala', 'escala', 'escala', true],
-  desempenho: ['Desempenho', 'desempenho', 'ind', false],
-  indicadores: ['Indicadores', 'indicadores', 'ind', true],
-  insights: ['Insights da Operação', 'insights', 'ins', true],
-  retorno: ['Retorno do mês', 'retorno', 'rel', true],
-  relatorios: ['Relatórios', 'relatorios', 'rel', true],
-  configuracoes: ['Configurações', 'configuracoes', 'conf', true],
+  // Para abrir para as consultoras: trocar quem para 'todos' e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
+  escala: { titulo: 'Escala', modulo: 'escala', icone: 'escala', quem: 'admin', grupo: 'ajustes', frase: 'Quem trabalha em cada fim de semana.' },
+  configuracoes: { titulo: 'Configurações', modulo: 'configuracoes', icone: 'conf', quem: 'admin', grupo: 'ajustes', frase: 'Equipe, rodízio, mensagens, WhatsApp e a conexão com a EVO.' },
 };
+// telas antigas que foram juntadas a outras (links salvos continuam funcionando)
+const REDIRECIONA = { 'visao-geral': null, insights: 'indicadores' };
+const podeVer = (r) => r.quem === 'todos' || (r.quem === 'admin') === ehAdmin;
 
 const $ = (id) => document.getElementById(id);
 const icone = (n) => `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONES[n]}</svg>`;
@@ -86,10 +89,12 @@ async function carregarBase() {
 }
 
 function montarMenu() {
-  const itens = Object.entries(ROTAS).filter(([rota, r]) => (!r[3] || ehAdmin) && !(ehAdmin && (rota === 'minhas-tarefas' || rota === 'meu-dia')));
-  const corte = itens.findIndex(([rota, r]) => r[3] && rota !== 'painel');
-  $('menu').innerHTML = itens.map(([rota, [titulo, , ic]], i) =>
-    `${i === corte ? '<li class="sep" role="separator"></li>' : ''}<li><a href="#/${rota}" data-rota="${rota}">${icone(ic)}<span>${esc(titulo)}</span></a></li>`).join('');
+  let grupoAtual;
+  $('menu').innerHTML = Object.entries(ROTAS).filter(([, r]) => r.grupo && podeVer(r)).map(([rota, r]) => {
+    const titulo = r.grupo !== grupoAtual && GRUPOS[r.grupo] ? `<li class="grupo" role="presentation">${esc(GRUPOS[r.grupo])}</li>` : '';
+    grupoAtual = r.grupo;
+    return `${titulo}<li data-li="${rota}"><a href="#/${rota}" data-rota="${rota}">${icone(r.icone)}<span>${esc(r.titulo)}</span><b class="cont" hidden></b></a></li>`;
+  }).join('');
   $('nome-usuario').textContent = perfil.nome || perfil.email;
   $('papel-usuario').textContent = ehAdmin ? 'Administrador' : 'Consultora';
   $('avatar').textContent = (perfil.nome || perfil.email || '?').trim()[0].toUpperCase();
@@ -101,6 +106,7 @@ function montarMenu() {
     sel.addEventListener('change', () => {
       ctx.unidade = sel.value;
       try { localStorage.setItem('central_unidade', sel.value); } catch { /* sem armazenamento: vale só nesta visita */ }
+      atualizarMenu();
       navegar();
     });
   } else if (perfil.unidade) {
@@ -113,19 +119,21 @@ function montarMenu() {
 
 let renderAtual = 0;
 async function navegar() {
-  const [rota = '', ...params] = location.hash.replace(/^#\/?/, '').split('/');
+  let [rota = '', ...params] = location.hash.replace(/^#\/?/, '').split('/');
   const padrao = ehAdmin ? 'painel' : 'meu-dia';
+  if (rota in REDIRECIONA) { location.replace(`#/${REDIRECIONA[rota] || padrao}`); return; }
   const def = ROTAS[rota];
-  if (!def || (def[3] && !ehAdmin)) { location.replace(`#/${padrao}`); return; }
-  const [titulo, modulo] = def;
-  document.querySelectorAll('#menu a').forEach((a) => a.classList.toggle('ativo', a.dataset.rota === rota));
+  if (!def || !podeVer(def)) { location.replace(`#/${padrao}`); return; }
+  const { titulo, modulo } = def;
+  document.querySelectorAll('#menu a').forEach((a) => a.classList.toggle('ativo', a.dataset.rota === rota || (rota === 'minhas-tarefas' && a.dataset.rota === 'meu-dia')));
   $('titulo').textContent = titulo;
+  $('subtitulo').textContent = def.frase || '';
   document.title = `${titulo} — Central de Tarefas`;
   const el = $('conteudo');
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261117105912`);
+    const tela = await import(`./telas/${modulo}.js?v=20261117133208`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -138,28 +146,45 @@ async function navegar() {
 
 // ── Sino ──
 let avisosAtuais = [];
+let tarefasDoMenu = [];
+
+// Número de contatos pendentes ao lado de cada lista no menu. A consultora só vê as listas em que tem algo.
+function atualizarMenu() {
+  const hoje = hojeSP();
+  const pend = {}, tem = {};
+  for (const t of tarefasDoMenu) {
+    if (ehAdmin && ctx.unidade && t.unidade !== ctx.unidade) continue;
+    const rota = ROTA_CONTROLE[t.controle_id];
+    if (!rota) continue;
+    tem[rota] = true;
+    if (String(t.status).startsWith('concluida') || (t.controle_id === 'experimental_confirmar' && t.prazo < hoje)) continue;
+    pend[rota] = (pend[rota] || 0) + Math.max(0, (t.total || 0) - (t.feitos || 0));
+  }
+  document.querySelectorAll('#menu li[data-li]').forEach((li) => {
+    const rota = li.dataset.li;
+    const cont = li.querySelector('.cont');
+    cont.hidden = !pend[rota];
+    cont.textContent = pend[rota] > 99 ? '99+' : pend[rota] || '';
+    if (!ehAdmin && ROTAS[rota].grupo === 'listas') li.hidden = !tem[rota] && location.hash !== `#/${rota}`;
+  });
+  document.querySelectorAll('#menu li.grupo').forEach((g) => {   // título de grupo sem nenhum item visível some
+    let n = g.nextElementSibling, algum = false;
+    while (n && !n.classList.contains('grupo')) { if (!n.hidden) algum = true; n = n.nextElementSibling; }
+    g.hidden = !algum;
+  });
+}
 export async function calcularAvisos() {
   const hoje = hojeSP();
   if (ehAdmin) {
     const desde = new Date(Date.now() - 45 * 864e5).toISOString().slice(0, 10);
-    const ref = mesReferenciaSugerido(hoje);
-    const refIni = `${ref.ano}-${String(ref.mes).padStart(2, '0')}-01`;
-    const [tarefas, risco, nf, pool] = await Promise.all([
-      dados.tarefas({ desde }), dados.importacoes('risco', { limite: 30 }), dados.importacoes('nao_fechou', { limite: 30 }),
-      dados.semResponsavelVisiveis()]);
-    const horaSP = +new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hour12: false }).format(new Date());
-    const ativas = ctx.unidadesAtivas();
-    const nfMes = nf.filter((i) => i.referencia_inicio === refIni).map((i) => i.id);
-    return avisosAdmin({
-      tarefas, nomeDe: ctx.nomeDe, nomeUnidade: ctx.nomeUnidade, hoje, horaSP,
-      semResponsavel: pool.filter((i) => nfMes.includes(i.importacao_id)).length,
-      riscoPendente: ativas.filter((u) => !risco.some((i) => i.unidade === u.id && i.referencia_inicio === semanaDe(hoje).inicio)).map((u) => u.nome),
-      naoFechouPendente: ativas.filter((u) => !nf.some((i) => i.unidade === u.id && i.referencia_inicio === refIni)).map((u) => u.nome),
-    });
+    const [tarefas, pool] = await Promise.all([dados.tarefas({ desde }), dados.semResponsavelVisiveis()]);
+    tarefasDoMenu = tarefas;
+    return avisosAdmin({ tarefas, nomeDe: ctx.nomeDe, nomeUnidade: ctx.nomeUnidade, hoje, semResponsavel: pool.length });
   }
   const [tarefas, pool, listas, trocas] = await Promise.all([
     dados.tarefas({ responsavel: perfil.id }), dados.semResponsavelVisiveis().catch(() => []), dados.listasFazer().catch(() => []),
     dados.trocasEscala().catch(() => [])]);
+  tarefasDoMenu = tarefas;
   const pedidosTroca = trocas.filter((p) => p.destino_id === perfil.id && p.status === 'pendente' && p.data_origem > hoje && (!p.data_troca || p.data_troca > hoje))
     .map((p) => ({ id: p.id, quem: ctx.nomeDe(p.solicitante_id), data: p.data_origem }));
   return avisosConsultora({ tarefas, semResponsavel: pool.length, hoje, titulos: Object.fromEntries(listas.map((l) => [l.importacao_id, l.titulo])), pedidosTroca });
@@ -169,6 +194,7 @@ async function atualizarSino() {
   try {
     const [avisos, visto] = await Promise.all([calcularAvisos(), dados.vistoAte(perfil.id)]);
     avisosAtuais = avisos;
+    atualizarMenu();
     const vistoDia = visto ? hojeSP(new Date(visto)) : '0000-00-00';
     const novos = visto ? avisos.filter((a) => a.desde > vistoDia) : avisos;
     $('sino-cont').hidden = novos.length === 0;

@@ -1,7 +1,19 @@
 // Filtros e carga de dados compartilhados por Indicadores e Relatórios.
-import * as dados from '../dados.js?v=20261117105912';
-import { esc, STATUS, NOMES_CONTROLE } from '../ui.js?v=20261117105912';
-import { somarDias } from '../regras.js?v=20261117105912';
+import * as dados from '../dados.js?v=20261117133208';
+import { esc, STATUS, NOMES_CONTROLE } from '../ui.js?v=20261117133208';
+import { somarDias, semanaDe } from '../regras.js?v=20261117133208';
+
+// Períodos de um clique (o resto dos filtros fica em "Mais filtros")
+export function periodos(hoje) {
+  const mes = `${hoje.slice(0, 8)}01`;
+  const mesPassado = `${somarDias(mes, -1).slice(0, 8)}01`;
+  return {
+    semana: ['Esta semana', semanaDe(hoje).inicio, hoje],
+    mes: ['Este mês', mes, hoje],
+    mes_passado: ['Mês passado', mesPassado, somarDias(mes, -1)],
+    tres: ['Últimos 3 meses', `${somarDias(mes, -32).slice(0, 8)}01`, hoje],
+  };
+}
 
 export function filtrosPadrao(ctx) {
   const hoje = ctx.hoje();
@@ -11,14 +23,31 @@ export function filtrosPadrao(ctx) {
 
 export function htmlFiltros(f, ctx, { status = true } = {}) {
   const opt = (v, r, sel) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${esc(r)}</option>`;
-  return `<div class="filtros">
+  const extras = [f.consultora, f.controle, f.status].filter(Boolean).length + (f.unidade !== (ctx.unidade || '') ? 1 : 0);
+  return `<div class="periodos">${Object.entries(periodos(ctx.hoje())).map(([k, [rotulo, de, ate]]) =>
+      `<button type="button" class="btn sec peq ${f.desde === de && f.ate === ate ? 'ativo' : ''}" data-periodo="${k}">${rotulo}</button>`).join('')}</div>
+    <details class="mais-filtros" ${extras ? 'open' : ''}><summary>Mais filtros (datas, unidade, consultora, lista)${extras ? ` · ${extras} em uso` : ''}</summary><div class="filtros">
     <label class="campo">De<input type="date" data-f="desde" value="${f.desde}"></label>
     <label class="campo">Até<input type="date" data-f="ate" value="${f.ate}"></label>
     <label class="campo">Unidade<select data-f="unidade">${opt('', 'Todas', f.unidade)}${ctx.unidades.map((u) => opt(u.id, u.nome, f.unidade)).join('')}</select></label>
     <label class="campo">Consultora<select data-f="consultora">${opt('', 'Todas', f.consultora)}${(f.unidade ? ctx.consultorasDa(f.unidade) : ctx.consultoras).map((c) => opt(c.id, c.nome, f.consultora)).join('')}</select></label>
-    <label class="campo">Controle<select data-f="controle">${opt('', 'Todos', f.controle)}${Object.entries(NOMES_CONTROLE).map(([id, n]) => opt(id, n, f.controle)).join('')}</select></label>
+    <label class="campo">Lista<select data-f="controle">${opt('', 'Todas', f.controle)}${Object.entries(NOMES_CONTROLE).map(([id, n]) => opt(id, n, f.controle)).join('')}</select></label>
     ${status ? `<label class="campo">Status<select data-f="status">${opt('', 'Todos', f.status)}${Object.entries(STATUS).map(([id, s]) => opt(id, s.rotulo, f.status)).join('')}</select></label>` : ''}
-  </div>`;
+  </div></details>`;
+}
+
+// Liga os botões de período: troca as datas e chama aoMudar()
+export function ligarPeriodos(el, f, ctx, aoMudar) {
+  el.querySelector('.periodos')?.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-periodo]');
+    if (!b) return;
+    const [, de, ate] = periodos(ctx.hoje())[b.dataset.periodo];
+    f.desde = de; f.ate = ate;
+    el.querySelector('[data-f="desde"]').value = de;
+    el.querySelector('[data-f="ate"]').value = ate;
+    el.querySelectorAll('[data-periodo]').forEach((x) => x.classList.toggle('ativo', x === b));
+    aoMudar();
+  });
 }
 
 export function lerFiltros(el, f) {

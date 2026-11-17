@@ -1,6 +1,6 @@
 // Vendas do dia — experimentais (confirmar e pós-aula) e interessados novos. Chegam sozinhas da EVO de segunda a
 // sexta de manhã, divididas entre as consultoras; o contato é no mesmo dia.
-import { criarTela } from './_grupo.js?v=20261117105912';
+import { criarTela } from './_grupo.js?v=20261117133208';
 
 export const render = criarTela({
   rota: 'vendas', titulo: 'Vendas do dia',

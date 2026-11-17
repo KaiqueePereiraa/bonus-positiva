@@ -1,7 +1,7 @@
-// Inadimplência — rodízio semanal; a responsável sobe o export do EVO e marca quem recebeu mensagem.
-import * as dados from '../dados.js?v=20261117105912';
-import { esc, dataCurta, diaSemana, seloStatus, toast, erro, vazio, modal } from '../ui.js?v=20261117105912';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, baixarArquivo } from './_comum.js?v=20261117105912';
+// Inadimplência — rodízio semanal; a lista chega sozinha da EVO e a responsável marca quem recebeu mensagem.
+import * as dados from '../dados.js?v=20261117133208';
+import { esc, dataCurta, diaSemana, seloStatus, toast, erro, vazio, modal } from '../ui.js?v=20261117133208';
+import { cabecalhoTarefa, listaContatos, baixarArquivo } from './_comum.js?v=20261117133208';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
@@ -33,7 +33,7 @@ export async function render(el, ctx, [tarefaId]) {
     </div>
     ${passadas.length ? `<div class="cartao"><h2>Histórico</h2><div class="tabela-wrap"><table class="tabela"><thead><tr><th>Data</th>${thUni}${ctx.ehAdmin ? '<th>Responsável</th>' : ''}<th>Contatos</th><th>Status</th><th></th></tr></thead><tbody>
       ${passadas.map((t) => `<tr><td>${dataCurta(t.prazo)}</td>${uni(t)}${ctx.ehAdmin ? `<td>${esc(ctx.nomeDe(t.responsavel_id))}</td>` : ''}
-        <td>${t.total ? `${t.feitos}/${t.total}` : 'sem planilha'}</td><td>${seloStatus(t.status)}</td>
+        <td>${t.total ? `${t.feitos}/${t.total}` : 'lista a caminho'}</td><td>${seloStatus(t.status)}</td>
         <td class="acoes"><a class="btn sec peq" href="#/inadimplencia/${t.id}">Abrir</a></td></tr>`).join('')}
     </tbody></table></div></div>` : ''}`;
 
@@ -57,53 +57,26 @@ export async function render(el, ctx, [tarefaId]) {
 async function detalhe(el, ctx, id) {
   const t = await dados.tarefa(id);
   if (!t) { el.innerHTML = vazio('Tarefa não encontrada.'); return; }
-  const ehMinha = ctx.ehAdmin || t.responsavel_id === ctx.perfil.id;
-  const podeSubstituir = ehMinha && t.feitos === 0;
+
   const imp = t.importacao_id ? (await dados.importacoes('inadimplencia', { limite: 50 })).find((i) => i.id === t.importacao_id) : null;
 
   el.innerHTML = `<a href="#/inadimplencia" class="dica">← Inadimplência</a>
     ${cabecalhoTarefa(t, ctx, {
       titulo: `Inadimplência — ${diaSemana(t.prazo)} ${dataCurta(t.prazo)}${ctx.ehAdmin ? ` · ${ctx.nomeUnidade(t.unidade)}` : ''}`,
-      extra: imp ? `<div class="linha-acoes" style="margin-top:14px"><span class="dica">Planilha: <b>${esc(imp.arquivo_nome || '—')}</b> (${imp.linhas} linhas)</span>
+      extra: imp ? `<div class="linha-acoes" style="margin-top:14px"><span class="dica">Lista: <b>${esc(imp.arquivo_nome || '—')}</b> (${imp.linhas} linhas)</span>
         ${imp.arquivo_path ? '<button class="btn sec peq" id="baixar">Baixar original</button>' : ''}
-        ${podeSubstituir ? '<button class="btn sec peq" id="substituir">Substituir planilha</button>' : ''}</div>` : '',
+        </div>` : '',
     })}
     <div class="cartao" id="corpo"></div>`;
 
   const corpo = el.querySelector('#corpo');
   el.querySelector('#baixar')?.addEventListener('click', () => baixarArquivo(imp.arquivo_path));
 
-  const mostrarUpload = (texto) => {
-    corpo.innerHTML = `<h2>${t.total ? 'Substituir planilha' : 'Planilha de inadimplentes'}</h2>
-      <p class="dica" style="margin-bottom:14px">No EVO, exporte a relação de inadimplentes (FiltroClientes) e envie aqui. Depois é só ir marcando quem recebeu mensagem — a tarefa conclui sozinha quando todos estiverem marcados.</p>
-      <div id="upload"></div><div id="previa"></div>`;
-    areaUpload(corpo.querySelector('#upload'), texto, async (arquivo) => {
-      const alvo = corpo.querySelector('#previa');
-      alvo.innerHTML = '<p class="dica" style="margin-top:12px">Lendo planilha…</p>';
-      const { registros, avisos, erro: problema } = await lerPlanilha(arquivo, 'inadimplencia');
-      if (problema) { alvo.innerHTML = `<p class="aviso-lista" style="margin-top:12px">${esc(problema)}</p>`; return; }
-      alvo.innerHTML = `<p style="margin-top:14px"><b>${registros.length} inadimplentes</b> encontrados.</p>${listaAvisos(avisos)}
-        <div class="linha-acoes" style="margin-top:14px"><button class="btn verde" id="confirmar">Enviar lista</button></div>`;
-      alvo.querySelector('#confirmar').onclick = async (e) => {
-        e.target.disabled = true;
-        try {
-          const caminho = await dados.enviarArquivo('inadimplencia', ctx.perfil.id, arquivo);
-          await dados.importarInadimplencia(t.id, caminho, arquivo.name, registros);
-          toast('Lista enviada. Agora é só marcar quem recebeu mensagem.');
-          ctx.atualizarSino();
-          detalhe(el, ctx, id);
-        } catch (err) { erro(err); e.target.disabled = false; }
-      };
-    });
-  };
-
-  // listas só automáticas: a da EVO entra sozinha na véspera (quem já está há mais de 3 dias com saldo em aberto)
-  void mostrarUpload;
+  // as listas chegam sozinhas da EVO na véspera (quem está há mais de 3 dias com saldo em aberto)
   if (!t.total) {
     corpo.innerHTML = vazio('A lista desta data entra sozinha da EVO no dia útil anterior, de madrugada. Não é preciso enviar planilha.');
     return;
   }
-  el.querySelector('#substituir')?.remove();
   corpo.innerHTML = '<h2>Inadimplentes</h2><div id="lista"></div>';
   await listaContatos(corpo.querySelector('#lista'), ctx, t);
 }
