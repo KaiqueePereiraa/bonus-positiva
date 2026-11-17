@@ -99,3 +99,17 @@ export function retornoTotais(r) {
   return { ...t, mensalidade, plataforma, mantido, total, porReal: plataforma > 0 ? total / plataforma : null,
     efeito: t.rc >= 10 && t.rs >= 10 ? { com: Math.round(100 * t.rcv / t.rc), sem: Math.round(100 * t.rsv / t.rs) } : null };
 }
+
+// Diagnóstico da equipe no período (ranking): sobrecarga (a maioria abaixo de 80% do mínimo) x individual
+export function diagnostico(lista, corte = 80) {
+  const com = lista.filter((c) => c.pct != null);
+  if (com.length === 0) return null;
+  const abaixo = com.filter((c) => c.pct < corte);
+  if (com.length >= 2 && abaixo.length * 2 > com.length) {
+    return { cor: 'vermelho', titulo: 'Possível sobrecarga', texto: ` ${abaixo.length} de ${com.length} consultoras ficaram abaixo de ${corte}% do mínimo. Quando a maioria não dá conta, o problema costuma ser o volume — vale rever as listas.` };
+  }
+  if (abaixo.length) {
+    return { cor: 'amarelo', titulo: 'Abaixo da equipe', texto: ` ${abaixo.map((c) => `${c.nome.split(' ')[0]} (${c.pct}%)`).join(', ')}. A equipe deu conta — veja as justificativas e converse.` };
+  }
+  return { cor: 'verde', titulo: 'Equipe no ritmo', texto: ` Todas cumpriram pelo menos ${corte}% do mínimo.` };
+}

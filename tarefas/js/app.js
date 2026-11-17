@@ -1,9 +1,9 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117103025';
-import * as dados from './dados.js?v=20261117103025';
-import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261117103025';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117103025';
-import { esc, erro, carregando } from './ui.js?v=20261117103025';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117103317';
+import * as dados from './dados.js?v=20261117103317';
+import { hojeSP, semanaDe, mesReferenciaSugerido } from './regras.js?v=20261117103317';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117103317';
+import { esc, erro, carregando, modal, toast } from './ui.js?v=20261117103317';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -23,6 +23,7 @@ const ICONES = {
 const ROTAS = {
   painel: ['Painel do gestor', 'painel', 'ind', true],
   'visao-geral': ['Visão geral', 'visao-geral', 'visao', false],
+  'meu-dia': ['Meu dia', 'meu-dia', 'tarefas', false],
   'minhas-tarefas': ['Minhas tarefas', 'minhas-tarefas', 'tarefas', false],
   inadimplencia: ['Inadimplência', 'inadimplencia', 'inad', false],
   risco: ['Risco de abandono', 'risco', 'risco', false],
@@ -31,6 +32,7 @@ const ROTAS = {
   // EM PREPARAÇÃO (pedido do usuário, 16/11/2026): só o admin vê a Escala até ele dizer que está 100% pronta.
   // Para abrir para as consultoras: trocar `true` por `false` aqui e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
   escala: ['Escala', 'escala', 'escala', true],
+  desempenho: ['Desempenho', 'desempenho', 'ind', false],
   indicadores: ['Indicadores', 'indicadores', 'ind', true],
   insights: ['Insights da Operação', 'insights', 'ins', true],
   retorno: ['Retorno do mês', 'retorno', 'rel', true],
@@ -81,7 +83,7 @@ async function carregarBase() {
 }
 
 function montarMenu() {
-  const itens = Object.entries(ROTAS).filter(([rota, r]) => (!r[3] || ehAdmin) && !(ehAdmin && rota === 'minhas-tarefas'));
+  const itens = Object.entries(ROTAS).filter(([rota, r]) => (!r[3] || ehAdmin) && !(ehAdmin && (rota === 'minhas-tarefas' || rota === 'meu-dia')));
   const corte = itens.findIndex(([rota, r]) => r[3] && rota !== 'painel');
   $('menu').innerHTML = itens.map(([rota, [titulo, , ic]], i) =>
     `${i === corte ? '<li class="sep" role="separator"></li>' : ''}<li><a href="#/${rota}" data-rota="${rota}">${icone(ic)}<span>${esc(titulo)}</span></a></li>`).join('');
@@ -109,7 +111,7 @@ function montarMenu() {
 let renderAtual = 0;
 async function navegar() {
   const [rota = '', ...params] = location.hash.replace(/^#\/?/, '').split('/');
-  const padrao = ehAdmin ? 'painel' : 'minhas-tarefas';
+  const padrao = ehAdmin ? 'painel' : 'meu-dia';
   const def = ROTAS[rota];
   if (!def || (def[3] && !ehAdmin)) { location.replace(`#/${padrao}`); return; }
   const [titulo, modulo] = def;
@@ -120,7 +122,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261117103025`);
+    const tela = await import(`./telas/${modulo}.js?v=20261117103317`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -190,6 +192,24 @@ function ligarSino() {
 try {
   await carregarBase();
 } catch (e) { erro(e); }
+
+// Plano do dia: quem não bateu o mínimo de um dia útil conta o que aconteceu antes de seguir (texto livre;
+// "não trabalhei" tira o dia da conta). O gestor recebe no WhatsApp.
+async function pedirJustificativas() {
+  for (let volta = 0; volta < 10; volta++) {
+    const p = await dados.justificativaPendente().catch(() => null);
+    if (!p) return;
+    const dia = `${p.data.slice(8, 10)}/${p.data.slice(5, 7)}`;
+    const r = await modal(`Como foi o dia ${dia}?`, `<p style="margin-bottom:10px">Você fez <b>${p.feitos} de ${p.minimo}</b> contatos do mínimo desse dia. Conta pra gente o que aconteceu — vai para o gestor.</p>
+      <textarea class="ctrl" id="just-texto" rows="4" style="width:100%" placeholder="Ex.: muitas matrículas na recepção, reunião, sistema fora…"></textarea>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="just-nao"> Não trabalhei nesse dia (folga, falta ou atestado)</label>`,
+      { acoes: [{ rotulo: 'Enviar', valor: 'enviar' }], ler: true });
+    if (r.valor !== 'enviar') { toast('Antes de continuar, conte o que aconteceu nesse dia.', 'erro'); continue; }
+    try { await dados.justificarDia(p.data, r.campos['just-texto'], r.campos['just-nao']); toast('Obrigado! Enviado ao gestor.'); }
+    catch (e) { erro(e); }
+  }
+}
+if (!ehAdmin) await pedirJustificativas();
 montarMenu();
 ligarSino();
 window.addEventListener('hashchange', navegar);
