@@ -26,6 +26,8 @@ export function sinais(unidades) {
   const inad = pend('inadimplencia');
   const risco = pend('risco');
   const nf = pend('nao_fechou');
+  const novos = pend('lead_novo') + pend('experimental_confirmar') + pend('experimental_pos');
+  const relac = pend('renovacao_vencer') + pend('renovacao_venceu') + pend('primeiros_90') + pend('cancelou') + pend('ex_alunos');
   const rc = mes('risco_contato'), rcv = mes('risco_contato_voltou'), rs = mes('risco_sem_contato'), rsv = mes('risco_sem_contato_voltou');
   const efeito = rc >= 10 && rs >= 10 ? ` Com contato, ${Math.round(100 * rcv / rc)}% voltaram; sem contato, ${Math.round(100 * rsv / rs)}%.` : '';
 
@@ -34,14 +36,14 @@ export function sinais(unidades) {
       titulo: sem('pagou') ? `${plural(sem('pagou'), 'pagou', 'pagaram')} nesta semana` : 'Cobrança da semana',
       texto: `${sem('valor') ? `${reais(sem('valor'))} recebidos depois da cobrança. ` : ''}${inad ? `${plural(inad, 'inadimplente aguarda', 'inadimplentes aguardam')} contato.` : 'Nenhum inadimplente esperando contato.'}`,
       acao: inad ? 'Garanta que a lista de hoje seja feita até o fim do dia.' : '' },
-    { area: 'Retenção', cor: risco ? 'amarelo' : 'verde',
+    { area: 'Retenção', cor: risco || relac ? 'amarelo' : 'verde',
       titulo: sem('voltou') ? `${plural(sem('voltou'), 'aluno voltou', 'alunos voltaram')} a treinar` : 'Alunos em risco',
-      texto: `${risco ? `${plural(risco, 'aluno em risco ainda sem contato', 'alunos em risco ainda sem contato')}.` : 'Todos os alunos em risco já receberam contato.'}${efeito}`,
+      texto: `${risco ? `${plural(risco, 'aluno em risco ainda sem contato', 'alunos em risco ainda sem contato')}.` : 'Todos os alunos em risco já receberam contato.'}${relac ? ` ${plural(relac, 'contato', 'contatos')} de renovação e relacionamento ${relac === 1 ? 'pendente' : 'pendentes'}.` : ''}${efeito}`,
       acao: risco ? 'Peça para perguntarem o motivo da falta, não só "sentimos sua falta".' : '' },
-    { area: 'Vendas', cor: nf ? 'amarelo' : 'verde',
+    { area: 'Vendas', cor: nf || novos ? 'amarelo' : 'verde',
       titulo: mes('matriculou') ? `${plural(mes('matriculou'), 'matrícula recuperada', 'matrículas recuperadas')} no mês` : 'Oportunidades não fechadas',
-      texto: nf ? `${plural(nf, 'interessado ainda sem motivo registrado', 'interessados ainda sem motivo registrado')}.` : 'Todos os interessados do mês já têm motivo registrado.',
-      acao: nf ? 'Ofereça um horário de experimental já na primeira mensagem.' : '' },
+      texto: `${novos ? `${plural(novos, 'interessado novo ou experimental esperando contato', 'interessados novos e experimentais esperando contato')}. ` : ''}${nf ? `${plural(nf, 'interessado ainda sem motivo registrado', 'interessados ainda sem motivo registrado')}.` : 'Todos os interessados do mês já têm motivo registrado.'}`,
+      acao: novos ? 'Interessado esfria rápido: o contato precisa sair hoje.' : nf ? 'Ofereça um horário de experimental já na primeira mensagem.' : '' },
     { area: 'Equipe', cor: atrasadas.length || vermelhas.length ? 'vermelho' : 'verde',
       titulo: atrasadas.length ? `${plural(atrasadas.length, 'consultora com atraso', 'consultoras com atraso')}` : vermelhas.length ? 'Ritmo abaixo hoje' : 'Equipe em dia',
       texto: atrasadas.length ? atrasadas.map((c) => `${c.nome.split(' ')[0]} (${c.atrasados})`).join(', ') + ' com contatos atrasados.'
@@ -87,14 +89,14 @@ export function retornoTotais(r) {
   const cfg = r.config || {};
   const mensalidade = Number(cfg.mensalidade_media) || 0;
   const plataforma = Number(cfg.plataforma_mensalidade) || 0;
-  const t = { pagou: 0, valor: 0, voltou: 0, matriculou: 0, sozinhos: 0, contatos: 0, listas: 0, rc: 0, rcv: 0, rs: 0, rsv: 0 };
+  const t = { pagou: 0, valor: 0, voltou: 0, matriculou: 0, renovou: 0, sozinhos: 0, contatos: 0, listas: 0, rc: 0, rcv: 0, rs: 0, rsv: 0 };
   for (const u of r.unidades) {
     const x = u.resultados || {};
-    t.pagou += +x.pagou || 0; t.valor += +x.valor || 0; t.voltou += +x.voltou || 0; t.matriculou += +x.matriculou || 0;
+    t.pagou += +x.pagou || 0; t.valor += +x.valor || 0; t.voltou += +x.voltou || 0; t.matriculou += +x.matriculou || 0; t.renovou += +x.renovou || 0;
     t.sozinhos += +x.sozinhos || 0; t.contatos += +u.contatos || 0; t.listas += +u.listas_automaticas || 0;
     t.rc += +x.risco_contato || 0; t.rcv += +x.risco_contato_voltou || 0; t.rs += +x.risco_sem_contato || 0; t.rsv += +x.risco_sem_contato_voltou || 0;
   }
-  const mantido = mensalidade * (t.voltou + t.matriculou);
+  const mantido = mensalidade * (t.voltou + t.matriculou + t.renovou);
   const total = t.valor + mantido;
   return { ...t, mensalidade, plataforma, mantido, total, porReal: plataforma > 0 ? total / plataforma : null,
     efeito: t.rc >= 10 && t.rs >= 10 ? { com: Math.round(100 * t.rcv / t.rc), sem: Math.round(100 * t.rsv / t.rs) } : null };

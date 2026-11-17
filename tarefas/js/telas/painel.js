@@ -1,8 +1,8 @@
 // Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que importa (gestão por exceção), em frases
 // simples, cada uma com "o que fazer". Os números vêm prontos do banco (painel_gestor), sem dados de alunos.
-import * as dados from '../dados.js?v=20261117104218';
-import { esc, vazio } from '../ui.js?v=20261117104218';
-import { sinais, atencao, quadrante, reais, mediana } from '../painel-regras.js?v=20261117104218';
+import * as dados from '../dados.js?v=20261117105912';
+import { esc, vazio } from '../ui.js?v=20261117105912';
+import { sinais, atencao, quadrante, reais, mediana } from '../painel-regras.js?v=20261117105912';
 
 export async function render(el, ctx) {
   const p = await dados.painelGestor();

@@ -41,8 +41,13 @@ export function barra(feitos, total, { rotulo = true } = {}) {
     <div class="barra-fill" style="width:${p}%"></div></div>${rotulo ? `<span class="barra-num">${feitos}/${total} · ${p}%</span>` : ''}`;
 }
 
-export const NOMES_CONTROLE = { inadimplencia: 'Inadimplência', risco: 'Risco de abandono', nao_fechou: 'Por que não fechou?', lista_fazer: 'Lista a fazer', renovacao_vencer: 'Renovação: a vencer', renovacao_venceu: 'Renovação: venceu e não renovou' };
-export const ROTA_CONTROLE = { inadimplencia: 'inadimplencia', risco: 'risco', nao_fechou: 'nao-fechou', lista_fazer: 'lista-fazer', renovacao_vencer: 'renovacao', renovacao_venceu: 'renovacao' };
+export const NOMES_CONTROLE = { inadimplencia: 'Inadimplência', risco: 'Risco de abandono', nao_fechou: 'Por que não fechou?', lista_fazer: 'Lista a fazer', renovacao_vencer: 'Renovação: a vencer', renovacao_venceu: 'Renovação: venceu e não renovou',
+  experimental_confirmar: 'Experimental: confirmar', experimental_pos: 'Experimental: pós-aula', lead_novo: 'Interessado novo (24h)',
+  primeiros_90: 'Primeiros 90 dias', cancelou: 'Cancelou: entrevista de saída', ex_alunos: 'Ex-alunos: campanha de volta' };
+export const ROTA_CONTROLE = { inadimplencia: 'inadimplencia', risco: 'risco', nao_fechou: 'nao-fechou', lista_fazer: 'lista-fazer', renovacao_vencer: 'renovacao', renovacao_venceu: 'renovacao',
+  experimental_confirmar: 'vendas', experimental_pos: 'vendas', lead_novo: 'vendas', primeiros_90: 'relacionamento', cancelou: 'relacionamento', ex_alunos: 'relacionamento' };
+// listas que chegam todo dia (as demais semanais/mensais)
+export const LISTAS_DIARIAS = ['experimental_confirmar', 'experimental_pos', 'lead_novo'];
 
 // ── Avisos rápidos ──
 let toastTimer;

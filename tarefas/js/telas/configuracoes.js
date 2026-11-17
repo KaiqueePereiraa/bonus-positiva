@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261117104218';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117104218';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117104218';
+import * as dados from '../dados.js?v=20261117105912';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117105912';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117105912';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -138,7 +138,7 @@ async function feriados(el) {
 
 // ── Motivos ──
 // listas que pedem motivo (só aparecem as que já existem no banco)
-const LISTAS_MOTIVO = [['nao_fechou', 'Por que não fechou?'], ['renovacao_venceu', 'Renovação: venceu e não renovou']];
+const LISTAS_MOTIVO = [['nao_fechou', 'Por que não fechou?'], ['renovacao_venceu', 'Renovação: venceu e não renovou'], ['cancelou', 'Cancelou: entrevista de saída']];
 let listaMotivo = 'nao_fechou';
 
 async function motivos(el, ctx) {
@@ -223,6 +223,10 @@ const ROTINAS_EVO = [
     texto: 'Busca as oportunidades (cadastros) do mês anterior que não viraram cliente, tira quem já é aluno ativo (mesmo nome) e as oportunidades repetidas (mesmo celular), marca quem tem o celular de um aluno ativo e sobe a lista do mês para as consultoras justificarem.' },
   { id: 'renovacao', titulo: 'Renovação de contratos', quando: 'Toda segunda-feira',
     texto: 'Monta duas listas: "a vencer" (contratos que vencem na próxima semana — na primeira vez, também nesta) e "venceu e não renovou" (venceram na semana passada). Tira quem já renovou, contratos com categoria (VIP, Colaborador, Wellhub…), registrados e quem está na inadimplência, e divide entre as consultoras.' },
+  { id: 'vendas_dia', titulo: 'Vendas do dia (experimental e interessados novos)', quando: 'De segunda a sexta, 6h da manhã',
+    texto: 'Monta três listas do dia: experimentais do próximo dia útil para CONFIRMAR (na sexta, também sábado, domingo e segunda), experimentais do último dia útil para o PÓS-AULA e INTERESSADOS NOVOS cadastrados desde o último dia útil. Tira quem já se matriculou, quem já é aluno (mesmo nome) e cadastros repetidos (mesmo celular); quem está numa experimental não entra de novo como interessado. Divide entre as consultoras; prazo no mesmo dia.' },
+  { id: 'relacionamento', titulo: 'Relacionamento (primeiros 90 dias, cancelou, ex-alunos)', quando: 'Toda segunda-feira, 5h30',
+    texto: 'Monta três listas da semana: alunos nas semanas 1, 2, 4 e 8 depois da matrícula (quem veio menos aparece primeiro), quem CANCELOU na semana passada (entrevista de saída com motivo; troca de plano e transferência ficam fora) e EX-ALUNOS cujo contrato terminou há uns 3 ou 6 meses e não voltaram. Tira contratos especiais, registrados e quem já está em outra lista de contato (uma conversa por vez). Prazo na sexta.' },
   { id: 'resultados', titulo: 'Resultado dos contatos', quando: 'Todo dia, de madrugada',
     texto: 'Toda madrugada confere na EVO: quem ainda está esperando contato e JÁ pagou, voltou a treinar ou se matriculou sai da lista sozinho (ninguém manda mensagem à toa). E para quem já recebeu contato, registra se deu certo — aparece em Indicadores, no desempenho e no retorno do mês. Não manda mensagem para ninguém.' },
 ];
@@ -239,6 +243,14 @@ const ROTULOS_RESUMO = {
   contratos_na_janela: 'Contratos vencendo nas duas semanas', ja_renovaram: 'Fora: já renovaram', especiais: 'Fora: contratos especiais',
   registrados: 'Fora: registrados', em_cobranca: 'Fora: na inadimplência', fora_da_janela: 'Vencem nesta semana (já tiveram contato)',
   a_vencer: 'Lista "a vencer"', venceu_sem_renovar: 'Lista "venceu e não renovou"', excluidos_em_cobranca: 'Fora: já na lista de inadimplência', tirados_da_lista: 'Saíram das listas (já resolveram sozinhos)',
+  sessoes_lidas: 'Aulas com experimental abertas', experimentais_confirmar: 'Experimentais para confirmar (EVO)', experimentais_pos: 'Experimentais do último dia útil (EVO)',
+  ja_matricularam: 'Fora: já se matricularam', interessados_lidos: 'Interessados cadastrados', interessados_ja_cliente: 'Fora: já viraram cliente',
+  interessados_ja_aluno: 'Fora: já é aluno (mesmo nome)', interessados_repetidos: 'Fora: cadastro repetido (mesmo celular)', interessados_na_experimental: 'Fora: já estão na lista da experimental',
+  confirmar: 'Lista "confirmar"', pos_aula: 'Lista "pós-aula"', interessados_novos: 'Lista "interessados novos"', janela_confirmar: 'Aulas de', janela_pos: 'Pós-aula das aulas de',
+  matriculas_lidas: 'Matrículas lidas (semanas 1, 2, 4 e 8)', cancelamentos_lidos: 'Cancelamentos lidos', contratos_terminados_lidos: 'Contratos terminados há 3/6 meses',
+  fora_especiais: 'Fora: contratos especiais', fora_registrados: 'Fora: registrados', fora_em_outra_lista: 'Fora: já em outra lista de contato',
+  cancelou_mas_tem_contrato: 'Fora: cancelou mas tem outro contrato (troca de plano)', transferencias_trocas: 'Fora: transferência/troca de contrato',
+  ex_aluno_ja_voltou: 'Fora: ex-aluno que já voltou', primeiros_90_dias: 'Lista "primeiros 90 dias"', cancelaram: 'Lista "cancelou"', ex_alunos: 'Lista "ex-alunos"',
   pagou_sem_contato: 'Pagaram antes do contato', voltou_sem_contato: 'Voltaram antes do contato', matriculou_sem_contato: 'Matricularam antes do contato',
 };
 const SELO_EXEC = { ok: 'verde', ignorado: 'cinza', erro: 'vermelho' };

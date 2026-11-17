@@ -1,8 +1,8 @@
 // Retorno do mês — quanto a Central trouxe de volta: alunos que voltaram, cobranças recebidas, matrículas.
 // Conta só o que aconteceu DEPOIS do contato da equipe (quem resolveu sozinho fica à parte, como comparação).
-import * as dados from '../dados.js?v=20261117104218';
-import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261117104218';
-import { retornoTotais, reais } from '../painel-regras.js?v=20261117104218';
+import * as dados from '../dados.js?v=20261117105912';
+import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261117105912';
+import { retornoTotais, reais } from '../painel-regras.js?v=20261117105912';
 
 let escolhido = null;
 
@@ -31,12 +31,13 @@ export async function render(el, ctx) {
         <div class="numero verde"><small>Trazido pela equipe com a Central</small><b>${reais(t.total)}</b><span>${t.mensalidade ? 'cobranças + alunos mantidos (estimativa)' : 'cobranças recebidas'}</span></div>
         <div class="numero azul"><small>Alunos que voltaram a treinar</small><b>${t.voltou}</b><span>depois do contato do risco</span></div>
         <div class="numero escuro"><small>Inadimplentes que pagaram</small><b>${t.pagou}</b><span>${reais(t.valor)} recebidos</span></div>
-        <div class="numero"><small>Matrículas recuperadas</small><b>${t.matriculou}</b><span>do "Por que não fechou?"</span></div>
+        <div class="numero"><small>Matrículas recuperadas</small><b>${t.matriculou}</b><span>interessados, experimentais e ex-alunos</span></div>
+        <div class="numero"><small>Renovações</small><b>${t.renovou}</b><span>depois do contato da renovação</span></div>
       </div>
       ${t.porReal ? `<p style="font-size:17px;margin:6px 0"><b>📈 Para cada R$ 1 pago na plataforma, voltaram ${reais(t.porReal).replace('R$ ', 'R$ ')}.</b></p>` : ''}
       ${t.efeito ? `<p style="margin:6px 0">🔎 <b>Prova do efeito:</b> dos alunos em risco que receberam contato, <b>${t.efeito.com}%</b> voltaram; dos que ficaram sem contato, <b>${t.efeito.sem}%</b>.</p>` : ''}
       <p style="margin:6px 0">⏱️ ${t.listas} listas montadas sozinhas a partir da EVO e ${t.contatos} contatos feitos pela equipe. 🤖 ${t.sozinhos} pessoas resolveram sozinhas e saíram das listas antes do contato (não contam como resultado da equipe).</p>
-      ${t.mensalidade ? `<p class="dica">Alunos mantidos e matrículas valem ${reais(t.mensalidade)} cada (mensalidade média informada), ou seja, uma mensalidade só: o valor é conservador.</p>` : ''}
+      ${t.mensalidade ? `<p class="dica">Alunos mantidos, renovações e matrículas valem ${reais(t.mensalidade)} cada (mensalidade média informada), ou seja, uma mensalidade só: o valor é conservador.</p>` : ''}
 
       ${unidades.map((u) => {
         const x = u.resultados || {};

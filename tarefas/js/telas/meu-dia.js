@@ -1,6 +1,6 @@
 // Meu dia — o que a consultora precisa fazer hoje: o mínimo de cada lista (o que falta ÷ dias úteis até o prazo).
-import * as dados from '../dados.js?v=20261117104218';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117104218';
+import * as dados from '../dados.js?v=20261117105912';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117105912';
 
 export async function render(el, ctx) {
   const d = await dados.meuDia();

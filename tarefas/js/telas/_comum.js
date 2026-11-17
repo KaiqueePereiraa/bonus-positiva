@@ -1,8 +1,8 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261117104218';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261117104218';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261117104218';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261117104218';
+import * as dados from '../dados.js?v=20261117105912';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261117105912';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261117105912';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261117105912';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -107,7 +107,7 @@ export async function listaContatos(el, ctx, tarefa) {
     const ultima = i.dados?.ultima_presenca ? dataLonga(i.dados.ultima_presenca.slice(0, 10)) : 'sem registro';
     const classe = i.dados?.classe || '';
     return `<tr class="${i.feito_em ? 'feito' : ''}" data-id="${i.id}">
-      <td class="nome">${esc(i.nome)}<span class="sub">ID ${esc(i.evo_id)}${i.repetido_semana_anterior ? ' · <span class="etiqueta">também na semana anterior</span>' : ''}</span></td>
+      <td class="nome">${esc(i.nome)}<span class="sub">ID ${esc(i.evo_id)}${i.dados?.info ? ` · ${esc(i.dados.info)}` : ''}${i.repetido_semana_anterior ? ' · <span class="etiqueta">também na semana anterior</span>' : ''}</span></td>
       <td class="oculta-cel">${tel ? esc(`(${tel.slice(2, 4)}) ${tel.slice(4, -4)}-${tel.slice(-4)}`) : '<span class="dica">sem celular</span>'}</td>
       ${ehRisco ? `<td class="oculta-cel">${esc(ultima)}</td>${obsRisco(i)}` : ''}
       <td>${i.feito_em ? `<span class="selo verde">${classe ? 'Registrado' : 'Enviada'}</span><span class="sub">${dataHora(i.feito_em)}${ctx.ehAdmin && i.feito_por && i.feito_por !== tarefa.responsavel_id ? ` por ${esc(ctx.nomeDe(i.feito_por))}` : ''}</span>` : '<span class="selo cinza">Pendente</span>'}</td>
