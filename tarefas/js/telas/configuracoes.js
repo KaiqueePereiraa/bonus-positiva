@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261117140556';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117140556';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117140556';
+import * as dados from '../dados.js?v=20261117172941';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261117172941';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261117172941';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -291,9 +291,11 @@ async function evo(el, ctx) {
       ${ctx.unidades.map((u) => { const n = u.id === 'laranjeiras' ? ['EVO_DNS', 'EVO_TOKEN'] : [`EVO_DNS_${u.id.toUpperCase()}`, `EVO_TOKEN_${u.id.toUpperCase()}`]; return `${esc(u.nome.replace('Positiva ', ''))}: <b>${n[0]}</b> e <b>${n[1]}</b>`; }).join(' · ')}.</p>
     <div class="linha-acoes"><button class="btn" id="testar-evo">Testar conexão das unidades</button><button class="btn sec" id="achar-filiais">Buscar filiais</button></div>
     <div id="res-conexao" style="margin:12px 0"></div>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade da Central</th><th>Filial na EVO</th></tr></thead><tbody>
-      ${ctx.unidades.map((u) => `<tr><td class="nome">${esc(u.nome)}</td><td>${idDe(u.id) !== '' ? `Filial ${esc(String(idDe(u.id)))} <span class="dica">(descoberta sozinha)</span>` : '<span class="dica">—</span>'}</td></tr>`).join('')}
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade da Central</th><th>Filial na EVO</th><th>Rotinas automáticas</th></tr></thead><tbody>
+      ${ctx.unidades.map((u) => { const ativa = u.automacao_ativa !== false; return `<tr><td class="nome">${esc(u.nome)}</td><td>${idDe(u.id) !== '' ? `Filial ${esc(String(idDe(u.id)))} <span class="dica">(descoberta sozinha)</span>` : '<span class="dica">—</span>'}</td>
+        <td><span class="selo ${ativa ? 'verde' : 'cinza'}">${ativa ? 'Ligadas' : 'Desligadas'}</span> ${'automacao_ativa' in u ? `<button class="btn ${ativa ? 'perigo' : 'verde'} peq" data-unidade-auto="${u.id}">${ativa ? 'Desligar nesta unidade' : 'Ligar nesta unidade'}</button>` : ''}</td></tr>`; }).join('')}
     </tbody></table></div>
+    <p class="dica" style="margin-top:8px">Unidade com rotinas desligadas não recebe nenhuma lista automática da EVO (nem a conferência de resultados), mesmo com a rotina ligada abaixo.</p>
     <p class="dica" style="margin-top:8px">A filial só é usada quando a chave da unidade enxerga mais de uma filial; com chave própria por unidade costuma ficar tudo certo.</p>
 
     <h2 style="font-size:14px;margin:26px 0 10px">2. Rotinas automáticas</h2>
@@ -333,6 +335,17 @@ async function evo(el, ctx) {
       return `<div style="padding:8px 0;border-top:1px solid var(--line)"><b>${esc(nomeUni(x.unidade))}</b> <span class="selo ${cor}">${rot}</span>${x.erro ? `<p class="dica" style="margin-top:4px">${esc(x.erro)}</p>` : ''}</div>`;
     }).join('');
   };
+  el.querySelectorAll('[data-unidade-auto]').forEach((b) => b.addEventListener('click', async () => {
+    const u = ctx.unidades.find((x) => x.id === b.dataset.unidadeAuto);
+    const ligar = u.automacao_ativa === false;
+    b.disabled = true;
+    try {
+      await dados.salvarUnidade(u.id, { automacao_ativa: ligar });
+      u.automacao_ativa = ligar;
+      toast(`${u.nome}: rotinas automáticas ${ligar ? 'ligadas' : 'desligadas'}.`);
+      evo(el, ctx);
+    } catch (err) { erro(err); b.disabled = false; }
+  }));
   el.querySelector('#testar-evo').onclick = async (e) => {
     const saida = el.querySelector('#res-conexao');
     saida.innerHTML = '<p class="dica">Testando…</p>';

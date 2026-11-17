@@ -1,10 +1,10 @@
 // Resultados — o que os contatos trouxeram (conferido na EVO), o que os números dizem (frases automáticas, antes na
 // tela "Insights"), cumprimento dos prazos e os motivos do "Por que não fechou?". O ranking da equipe fica em Desempenho.
-import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, resultadosPorConsultora, gerarInsights, POSITIVO } from '../analises.js?v=20261117140556';
-import * as dados from '../dados.js?v=20261117140556';
-import { linha, barras } from '../graficos.js?v=20261117140556';
-import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261117140556';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261117140556';
+import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, resultadosPorConsultora, gerarInsights, POSITIVO } from '../analises.js?v=20261117172941';
+import * as dados from '../dados.js?v=20261117172941';
+import { linha, barras } from '../graficos.js?v=20261117172941';
+import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261117172941';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261117172941';
 
 let filtros;
 

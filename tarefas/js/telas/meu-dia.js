@@ -1,8 +1,8 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 3 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261117140556';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117140556';
+import * as dados from '../dados.js?v=20261117172941';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117172941';
 
 const CHAVE_GUIA = 'central_guia_meu_dia';
 const guiaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1'; } catch { return true; } };

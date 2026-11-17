@@ -63,6 +63,7 @@ export function atencao(p, unidades, hora = 12, desligadas = []) {
   }
   for (const u of unidades) {
     if (!u.consultoras?.length) {
+      if (u.automacao_ativa === false) continue;   // unidade desligada de propósito: sem alerta
       lista.push({ texto: `${u.nome} está sem consultoras cadastradas: as listas não são distribuídas.`, acao: 'Cadastre as consultoras e a ordem do rodízio.', rota: '#/configuracoes' });
       continue;
     }

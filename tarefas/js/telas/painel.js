@@ -1,19 +1,20 @@
 // Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que importa (gestão por exceção), em frases
 // simples, cada uma com "o que fazer". Os números vêm prontos do banco (painel_gestor), sem dados de alunos.
-import * as dados from '../dados.js?v=20261117140556';
-import { esc, vazio, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117140556';
-import { somarDias, semanaDe } from '../regras.js?v=20261117140556';
+import * as dados from '../dados.js?v=20261117172941';
+import { esc, vazio, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117172941';
+import { somarDias, semanaDe } from '../regras.js?v=20261117172941';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', vendas_dia: 'Vendas do dia', relacionamento: 'Relacionamento' };
-import { sinais, atencao, quadrante, reais, mediana } from '../painel-regras.js?v=20261117140556';
+import { sinais, atencao, quadrante, reais, mediana } from '../painel-regras.js?v=20261117172941';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
   const [p, cfg, tarefas] = await Promise.all([dados.painelGestor(), dados.config().catch(() => ({})),
     dados.tarefas({ desde: somarDias(hojeIso, -21), unidade: ctx.unidade || undefined }).catch(() => [])]);
   const desligadas = Object.entries(ROTINAS_NOVAS).filter(([id]) => cfg[`evo_auto_${id}`] !== true).map(([, nome]) => nome);
-  const unidades = (ctx.unidade ? p.unidades.filter((u) => u.id === ctx.unidade) : p.unidades);
+  const ativaDe = (id) => ctx.unidades.find((x) => x.id === id)?.automacao_ativa;
+  const unidades = (ctx.unidade ? p.unidades.filter((u) => u.id === ctx.unidade) : p.unidades).map((u) => ({ ...u, automacao_ativa: ativaDe(u.id) }));
   const ativas = unidades.filter((u) => u.consultoras.length);
   const hora = +new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hour12: false }).format(new Date());
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';

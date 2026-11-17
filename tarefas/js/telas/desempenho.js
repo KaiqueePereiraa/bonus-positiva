@@ -1,9 +1,9 @@
 // Desempenho — ranking aberto (todas veem todas): mínimo cumprido, dias com a meta batida, contatos e resultados.
 // O gestor também vê as justificativas e o diagnóstico (sobrecarga x individual).
-import * as dados from '../dados.js?v=20261117140556';
-import { esc, dataCurta, vazio } from '../ui.js?v=20261117140556';
-import { somarDias, semanaDe } from '../regras.js?v=20261117140556';
-import { diagnostico } from '../painel-regras.js?v=20261117140556';
+import * as dados from '../dados.js?v=20261117172941';
+import { esc, dataCurta, vazio } from '../ui.js?v=20261117172941';
+import { somarDias, semanaDe } from '../regras.js?v=20261117172941';
+import { diagnostico } from '../painel-regras.js?v=20261117172941';
 
 let periodo = 'semana_passada';
 
