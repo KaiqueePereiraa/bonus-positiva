@@ -252,3 +252,26 @@ details.mais-filtros .filtros{margin-top:12px}
   .cartao{box-shadow:none;border:0}
   body{background:#fff}
 }
+
+/* ── Meta da semana (topo do Meu dia) ── */
+.meta-semana{background:var(--grad-dark);color:var(--white);padding:24px 26px}
+.meta-semana a{color:var(--green)}
+.ms-topo{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;opacity:.9}
+.ms-numero{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:10px 0 18px}
+.ms-numero b{font-size:52px;line-height:1;font-weight:900;color:var(--green)}
+.ms-numero span{font-size:17px;font-weight:700}
+.ms-faixa{margin-left:auto;background:rgba(255,255,255,.12);border-radius:999px;padding:5px 12px;font-size:13px!important;font-weight:900!important}
+.ms-faixa.ok{background:var(--green);color:var(--dark)}
+.ms-trilha{position:relative;height:16px;background:rgba(255,255,255,.14);border-radius:10px}
+.ms-fill{height:100%;background:linear-gradient(90deg,#7FB85A,#BEF575);border-radius:10px;transition:width .4s}
+.ms-trilha i{position:absolute;top:-4px;width:4px;height:24px;margin-left:-2px;background:rgba(255,255,255,.45);border-radius:2px}
+.ms-trilha i.ok{background:var(--white)}
+.ms-marcos{position:relative;height:38px;margin-top:6px;font-size:12px;font-weight:800}
+.ms-marcos span{position:absolute;transform:translateX(-50%);white-space:nowrap;opacity:.65;text-align:center}
+.ms-marcos span.ok{opacity:1;color:var(--green)}
+.ms-marcos small{display:block;font-size:11px;font-weight:700;opacity:.8}
+.ms-frase{font-size:17px;font-weight:800;margin-top:6px;line-height:1.35}
+.ms-nota{font-size:12px;opacity:.75;margin-top:10px;line-height:1.5}
+@media (max-width:600px){.meta-semana{padding:20px}.ms-numero b{font-size:44px}.ms-faixa{margin-left:0}
+  .ms-marcos{display:flex;justify-content:flex-end;gap:16px;height:auto;margin-top:8px}
+  .ms-marcos span{position:static;transform:none!important;text-align:center!important}}

@@ -1,8 +1,8 @@
 // Filtros e carga de dados compartilhados por Indicadores e Relatórios.
-import * as dados from '../dados.js?v=20261118185017';
-import { esc, STATUS, NOMES_CONTROLE } from '../ui.js?v=20261118185017';
-import { somarDias, semanaDe } from '../regras.js?v=20261118185017';
-import { comMotivoEfetivo } from '../analises.js?v=20261118185017';
+import * as dados from '../dados.js?v=20261118192412';
+import { esc, STATUS, NOMES_CONTROLE } from '../ui.js?v=20261118192412';
+import { somarDias, semanaDe } from '../regras.js?v=20261118192412';
+import { comMotivoEfetivo } from '../analises.js?v=20261118192412';
 
 // Períodos de um clique (o resto dos filtros fica em "Mais filtros")
 export function periodos(hoje) {

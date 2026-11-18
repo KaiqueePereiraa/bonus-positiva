@@ -35,3 +35,23 @@ export function resumoSemana(vendas, hoje, unidade) {
   return { semana: n + 1, ini: s.ini, fim: s.fim, feitos, faixa: atual ? atual[1] : 'Abaixo do básico',
     proxima: proxima ? { nome: proxima[1], faltam: proxima[0] - feitos } : null, basico: faixas[faixas.length - 1][0] };
 }
+
+// Quadro da meta no topo do "Meu dia": marcos das faixas na barra, quantos dias faltam e uma frase de incentivo.
+// r = resumoSemana(...). A barra vai até a Super meta; cada faixa vira um marco (✓ quando atingida).
+export function painelMeta(r, hoje, unidade) {
+  const faixas = [...(FAIXAS[unidade] || FAIXAS.club)].reverse();   // da menor para a maior
+  const topo = faixas[faixas.length - 1][0];
+  const dia = (s) => Date.parse(`${s}T12:00:00Z`);
+  const dias = Math.max(1, Math.round((dia(r.fim) - dia(hoje)) / 864e5) + 1);   // hoje incluído
+  const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+  const marcos = faixas.map(([n, nome]) => ({ n, nome, atingido: r.feitos >= n, pos: Math.round((100 * n) / topo) }));
+  let frase;
+  if (!r.proxima) frase = 'Super meta batida! 🏆 Semana de referência — tudo o que vier agora é extra.';
+  else {
+    const alvo = r.proxima.nome === 'Básico' ? 'o Básico' : `a ${r.proxima.nome}`;
+    const quando = dias === 1 ? 'hoje é o último dia da semana' : `você tem ${plural(dias, 'dia', 'dias')} até domingo`;
+    frase = `${r.feitos === 0 ? 'Bora começar!' : r.faixa === 'Abaixo do básico' ? 'Você está no caminho!' : `${r.faixa} garantida!`} `
+      + `${r.proxima.faltam === 1 ? 'Falta' : 'Faltam'} ${plural(r.proxima.faltam, 'contrato', 'contratos')} para ${alvo} — ${quando}.`;
+  }
+  return { marcos, pct: Math.min(100, Math.round((100 * r.feitos) / topo)), dias, frase, topo };
+}

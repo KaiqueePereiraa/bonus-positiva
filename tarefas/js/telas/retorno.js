@@ -1,9 +1,9 @@
 // Retorno do mês — quanto a Central trouxe de volta: alunos que voltaram, cobranças recebidas, matrículas.
 // Conta só o que aconteceu DEPOIS do contato da equipe (quem resolveu sozinho fica à parte, como comparação).
-import * as dados from '../dados.js?v=20261118185017';
-import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261118185017';
-import { retornoTotais, reais } from '../painel-regras.js?v=20261118185017';
-import { abasRelatorios } from './_comum.js?v=20261118185017';
+import * as dados from '../dados.js?v=20261118192412';
+import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261118192412';
+import { retornoTotais, reais } from '../painel-regras.js?v=20261118192412';
+import { abasRelatorios } from './_comum.js?v=20261118192412';
 
 let escolhido = null;
 

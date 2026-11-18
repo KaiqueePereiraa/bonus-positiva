@@ -1,9 +1,9 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 3 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118185017';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118185017';
-import { resumoSemana } from '../bonus-meta.js?v=20261118185017';
+import * as dados from '../dados.js?v=20261118192412';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118192412';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118192412';
 
 const CHAVE_GUIA = 'central_guia_meu_dia';
 const guiaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1'; } catch { return true; } };
@@ -26,6 +26,8 @@ export async function render(el, ctx) {
   el.innerHTML = `
     ${urgentes.map((a) => `<div class="faixa ${a.nivel === 'urgente' ? 'urgente' : ''}"><div>${esc(a.texto)} <a href="${a.rota}">Abrir →</a></div></div>`).join('')}
 
+    ${cartaoMeta(meta, d.hoje, ctx.perfil.unidade)}
+
     ${guiaVisto() ? '' : `<div class="cartao guia"><h2>Primeira vez aqui? É simples</h2>
       <ol>
         <li>Toque no botão verde <b>Começar</b>: ele abre a lista mais urgente.</li>
@@ -41,7 +43,6 @@ export async function render(el, ctx) {
       ${sem.dias ? `<p class="dica" style="margin-top:12px">Nesta semana: mínimo batido em ${sem.bateu} de ${sem.dias} dia(s).</p>` : ''}
     </div>
 
-    ${cartaoMeta(meta, d.hoje, ctx.perfil.unidade)}
 
     ${listas.length ? `<div class="cartao"><h2>Suas listas de hoje</h2>
       <div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Lista</th><th>Faltam</th><th>Prazo</th><th>Hoje, no mínimo</th><th></th></tr></thead><tbody>
@@ -65,13 +66,22 @@ export async function render(el, ctx) {
   });
 }
 
-// Resumo da meta da semana do Bônus: contratos "de meta" dela na semana (mês dividido em 4, como no Bônus)
-function cartaoMeta(meta, hoje, unidade) {
+// Meta da semana do Bônus, em destaque no topo: contratos "de meta" dela na semana (mês dividido em 4, como no Bônus),
+// com a barra até a Super meta e os marcos de cada faixa. Os números vêm da EVO de madrugada.
+export function cartaoMeta(meta, hoje, unidade) {
   if (!meta || !meta.publicado_em) return '';
   const r = resumoSemana(meta.vendas || [], hoje, unidade);
-  const cor = r.faixa === 'Abaixo do básico' ? 'laranja' : 'verde';
-  return `<div class="cartao"><div class="linha-info"><b>🎯 Meta da semana ${r.semana} (${dataCurta(r.ini)} a ${dataCurta(r.fim)})</b>
-      <span><span class="selo ${cor}">${r.feitos} ${r.feitos === 1 ? 'contrato' : 'contratos'} · ${esc(r.faixa)}</span></span></div>
-    <p class="dica" style="margin-top:6px">${r.proxima ? `Faltam <b>${r.proxima.faltam}</b> para ${esc(r.proxima.nome === 'Básico' ? 'o Básico' : `a ${r.proxima.nome}`)}.` : 'Super meta batida! 🎉'}
-      Atualizado de madrugada pela EVO. <a href="../bonus/index.html">Ver detalhes no Bônus →</a></p></div>`;
+  const p = painelMeta(r, hoje, unidade);
+  const ultimo = p.marcos.length - 1;
+  return `<div class="cartao meta-semana">
+    <div class="ms-topo"><span>🎯&nbsp; Meta da semana ${r.semana}</span><span>${dataCurta(r.ini)} a ${dataCurta(r.fim)}</span></div>
+    <div class="ms-numero"><b>${r.feitos}</b><span>${r.feitos === 1 ? 'contrato' : 'contratos'}</span>
+      <span class="ms-faixa ${r.faixa === 'Abaixo do básico' ? '' : 'ok'}">${esc(r.faixa)}</span></div>
+    <div class="ms-trilha" role="progressbar" aria-valuenow="${r.feitos}" aria-valuemin="0" aria-valuemax="${p.topo}" aria-label="Contratos da semana">
+      <div class="ms-fill" style="width:${p.pct}%"></div>
+      ${p.marcos.map((m) => `<i class="${m.atingido ? 'ok' : ''}" style="left:${m.pos}%"></i>`).join('')}</div>
+    <div class="ms-marcos">${p.marcos.map((m, k) => `<span class="${m.atingido ? 'ok' : ''}" style="left:${m.pos}%;${k === ultimo ? 'transform:translateX(-100%);text-align:right' : ''}">${m.atingido ? '✓ ' : ''}${esc(m.nome)}<small>${m.n}</small></span>`).join('')}</div>
+    <p class="ms-frase">${esc(p.frase)}</p>
+    <p class="ms-nota">Contam matrícula, rematrícula e venda completa. Atualiza de madrugada pela EVO: a venda de hoje aparece amanhã. <a href="../bonus/index.html">Ver detalhes no Bônus →</a></p>
+  </div>`;
 }
