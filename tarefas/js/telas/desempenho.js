@@ -1,10 +1,10 @@
 // Desempenho — ranking aberto (todas veem todas): mínimo cumprido, dias com a meta batida, contatos e resultados.
 // O gestor também vê as justificativas, o diagnóstico (sobrecarga x individual) e o quadro esforço × resultado
 // dos últimos 30 dias (cada consultora comparada com a mediana da equipe).
-import * as dados from '../dados.js?v=20261118195212';
-import { esc, dataCurta, vazio } from '../ui.js?v=20261118195212';
-import { somarDias, semanaDe } from '../regras.js?v=20261118195212';
-import { diagnostico, quadrante, mediana } from '../painel-regras.js?v=20261118195212';
+import * as dados from '../dados.js?v=20261118200419';
+import { esc, dataCurta, vazio, NOMES_CONTROLE } from '../ui.js?v=20261118200419';
+import { somarDias, semanaDe } from '../regras.js?v=20261118200419';
+import { diagnostico, quadrante, mediana, resumoAtividade } from '../painel-regras.js?v=20261118200419';
 
 let periodo = 'semana_passada';
 
@@ -31,7 +31,8 @@ export async function render(el, ctx) {
       ${lista.map((c, i) => `<tr><td>${i + 1}º</td><td class="nome">${esc(c.nome)}<span class="sub">${esc(ctx.nomeUnidade(c.unidade))}</span></td>
         <td>${c.pct == null ? '<span class="dica">—</span>' : `<b>${c.pct}%</b>`}</td>
         <td>${c.dias ? `${c.dias_bateu} de ${c.dias}` : '—'}</td><td>${c.contatos}</td><td>${c.resultados}</td></tr>
-        ${ctx.ehAdmin && c.justificativas?.length ? `<tr><td></td><td colspan="5" class="dica">${c.justificativas.map((j) => `<div>📝 ${dataCurta(j.data)} (${j.feitos}/${j.minimo}${j.trabalhou ? '' : ', não trabalhou'}): "${esc(j.texto)}"</div>`).join('')}</td></tr>` : ''}`).join('')}
+        ${ctx.ehAdmin && c.justificativas?.length ? `<tr><td></td><td colspan="5" class="dica">${c.justificativas.map((j) => { const a = resumoAtividade(j.atividade, NOMES_CONTROLE); return `<div style="margin-bottom:8px">📝 ${dataCurta(j.data)} (${j.feitos}/${j.minimo} do mínimo${j.trabalhou ? '' : ', não trabalhou'}): "${esc(j.texto)}"
+          ${j.atividade ? `<div style="margin-left:22px">🔎 O que fez nesse dia: ${esc(a.texto)}${a.alerta ? `<div style="color:#B42318;font-weight:700">⚠️ ${esc(a.alerta)}</div>` : ''}</div>` : ''}</div>`; }).join('')}</td></tr>` : ''}`).join('')}
       </tbody></table></div>` : vazio('Ainda não há dias fechados neste período. O fechamento acontece todo dia útil às 23h55.')}</div>
     ${painel ? quadroEsforco(painel, unidade) : ''}`;
   el.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => { periodo = b.dataset.p; render(el, ctx); }));

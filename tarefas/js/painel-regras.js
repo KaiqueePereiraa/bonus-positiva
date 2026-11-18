@@ -121,3 +121,16 @@ export function diagnostico(lista, corte = 80) {
   }
   return { cor: 'verde', titulo: 'Equipe no ritmo', texto: ` Todas cumpriram pelo menos ${corte}% do mínimo.` };
 }
+
+// Auditoria da justificativa: o que a consultora fez de fato no dia (vem de _atividade_do_dia no banco).
+// a = { total, por_lista: [{ controle, titulo, n }], primeiro, ultimo, com_observacao, minutos_rajada }
+export function resumoAtividade(a, nomes = {}) {
+  if (!a || !a.total) return { texto: 'Nenhum contato marcado nesse dia.', alerta: '' };
+  const listas = (a.por_lista || []).map((l) => `${l.titulo || nomes[l.controle] || l.controle} (${l.n})`).join(', ');
+  const texto = `${a.total} ${a.total === 1 ? 'contato marcado' : 'contatos marcados'}: ${listas} · das ${a.primeiro} às ${a.ultimo}`
+    + (a.com_observacao ? ` · ${a.com_observacao} com observação` : '');
+  const alerta = a.minutos_rajada
+    ? `${a.minutos_rajada} ${a.minutos_rajada === 1 ? 'minuto' : 'minutos'} com 5 ou mais contatos marcados de uma vez — confira se as mensagens foram enviadas de verdade.`
+    : '';
+  return { texto, alerta };
+}
