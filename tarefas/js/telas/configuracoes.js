@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261118140655';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118140655';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118140655';
+import * as dados from '../dados.js?v=20261118181330';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118181330';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118181330';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -145,17 +145,21 @@ async function motivos(el, ctx) {
   const existentes = new Set(Object.keys(ctx.controles || {}));
   const listas = LISTAS_MOTIVO.filter(([id]) => id === 'nao_fechou' || existentes.has(id));
   const lista = (await dados.motivos()).filter((m) => (m.controle_id || 'nao_fechou') === listaMotivo);
+  // "Por que não fechou?": cada motivo pode valer para uma etapa só (vazio = as duas)
+  const comEtapa = listaMotivo === 'nao_fechou';
+  const selEtapa = (v) => (comEtapa ? `<td><select class="ctrl" data-c="etapa">${[['', 'As duas'], ['sem_experimental', 'Não agendou experimental'], ['fez_experimental', 'Fez experimental']]
+    .map(([k, n]) => `<option value="${k}" ${(v || '') === k ? 'selected' : ''}>${n}</option>`).join('')}</select></td>` : '');
   el.innerHTML = `${listas.length > 1 ? `<div class="filtros" style="margin-bottom:12px"><label class="campo">Lista<select class="ctrl" id="lista-motivo">
       ${listas.map(([id, nome]) => `<option value="${id}" ${id === listaMotivo ? 'selected' : ''}>${esc(nome)}</option>`).join('')}</select></label></div>` : ''}
-    <p class="dica" style="margin-bottom:14px">Motivo não usado mais deve ser <b>desativado</b> (não some dos meses anteriores). "Exige texto" obriga a consultora a escrever o motivo.</p>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Ordem</th><th>Motivo</th><th>Exige texto</th><th>Ativo</th><th></th></tr></thead><tbody>
+    <p class="dica" style="margin-bottom:14px">Motivo não usado mais deve ser <b>desativado</b> (não some dos meses anteriores).${comEtapa ? ' <b>Etapa</b>: em qual pergunta o motivo aparece ("Por que não agendou a experimental?" ou "Por que não fechou depois da experimental?").' : ''} "Exige texto" obriga a consultora a escrever o motivo.</p>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Ordem</th><th>Motivo</th>${comEtapa ? '<th>Etapa</th>' : ''}<th>Exige texto</th><th>Ativo</th><th></th></tr></thead><tbody>
     ${lista.map((m) => `<tr data-id="${m.id}"><td><input class="ctrl" type="number" data-c="ordem" value="${m.ordem}" style="width:70px"></td>
-      <td><input class="ctrl" data-c="nome" value="${esc(m.nome)}" style="width:100%"></td>
+      <td><input class="ctrl" data-c="nome" value="${esc(m.nome)}" style="width:100%"></td>${selEtapa(m.etapa)}
       <td><input type="checkbox" data-c="exige_texto" ${m.exige_texto ? 'checked' : ''}></td>
       <td><input type="checkbox" data-c="ativo" ${m.ativo ? 'checked' : ''}></td>
       <td class="acoes"><button class="btn sec peq" data-acao="salvar">Salvar</button></td></tr>`).join('')}
     <tr data-id=""><td><input class="ctrl" type="number" data-c="ordem" value="${lista.length + 1}" style="width:70px"></td>
-      <td><input class="ctrl" data-c="nome" placeholder="Novo motivo" style="width:100%"></td>
+      <td><input class="ctrl" data-c="nome" placeholder="Novo motivo" style="width:100%"></td>${selEtapa('')}
       <td><input type="checkbox" data-c="exige_texto"></td><td><input type="checkbox" data-c="ativo" checked></td>
       <td class="acoes"><button class="btn peq" data-acao="salvar">Adicionar</button></td></tr></tbody></table></div>`;
   el.onclick = async (e) => {
@@ -165,6 +169,7 @@ async function motivos(el, ctx) {
     const v = (c) => tr.querySelector(`[data-c="${c}"]`);
     const m = { controle_id: listaMotivo, nome: v('nome').value.trim(), ordem: +v('ordem').value || 0, exige_texto: v('exige_texto').checked, ativo: v('ativo').checked };
     if (!m.nome) return toast('Informe o nome do motivo.', 'erro');
+    if (comEtapa) m.etapa = v('etapa').value || null;
     if (tr.dataset.id) m.id = +tr.dataset.id;
     try { await dados.salvarMotivoCadastro(m); ctx.motivos = await dados.motivos(); toast('Motivo salvo.'); motivos(el, ctx); } catch (err) { erro(err); }
   };

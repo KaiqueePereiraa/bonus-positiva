@@ -1,11 +1,12 @@
 // Relatório do "Por que não fechou?" para apresentar à diretoria (cálculo puro; testado em tests/relatorio-nf.test.js).
 // itens: linhas de `itens` (controle nao_fechou) — inclui quem ainda não tem consultora.
 // importacoes: linhas de `importacoes` { id, unidade, referencia_inicio } das listas escolhidas.
-import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261118140655';
+import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261118181330';
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const ETAPA_NOME = { fez_experimental: 'Fez experimental e não fechou', sem_experimental: 'Cadastrou e não fez experimental' };
+const ETAPA_PERGUNTA = { sem_experimental: 'Por que não agendou a aula experimental?', fez_experimental: 'Por que não fechou depois da experimental?' };
 export const nomeMesRef = (iso) => (iso ? `${MESES[+iso.slice(5, 7) - 1][0].toUpperCase()}${MESES[+iso.slice(5, 7) - 1].slice(1)}/${iso.slice(0, 4)}` : '—');
 
 const FAIXAS = [['Até 12 anos', 0, 12], ['13 a 17 anos', 13, 17], ['18 a 39 anos', 18, 39], ['40 a 59 anos', 40, 59], ['60 anos ou mais', 60, 200]];
@@ -54,6 +55,11 @@ export function montarRelatorioNF({ itens, motivos, importacoes, nomeDe = (id) =
   const ordemFaixa = (a, b) => [...FAIXAS.map((f) => f[0]), 'Sem idade informada'].indexOf(a.rotulo) - [...FAIXAS.map((f) => f[0]), 'Sem idade informada'].indexOf(b.rotulo);
   const porFaixa = agrupar(todos, (i) => faixaIdade(i.dados?.idade), motivos, { ordem: ordemFaixa });
   const porEtapa = agrupar(todos, (i) => ETAPA_NOME[i.dados?.etapa] || 'Lista mensal (antes de 19/11/2026)', motivos);
+  // motivos de cada etapa, separados: "por que não agendou a experimental?" e "por que não fechou depois dela?"
+  const motivosPorEtapa = Object.entries(ETAPA_PERGUNTA).map(([etapa, pergunta]) => {
+    const daEtapa = todos.filter((i) => i.dados?.etapa === etapa);
+    return { etapa, titulo: ETAPA_NOME[etapa], pergunta, total: daEtapa.length, preenchidos: daEtapa.filter(preenchido).length, motivos: contarMotivos(daEtapa, motivos) };
+  }).filter((e) => e.total > 0);
   const porMes = agrupar(todos, (i) => i.periodo_inicio || 'Sem mês', motivos, { ordem: (a, b) => a.rotulo.localeCompare(b.rotulo) })
     .map((l) => ({ ...l, rotulo: nomeMesRef(l.rotulo) }));
 
@@ -73,7 +79,7 @@ export function montarRelatorioNF({ itens, motivos, importacoes, nomeDe = (id) =
     insights.push({ texto: `${resumo.pendentes} interessado(s) ainda estão sem motivo preenchido (${pct(resumo.pendentes, total)}% do total).`, base: `${total} interessados no período` });
   }
 
-  return { resumo, motivos: lista, porUnidade, porConsultora, porOrigem, porInteresse, porFaixa, porMes, porEtapa, insights, itens: todos };
+  return { resumo, motivos: lista, porUnidade, porConsultora, porOrigem, porInteresse, porFaixa, porMes, porEtapa, motivosPorEtapa, insights, itens: todos };
 }
 
 // Uma linha por interessado (sem telefone): para a aba "Interessados" do Excel.

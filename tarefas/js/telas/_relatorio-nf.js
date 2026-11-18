@@ -2,11 +2,11 @@
 //  • Excel completo: resumo, motivos, por unidade/consultora/origem/interesse/faixa etária, insights e TODOS os interessados;
 //  • PDF executivo: números, gráfico de motivos, tabelas e insights.
 // Telefones nunca entram.
-import * as dados from '../dados.js?v=20261118140655';
-import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261118140655';
-import { barras, imagem } from '../graficos.js?v=20261118140655';
-import { excel, pdf } from '../exportar.js?v=20261118140655';
-import { esc, toast, erro } from '../ui.js?v=20261118140655';
+import * as dados from '../dados.js?v=20261118181330';
+import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261118181330';
+import { barras, imagem } from '../graficos.js?v=20261118181330';
+import { excel, pdf } from '../exportar.js?v=20261118181330';
+import { esc, toast, erro } from '../ui.js?v=20261118181330';
 
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
 const slug = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -73,6 +73,8 @@ async function baixarExcel(rel, ctx, { quando, onde, base }) {
     { nome: 'Motivos', linhas: [['Motivo', 'Quantidade', '% dos preenchidos'], ...rel.motivos.map((m) => [m.nome, m.n, m.pct])] },
     { nome: 'Por mês', linhas: [CAB_GRUPO('Mês'), ...rel.porMes.map(linhaGrupo)] },
     { nome: 'Por etapa', linhas: [CAB_GRUPO('Etapa'), ...rel.porEtapa.map(linhaGrupo)] },
+    { nome: 'Motivos por etapa', linhas: [['Etapa', 'Motivo', 'Quantidade', '% da etapa'],
+      ...rel.motivosPorEtapa.flatMap((e) => (e.motivos.length ? e.motivos.map((m) => [e.pergunta, m.nome, m.n, m.pct]) : [[e.pergunta, 'Nenhum motivo preenchido ainda', 0, '']]))] },
     { nome: 'Por unidade', linhas: [CAB_GRUPO('Unidade'), ...rel.porUnidade.map(linhaGrupo)] },
     { nome: 'Por consultora', linhas: [CAB_GRUPO('Consultora'), ...rel.porConsultora.map(linhaGrupo)] },
     { nome: 'Como conheceu', linhas: [CAB_GRUPO('Como conheceu'), ...rel.porOrigem.map(linhaGrupo)] },
@@ -113,6 +115,8 @@ function baixarPdf(rel, { quando, onde }) {
     ${top ? `<p style="margin-top:8px;color:#788192">Motivo mais comum: <b style="color:#212B37">${esc(top.nome)}</b> (${top.n} de ${r.preenchidos} justificativas).</p>` : ''}
     ${rel.motivos.length ? `<h2>Motivos de não fechamento</h2>${img ? `<img class="grafico" src="${img}" alt="Gráfico de motivos">` : ''}
       <table><thead><tr><th>Motivo</th><th>Qtd.</th><th>%</th></tr></thead><tbody>${rel.motivos.map((m) => `<tr><td>${esc(m.nome)}</td><td>${m.n}</td><td>${m.pct}%</td></tr>`).join('')}</tbody></table>` : ''}
+    ${rel.motivosPorEtapa.map((e) => `<h2>${esc(e.pergunta)}</h2><p style="color:#788192">${esc(e.titulo)}: ${e.preenchidos} de ${e.total} com motivo.</p>
+      ${e.motivos.length ? `<table><thead><tr><th>Motivo</th><th>Qtd.</th><th>%</th></tr></thead><tbody>${e.motivos.map((m) => `<tr><td>${esc(m.nome)}</td><td>${m.n}</td><td>${m.pct}%</td></tr>`).join('')}</tbody></table>` : ''}`).join('')}
     ${rel.insights.length ? `<h2>Principais insights</h2>${rel.insights.map((i) => `<div class="insight">${esc(i.texto)}<small>Base: ${esc(i.base)}</small></div>`).join('')}` : ''}
     ${rel.porEtapa.length > 1 ? grupo('Por etapa', 'Etapa', rel.porEtapa) : ''}
     ${rel.porMes.length > 1 ? grupo('Por mês', 'Mês', rel.porMes) : ''}

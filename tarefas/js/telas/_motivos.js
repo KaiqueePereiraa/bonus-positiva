@@ -1,9 +1,9 @@
 // Formulário de motivos: "Por que não fechou?" (etapas "fez experimental" e "não fez experimental"), "Renovação: venceu
 // e não renovou" e "Cancelou". Usado pela tela do "Por que não fechou?" e pelas telas de grupo (_grupo.js).
-import * as dados from '../dados.js?v=20261118140655';
-import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261118140655';
-import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261118140655';
-import { atualizarCabecalho } from './_comum.js?v=20261118140655';
+import * as dados from '../dados.js?v=20261118181330';
+import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261118181330';
+import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261118181330';
+import { atualizarCabecalho } from './_comum.js?v=20261118181330';
 
 // Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
 async function confirmarExclusao(nome) {
@@ -11,9 +11,11 @@ async function confirmarExclusao(nome) {
 }
 
 export const ETAPAS = {
-  fez_experimental: { titulo: 'Fez aula experimental e não fechou', selo: 'Fez experimental', cor: 'azul' },
-  sem_experimental: { titulo: 'Cadastrou e não fez aula experimental', selo: 'Sem experimental', cor: 'laranja' },
+  fez_experimental: { titulo: 'Fez aula experimental e não fechou', selo: 'Fez experimental', cor: 'azul', pergunta: 'Por que não fechou depois da experimental?' },
+  sem_experimental: { titulo: 'Cadastrou e não fez aula experimental', selo: 'Sem experimental', cor: 'laranja', pergunta: 'Por que não agendou a experimental?' },
 };
+// cada etapa tem os seus motivos (motivo sem etapa vale para as duas)
+export const motivoServe = (m, etapa) => !m.etapa || !etapa || m.etapa === etapa;
 // mensagem do WhatsApp: quem não fez experimental recebe o convite para a aula; os demais, a mensagem da lista
 const modeloDe = (ctx, i) => {
   const cfg = ctx.controles?.[i.controle_id]?.config || {};
@@ -24,7 +26,9 @@ function linhaMotivo(i, ctx, editavel) {
   const d = i.dados || {};
   const info = d.info || [d.contrato, d.vencimento && `venceu/vence ${dataLonga(d.vencimento)}`, d.data_cadastro && `cadastro ${dataLonga(d.data_cadastro)}`, d.interesse, d.como_conheceu && `via ${d.como_conheceu}`, d.idade != null && `${d.idade} anos`].filter(Boolean).join(' · ');
   const motivo = ctx.motivos.find((m) => m.id === i.motivo_id);
-  const opcoes = ctx.motivos.filter((m) => (m.controle_id || 'nao_fechou') === i.controle_id && (m.ativo || m.id === i.motivo_id));
+  const etapa = d.etapa;
+  const opcoes = ctx.motivos.filter((m) => (m.controle_id || 'nao_fechou') === i.controle_id
+    && ((m.ativo && motivoServe(m, etapa)) || m.id === i.motivo_id));
   const alerta = d.aluno_mesmo_celular
     ? `<span class="selo laranja" title="Este celular está na ficha de um aluno ativo. Confira se é cadastro duplicado ou um novo aluno da mesma família.">Celular de aluno ativo: ${esc(d.aluno_mesmo_celular)}</span>` : '';
   if (i.resultado === 'matriculou_sem_contato') {
@@ -33,7 +37,7 @@ function linhaMotivo(i, ctx, editavel) {
   }
   return `<tr data-id="${i.id}" class="${i.feito_em ? 'feito' : ''}">
     <td class="nome">${esc(i.nome)}<span class="sub">${esc(info || `ID ${i.evo_id}`)}</span>${alerta}</td>
-    <td style="min-width:220px">${editavel ? `<select class="ctrl" data-campo="motivo" style="width:100%"><option value="">Escolha o motivo…</option>
+    <td style="min-width:220px">${editavel ? `<select class="ctrl" data-campo="motivo" style="width:100%"><option value="">${esc(ETAPAS[etapa]?.pergunta || 'Escolha o motivo…')}</option>
         ${opcoes.map((m) => `<option value="${m.id}" ${m.id === i.motivo_id ? 'selected' : ''}>${esc(m.nome)}</option>`).join('')}</select>
         <input class="ctrl" data-campo="texto" placeholder="Qual foi o motivo?" value="${esc(i.motivo_texto || '')}" style="width:100%;margin-top:6px" ${motivo?.exige_texto ? '' : 'hidden'}>`
       : `${motivo ? esc(motivo.nome) : '<span class="dica">—</span>'}${i.motivo_texto ? `<span class="sub">${esc(i.motivo_texto)}</span>` : ''}`}</td>
@@ -50,7 +54,7 @@ export async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }
   const corpo = !comEtapa ? itens.map((i) => linhaMotivo(i, ctx, editavel)).join('')
     : Object.entries(ETAPAS).map(([k, e]) => {
       const doGrupo = itens.filter((i) => (i.dados?.etapa || 'sem_experimental') === k);
-      return doGrupo.length ? `<tr class="grupo"><td colspan="4"><b>${esc(e.titulo)}</b> <span class="selo ${e.cor}">${doGrupo.length}</span></td></tr>${doGrupo.map((i) => linhaMotivo(i, ctx, editavel)).join('')}` : '';
+      return doGrupo.length ? `<tr class="grupo"><td colspan="4"><b>${esc(e.titulo)}</b> <span class="selo ${e.cor}">${doGrupo.length}</span> <span class="dica">${esc(e.pergunta)}</span></td></tr>${doGrupo.map((i) => linhaMotivo(i, ctx, editavel)).join('')}` : '';
     }).join('');
   el.innerHTML = `<div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Interessado</th><th>Motivo</th><th>Observação</th><th></th></tr></thead>
     <tbody>${corpo}</tbody></table></div>`;
