@@ -1,6 +1,6 @@
 // Escala de fim de semana e feriados — funções puras (sem tela, sem banco): agrupam as linhas de
 // escala_periodo em blocos para exibir e montam as opções do pedido de troca.
-import { somarDias, semAcento } from './regras.js?v=20261117214149';
+import { somarDias, semAcento } from './regras.js?v=20261118091400';
 
 const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
 const dow = (d) => new Date(`${d}T12:00:00Z`).getUTCDay();   // 0 = domingo … 6 = sábado

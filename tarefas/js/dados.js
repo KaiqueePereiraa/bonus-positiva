@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261117214149';
+import { sb } from '../../shared/sessao.js?v=20261118091400';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -99,6 +99,7 @@ export const editarListaFazer = async (id, campos) => ok(await sb.from('listas_f
 // ── Ações da consultora ──
 export const marcar = (id) => rpc('marcar_enviada', { p_item: id });
 // Lista a fazer: marca como feito e guarda a observação (opcional); chamar de novo atualiza a observação.
+export const salvarObservacao = (id, observacao) => rpc('salvar_observacao', { p_item: id, p_obs: observacao || null });
 export const marcarListaItem = (id, observacao) => rpc('marcar_lista_item', { p_item: id, p_obs: observacao || null });
 // Risco de abandono: marca com observação e tipo do aluno (gympass_convenios | beneficio_colaborador | vazio).
 // Com tipo, o aluno fica registrado e sai das próximas listas; chamar de novo atualiza.

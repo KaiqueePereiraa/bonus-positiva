@@ -1,8 +1,8 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261117214149';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261117214149';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261117214149';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261117214149';
+import * as dados from '../dados.js?v=20261118091400';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118091400';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118091400';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118091400';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -72,7 +72,7 @@ export async function recarregarNoLugar(fn) {
   window.scrollTo(0, y);
 }
 
-// ── Lista de contatos (inadimplência e risco) ──
+// ── Lista de contatos (inadimplência, risco e listas automáticas sem motivo) ──
 // Marcar/desmarcar/mover atualizam só a linha e o cabeçalho — a página não pula para o topo.
 export async function listaContatos(el, ctx, tarefa) {
   const itens = await dados.itensDaTarefa(tarefa.id);
@@ -80,6 +80,7 @@ export async function listaContatos(el, ctx, tarefa) {
   const podeMexer = ctx.ehAdmin || tarefa.responsavel_id === ctx.perfil.id;
   const modelo = ctx.controles[tarefa.controle_id]?.config?.mensagem_whatsapp || '';
   const ehRisco = tarefa.controle_id === 'risco';
+  const ehInad = tarefa.controle_id === 'inadimplencia';   // inadimplência: campo de observação (o que o aluno respondeu)
   const outras = ctx.consultorasDa(tarefa.unidade).filter((c) => c.id !== tarefa.responsavel_id);
 
   // Risco de abandono: observação + tipo do aluno. Gympass/convênios e benefício colaborador ficam registrados
@@ -92,6 +93,10 @@ export async function listaContatos(el, ctx, tarefa) {
       <input class="ctrl" data-campo="obs" placeholder="Observação (opcional)" value="${esc(i.observacao || '')}" style="width:100%;margin-top:6px"></td>`;
   };
 
+  // Inadimplência: só a observação (ex.: "paga sexta", "vai passar na recepção")
+  const obsInad = (i) => (!podeMexer ? `<td>${esc(i.observacao || '')}</td>`
+    : `<td style="min-width:200px"><input class="ctrl" data-campo="obs" placeholder="Observação (opcional)" value="${esc(i.observacao || '')}" style="width:100%" maxlength="500"></td>`);
+
   // resolvido sozinho (conferido na EVO de madrugada): não precisa mais de contato
   const SOZINHO = { pagou_sem_contato: 'Já pagou', voltou_sem_contato: 'Já voltou a treinar', matriculou_sem_contato: 'Já se matriculou' };
   const linha = (i) => {
@@ -101,6 +106,7 @@ export async function listaContatos(el, ctx, tarefa) {
       <td class="nome">${esc(i.nome)}<span class="sub">ID ${esc(i.evo_id)}</span></td>
       <td class="oculta-cel">${tel ? esc(`(${tel.slice(2, 4)}) ${tel.slice(4, -4)}-${tel.slice(-4)}`) : ''}</td>
       ${ehRisco ? `<td class="oculta-cel">${esc(i.dados?.ultima_presenca ? dataLonga(i.dados.ultima_presenca.slice(0, 10)) : 'sem registro')}</td><td></td>` : ''}
+      ${ehInad ? `<td>${esc(i.observacao || '')}</td>` : ''}
       <td><span class="selo azul" title="Conferido automaticamente na EVO antes do contato">${SOZINHO[i.resultado]}</span><span class="sub">antes do contato · EVO</span></td>
       <td class="acoes"></td></tr>`;
     }
@@ -110,16 +116,17 @@ export async function listaContatos(el, ctx, tarefa) {
       <td class="nome">${esc(i.nome)}<span class="sub">ID ${esc(i.evo_id)}${i.dados?.info ? ` · ${esc(i.dados.info)}` : ''}${i.repetido_semana_anterior ? ' · <span class="etiqueta">também na semana anterior</span>' : ''}</span></td>
       <td class="oculta-cel">${tel ? esc(`(${tel.slice(2, 4)}) ${tel.slice(4, -4)}-${tel.slice(-4)}`) : '<span class="dica">sem celular</span>'}</td>
       ${ehRisco ? `<td class="oculta-cel">${esc(ultima)}</td>${obsRisco(i)}` : ''}
+      ${ehInad ? obsInad(i) : ''}
       <td>${i.feito_em ? `<span class="selo verde">${classe ? 'Registrado' : 'Enviada'}</span><span class="sub">${dataHora(i.feito_em)}${ctx.ehAdmin && i.feito_por && i.feito_por !== tarefa.responsavel_id ? ` por ${esc(ctx.nomeDe(i.feito_por))}` : ''}</span>` : '<span class="selo cinza">Pendente</span>'}</td>
       <td class="acoes">${!podeMexer ? '' : i.feito_em
-        ? `${ehRisco ? '<button class="btn sec peq" data-acao="salvar">Salvar obs.</button> ' : ''}<button class="btn sec peq" data-acao="desmarcar">Desmarcar</button>`
+        ? `${ehRisco || ehInad ? '<button class="btn sec peq" data-acao="salvar">Salvar obs.</button> ' : ''}<button class="btn sec peq" data-acao="desmarcar">Desmarcar</button>`
         : `${tel ? '<button class="btn wa peq" data-acao="wa">WhatsApp</button> ' : ''}<button class="btn peq" data-acao="marcar">Marcar enviada</button>`}
         ${ctx.ehAdmin && ehRisco && !i.feito_em && outras.length ? `<select class="ctrl" data-acao="mover" aria-label="Mover para"><option value="">Mover…</option>${outras.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select>` : ''}
       </td></tr>`;
   };
 
   el.innerHTML = `<div class="tabela-wrap"><table class="tabela responsiva">
-    <thead><tr><th>Nome</th><th>Celular</th>${ehRisco ? '<th>Última presença</th><th>Observação</th>' : ''}<th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Nome</th><th>Celular</th>${ehRisco ? '<th>Última presença</th><th>Observação</th>' : ''}${ehInad ? '<th>Observação</th>' : ''}<th>Status</th><th></th></tr></thead>
     <tbody>${itens.map(linha).join('')}</tbody></table></div>`;
 
   // troca só a linha do item e atualiza o cabeçalho
@@ -139,6 +146,12 @@ export async function listaContatos(el, ctx, tarefa) {
     } catch (e) { erro(e); alvo.disabled = false; }
   };
 
+  // marca o contato e, se a consultora escreveu algo, grava a observação junto
+  const marcarComObs = async (id, obs) => {
+    await dados.marcar(id);
+    if (ehInad && String(obs || '').trim()) await dados.salvarObservacao(id, obs);
+  };
+
   el.onclick = (e) => {
     const b = e.target.closest('button[data-acao]');
     if (!b) return;
@@ -150,9 +163,15 @@ export async function listaContatos(el, ctx, tarefa) {
       const i = itens.find((x) => x.id === id);
       const url = linkWhatsApp(normalizarTelefone(i.celular), montarMensagem(modelo, { nome: i.nome }), { celular: ehCelular() });
       window.open(url, 'whatsapp');
-      agir(b, id, () => (ehRisco ? dados.marcarRisco(id, campos().obs, null) : dados.marcar(id)));
+      const obs = campos().obs;
+      agir(b, id, () => (ehRisco ? dados.marcarRisco(id, obs, null) : marcarComObs(id, obs)));
     } else if (b.dataset.acao === 'marcar' || b.dataset.acao === 'salvar') {
-      if (!ehRisco) { agir(b, id, () => dados.marcar(id)); return; }
+      if (!ehRisco) {
+        const obs = campos().obs;
+        if (b.dataset.acao === 'salvar') agir(b, id, () => dados.salvarObservacao(id, obs), 'Anotado.');
+        else agir(b, id, () => marcarComObs(id, obs));
+        return;
+      }
       const { obs, classe } = campos();
       agir(b, id, () => dados.marcarRisco(id, obs, classe),
         classe ? 'Registrado. Este aluno não entra mais nas próximas listas.' : (b.dataset.acao === 'salvar' ? 'Anotado.' : undefined));
