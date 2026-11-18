@@ -1,9 +1,11 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 3 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118193752';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118193752';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118193752';
+import * as dados from '../dados.js?v=20261118194527';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118194527';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118194527';
+import { pendentesAtePrazo } from '../regras.js?v=20261118194527';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118194527';
 
 const CHAVE_GUIA = 'central_guia_meu_dia';
 const guiaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1'; } catch { return true; } };
@@ -11,7 +13,11 @@ const guiaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1';
 export async function render(el, ctx) {
   // meta da semana do Bônus (só um resumo; o detalhe fica na área do Bônus)
   const temBonus = ctx.perfil.acesso_bonus && ctx.perfil.unidade;
-  const [d, meta] = await Promise.all([dados.meuDia(), temBonus ? dados.minhaMetaSemana().catch(() => null) : null]);
+  const [d, meta, tarefas, listasFazer] = await Promise.all([dados.meuDia(), temBonus ? dados.minhaMetaSemana().catch(() => null) : null,
+    dados.tarefas({ responsavel: ctx.perfil.id }).catch(() => []), dados.listasFazer().catch(() => [])]);
+  // tudo o que ela ainda tem para fazer, em todas as listas (inclusive a Lista a fazer), até cada prazo
+  const pendentes = pendentesAtePrazo(tarefas, d.hoje);
+  const faltamTotal = pendentes.reduce((s, t) => s + (t.total - t.feitos), 0);
   const minimo = d.listas.reduce((s, l) => s + l.minimo, 0);
   const feitos = d.feitos_hoje;
   const ok = minimo === 0 || feitos >= minimo;
@@ -57,7 +63,18 @@ export async function render(el, ctx) {
       }).join('')}</tbody></table></div>
       <p class="dica" style="margin-top:8px">O mínimo de hoje é o que falta dividido pelos dias úteis até o prazo. Um pouco por dia rende mais que tudo no último dia.</p></div>` : ''}
 
-    ${d.lista_fazer ? `<div class="cartao"><div class="linha-info"><b>📋 Lista a fazer</b><span>${d.lista_fazer} pendente(s) · <a href="#/lista-fazer">abrir</a></span></div></div>` : ''}
+    ${pendentes.length ? `<div class="cartao"><h2>📋 Tudo o que você tem até o prazo <span class="selo cinza">${faltamTotal} ${faltamTotal === 1 ? 'contato' : 'contatos'}</span></h2>
+      <div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Lista</th><th>Faltam</th><th>Prazo</th><th></th></tr></thead><tbody>
+      ${pendentes.map((t) => {
+        const atrasada = t.prazo < d.hoje;
+        const prazo = atrasada ? `<span class="selo vermelho">atrasada desde ${dataCurta(t.prazo)}</span>` : t.prazo === d.hoje ? '<span class="selo laranja">último dia hoje</span>' : `até ${diaSemana(t.prazo)} ${dataCurta(t.prazo)}`;
+        return `<tr><td class="nome">${esc(tituloTarefa(t, listasFazer))}
+            <span class="sub">${prazo} · ${t.feitos} de ${t.total} feitos</span><div style="margin-top:6px;max-width:260px">${barra(t.feitos, t.total, { rotulo: false })}</div></td>
+          <td><b>${t.total - t.feitos}</b> <span class="dica">faltam</span></td>
+          <td class="oculta-cel">${atrasada ? 'atrasada' : `${diaSemana(t.prazo)} ${dataCurta(t.prazo)}`}</td>
+          <td class="acoes"><a class="btn sec peq" href="#/${ROTA_CONTROLE[t.controle_id]}/${t.id}">Abrir</a></td></tr>`;
+      }).join('')}</tbody></table></div>
+      <p class="dica" style="margin-top:8px">Tudo o que ainda falta em cada lista até o prazo dela. O "mínimo de hoje" lá em cima é esse total dividido pelos dias que faltam.</p></div>` : ''}
     <p class="dica" style="text-align:center"><a href="#/minhas-tarefas">Ver todas as minhas tarefas →</a></p>`;
 
   el.querySelector('#guia-ok')?.addEventListener('click', () => {

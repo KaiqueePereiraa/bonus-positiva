@@ -215,3 +215,12 @@ export function separarExcecoes(registros, excecoes) {
   }
   return { mantidos, retirados };
 }
+
+// "Tudo o que você tem até o prazo" (Meu dia): listas abertas da consultora com contato pendente, do prazo mais perto
+// ao mais longe — inclusive a Lista a fazer. Inadimplência de semanas futuras ainda não iniciada fica de fora (igual ao
+// quadro "Minhas tarefas").
+export function pendentesAtePrazo(tarefas, hoje) {
+  return tarefas.filter((t) => colunaQuadro(t.status) !== 'concluidas' && (Number(t.total) || 0) > (Number(t.feitos) || 0)
+      && !(t.controle_id === 'inadimplencia' && t.status === 'nao_iniciada' && t.prazo > somarDias(hoje, 7)))
+    .sort((a, b) => a.prazo.localeCompare(b.prazo));
+}

@@ -1,11 +1,11 @@
 // Quadro da consultora: Atrasadas · Para fazer · Em andamento · Concluídas (o que está atrasado vem primeiro).
-import * as dados from '../dados.js?v=20261118193752';
-import { colunaQuadro, somarDias } from '../regras.js?v=20261118193752';
-import { esc, dataCurta, diaSemana, seloStatus, barra, STATUS, NOMES_CONTROLE, ROTA_CONTROLE, LISTAS_DIARIAS } from '../ui.js?v=20261118193752';
+import * as dados from '../dados.js?v=20261118194527';
+import { colunaQuadro, somarDias } from '../regras.js?v=20261118194527';
+import { esc, dataCurta, diaSemana, seloStatus, barra, STATUS, NOMES_CONTROLE, ROTA_CONTROLE, LISTAS_DIARIAS } from '../ui.js?v=20261118194527';
 
 const COLUNAS = [['atrasadas', 'Atrasadas'], ['para_fazer', 'Para fazer'], ['em_andamento', 'Em andamento'], ['concluidas', 'Concluídas']];
 
-const titulo = (t, listas = []) => (t.controle_id === 'lista_fazer'
+export const titulo = (t, listas = []) => (t.controle_id === 'lista_fazer'
   ? listas.find((l) => l.importacao_id === t.importacao_id)?.titulo || NOMES_CONTROLE.lista_fazer
   : t.controle_id === 'inadimplencia' || LISTAS_DIARIAS.includes(t.controle_id) ? `${NOMES_CONTROLE[t.controle_id]} — ${dataCurta(t.prazo)}`
   : `${NOMES_CONTROLE[t.controle_id] || t.controle_id} — semana ${dataCurta(t.periodo_inicio)}`);
