@@ -1,8 +1,8 @@
-// Risco de abandono — admin importa e acompanha; consultora marca as mensagens da semana.
-import * as dados from '../dados.js?v=20261118091400';
-import { dividir, semanaDe, prazoSemanal, separarExcecoes, CLASSES_RISCO } from '../regras.js?v=20261118091400';
-import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261118091400';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261118091400';
+// Risco de abandono — a lista chega sozinha da EVO toda segunda; o admin acompanha e a consultora marca as mensagens.
+import * as dados from '../dados.js?v=20261118095302';
+import { semanaDe, prazoSemanal, CLASSES_RISCO } from '../regras.js?v=20261118095302';
+import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261118095302';
+import { cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, escolherUnidade } from './_comum.js?v=20261118095302';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
@@ -70,54 +70,5 @@ async function painelAdmin(el, ctx) {
     try { await dados.removerExcecaoRisco(x.id); toast('Registro removido.'); painelAdmin(el, ctx); } catch (err) { erro(err); }
   });
 
-  if (daSemana) {
-    el.querySelector('#baixar')?.addEventListener('click', () => baixarArquivo(daSemana.arquivo_path));
-    el.querySelector('#desfazer')?.addEventListener('click', async () => {
-      if (!(await confirmarDesfazer(daSemana))) return;
-      try { await dados.desfazerImportacao(daSemana.id); toast('Importação desfeita.'); painelAdmin(el, ctx); } catch (e) { erro(e); }
-    });
-    return;
-  }
-  // listas só automáticas (sem envio de planilha): a prévia antiga fica guardada só para consulta do código
-  void previa; void areaUpload;
-}
-
-async function previa(el, ctx, arquivo, hoje, unidade) {
-  const alvo = el.querySelector('#previa');
-  alvo.innerHTML = '<p class="dica" style="margin-top:12px">Lendo planilha…</p>';
-  const { registros: todos, avisos, erro: problema } = await lerPlanilha(arquivo, 'risco');
-  if (problema) { alvo.innerHTML = `<p class="aviso-lista" style="margin-top:12px">${esc(problema)}</p>`; return; }
-  // alunos já registrados como Gympass/convênios, benefício colaborador, contrato VIP ou que não quer mais contato não entram na lista
-  const { mantidos: registros, retirados } = separarExcecoes(todos, await dados.riscoExcecoes(unidade));
-  if (!registros.length) {
-    alvo.innerHTML = `<p class="aviso-lista" style="margin-top:12px">Todos os ${todos.length} alunos do arquivo já estão registrados como Gympass/convênios, benefício colaborador, contrato VIP ou que não quer mais contato. Não há ninguém para dividir.</p>`;
-    return;
-  }
-  const daUnidade = ctx.consultorasDa(unidade);
-  if (!daUnidade.length) { alvo.innerHTML = `<p class="aviso-lista">Cadastre as consultoras da ${esc(ctx.nomeUnidade(unidade))} (com ordem do rodízio) em Configurações antes de importar.</p>`; return; }
-
-  // ponteiro lido na hora: desfazer uma importação devolve o ponteiro anterior no banco
-  const ponteiro = (await dados.unidades()).find((u) => u.id === unidade).ponteiro_divisao;
-  const divisao = dividir(registros.map((r) => ({ evo_id: r.evo_id, consultorEvo: r.dados.consultor_evo })),
-    daUnidade.map((c) => ({ id: c.id, nome_evo: c.nome_evo || '' })), ponteiro);
-  alvo.innerHTML = `<div style="margin-top:16px">
-    <h2 style="font-size:14px;margin-bottom:10px">Prévia da divisão — ${registros.length} alunos</h2>
-    ${divisao.resumo.map((r) => `<div class="linha-info"><b>${esc(ctx.nomeDe(r.consultora_id))}</b><span>${r.total} alunos (${r.daEvo} já eram dela no EVO + ${r.recebidos} redistribuídos)</span></div>`).join('')}
-    ${retirados.length ? `<p class="dica" style="margin-top:10px"><b>${retirados.length} aluno(s) retirado(s)</b> por estarem registrados como Gympass/convênios, benefício colaborador, contrato VIP ou que não quer mais contato:
-      ${retirados.slice(0, 12).map((r) => `${esc(r.nome)} (${esc(CLASSES_RISCO[r.classe])})`).join(', ')}${retirados.length > 12 ? ` e mais ${retirados.length - 12}` : ''}.</p>` : ''}
-    ${listaAvisos(avisos)}
-    <div class="linha-acoes" style="margin-top:16px"><button class="btn verde" id="confirmar">Confirmar e distribuir</button><button class="btn sec" id="cancelar">Cancelar</button></div></div>`;
-  alvo.querySelector('#cancelar').onclick = () => painelAdmin(el, ctx);
-  alvo.querySelector('#confirmar').onclick = async (e) => {
-    e.target.disabled = true;
-    try {
-      const caminho = await dados.enviarArquivo('risco', ctx.perfil.id, arquivo);
-      const destino = Object.fromEntries(divisao.atribuicoes.map((a) => [a.evo_id, a.consultora_id]));
-      await dados.importarRisco(unidade, hoje, caminho, arquivo.name,
-        registros.map((r) => ({ ...r, consultora_id: destino[r.evo_id] })), divisao.proximoPonteiro);
-      toast(`Lista importada e dividida entre ${divisao.resumo.filter((r) => r.total).length} consultoras.`);
-      ctx.atualizarSino();
-      painelAdmin(el, ctx);
-    } catch (err) { erro(err); e.target.disabled = false; }
-  };
+  if (daSemana) el.querySelector('#baixar')?.addEventListener('click', () => baixarArquivo(daSemana.arquivo_path));
 }

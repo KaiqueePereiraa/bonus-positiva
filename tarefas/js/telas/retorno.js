@@ -1,16 +1,16 @@
 // Retorno do mês — quanto a Central trouxe de volta: alunos que voltaram, cobranças recebidas, matrículas.
 // Conta só o que aconteceu DEPOIS do contato da equipe (quem resolveu sozinho fica à parte, como comparação).
-import * as dados from '../dados.js?v=20261118091400';
-import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261118091400';
-import { retornoTotais, reais } from '../painel-regras.js?v=20261118091400';
-import { abasRelatorios } from './_comum.js?v=20261118091400';
+import * as dados from '../dados.js?v=20261118095302';
+import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261118095302';
+import { retornoTotais, reais } from '../painel-regras.js?v=20261118095302';
+import { abasRelatorios } from './_comum.js?v=20261118095302';
 
 let escolhido = null;
 
 export async function render(el, ctx) {
   const hoje = ctx.hoje();
   const meses = [];
-  for (let k = 0; k < 12; k++) {
+  for (let k = 0; k < 36; k++) {   // 3 anos: dá para comparar o mesmo mês do ano passado (os dados escritos não são apagados)
     const d = new Date(`${hoje.slice(0, 7)}-01T12:00:00Z`);
     d.setUTCMonth(d.getUTCMonth() - k);
     meses.push({ ano: d.getUTCFullYear(), mes: d.getUTCMonth() + 1 });
