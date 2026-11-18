@@ -1,7 +1,7 @@
 // Quadro da consultora: Atrasadas · Para fazer · Em andamento · Concluídas (o que está atrasado vem primeiro).
-import * as dados from '../dados.js?v=20261117213456';
-import { colunaQuadro, somarDias } from '../regras.js?v=20261117213456';
-import { esc, dataCurta, diaSemana, seloStatus, barra, STATUS, NOMES_CONTROLE, ROTA_CONTROLE, LISTAS_DIARIAS, nomeMesCap } from '../ui.js?v=20261117213456';
+import * as dados from '../dados.js?v=20261117214149';
+import { colunaQuadro, somarDias } from '../regras.js?v=20261117214149';
+import { esc, dataCurta, diaSemana, seloStatus, barra, STATUS, NOMES_CONTROLE, ROTA_CONTROLE, LISTAS_DIARIAS, nomeMesCap } from '../ui.js?v=20261117214149';
 
 const COLUNAS = [['atrasadas', 'Atrasadas'], ['para_fazer', 'Para fazer'], ['em_andamento', 'Em andamento'], ['concluidas', 'Concluídas']];
 

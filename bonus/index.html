@@ -910,7 +910,7 @@ async function bootApp() {
     const sel = document.createElement('select');
     sel.className = 'month';
     sel.setAttribute('aria-label', 'Mês do bônus');
-    sel.style.cssText = 'background:transparent;border:1px solid rgba(255,255,255,.35);border-radius:8px;color:inherit;font:inherit;padding:2px 6px;cursor:pointer';
+    sel.style.cssText = 'border:none;font-family:inherit;cursor:pointer;outline:none';   // mesmo selo verde do mês (classe .month)
     sel.innerHTML = meses.map(m => `<option value="${m}" ${m === MONTH ? 'selected' : ''} style="color:#111">${m}</option>`).join('');
     sel.onchange = () => { location.search = '?mes=' + encodeURIComponent(sel.value); };
     document.getElementById('hdr-month').replaceWith(sel);
