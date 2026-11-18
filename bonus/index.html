@@ -785,11 +785,15 @@ let UNIT_LABELS= {};
 let ALL_MONTHS = [];
 let DEFAULT_CONSULTANT = '';
 
-// Lê a publicação mais recente (gerada pelo gerar_comissao.py) e as vendas dela.
+// Lê a publicação do mês pedido (?mes=Outubro/2026) ou a mais recente, e as vendas dela. Desde 17/11/2026 o mês atual
+// é publicado sozinho toda madrugada pela EVO (função evo-bonus); os meses anteriores continuam disponíveis no seletor.
+let PUBLICACOES = [];
 async function carregarPublicacao() {
-  const { data: pub, error } = await db.from('bonus_publicacoes').select('*')
-    .order('publicado_em', { ascending: false }).limit(1).maybeSingle();
-  if (error || !pub) return false;
+  const { data: pubs, error } = await db.from('bonus_publicacoes').select('*').order('publicado_em', { ascending: false });
+  if (error || !pubs || !pubs.length) return false;
+  const pedido = new URLSearchParams(location.search).get('mes');
+  const pub = pubs.find(p => p.mes === pedido) || pubs[0];
+  PUBLICACOES = pubs.map(p => ({ mes: p.mes, em: p.publicado_em }));
   const vendas = [];
   for (let de = 0; ; de += 1000) {
     const { data, error: e } = await db.from('vendas').select('dados').eq('mes', pub.mes).order('ordem').range(de, de + 999);
@@ -899,6 +903,18 @@ async function bootApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('hdr-month').textContent = MONTH;
+  // seletor de fechamento: troca o mês inteiro do Bônus (contestações, vendas manuais e descontos são por mês)
+  if (PUBLICACOES.length > 1) {
+    const ordem = (m) => { const p = parseMonthLabel(m); return p ? p.year * 100 + p.month : 0; };
+    const meses = PUBLICACOES.map(p => p.mes).sort((a, b) => ordem(b) - ordem(a));
+    const sel = document.createElement('select');
+    sel.className = 'month';
+    sel.setAttribute('aria-label', 'Mês do bônus');
+    sel.style.cssText = 'background:transparent;border:1px solid rgba(255,255,255,.35);border-radius:8px;color:inherit;font:inherit;padding:2px 6px;cursor:pointer';
+    sel.innerHTML = meses.map(m => `<option value="${m}" ${m === MONTH ? 'selected' : ''} style="color:#111">${m}</option>`).join('');
+    sel.onchange = () => { location.search = '?mes=' + encodeURIComponent(sel.value); };
+    document.getElementById('hdr-month').replaceWith(sel);
+  }
   document.getElementById('hdr-name').textContent  = session.name;
   document.getElementById('hdr-role').textContent  = session.role === 'coordinator' ? 'Coordenador' : 'Consultor';
   document.getElementById('hdr-avatar').textContent = session.name[0];

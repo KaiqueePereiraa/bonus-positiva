@@ -1,8 +1,8 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261117183018';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261117183018';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261117183018';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261117183018';
+import * as dados from '../dados.js?v=20261117213456';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261117213456';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261117213456';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261117213456';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -200,3 +200,7 @@ export function escolherUnidade(el, ctx, texto) {
     sel.dispatchEvent(new Event('change'));
   };
 }
+
+// Abas da área Relatórios: baixar relatórios e o retorno do mês em R$ (o Retorno não tem item próprio no menu)
+export const abasRelatorios = (atual) => `<div class="abas nao-imprimir" style="margin-bottom:0">${[['relatorios', 'Baixar relatórios'], ['retorno', 'Retorno do mês (R$)']]
+  .map(([r, rotulo]) => `<button class="${r === atual ? 'ativo' : ''}" onclick="location.hash='#/${r}'">${rotulo}</button>`).join('')}</div>`;

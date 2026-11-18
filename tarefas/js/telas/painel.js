@@ -1,17 +1,23 @@
-// Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que importa (gestão por exceção), em frases
-// simples, cada uma com "o que fazer". Os números vêm prontos do banco (painel_gestor), sem dados de alunos.
-import * as dados from '../dados.js?v=20261117183018';
-import { esc, vazio, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117183018';
-import { somarDias, semanaDe } from '../regras.js?v=20261117183018';
+// Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que acontece HOJE e pede ação (gestão por
+// exceção), em frases simples, cada uma com "o que fazer". Comparações de 30 dias ficam em Desempenho; o que cada
+// lista trouxe fica em Resultados; o retorno em R$, em Relatórios → Retorno do mês.
+import * as dados from '../dados.js?v=20261117213456';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117213456';
+import { somarDias, semanaDe } from '../regras.js?v=20261117213456';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', vendas_dia: 'Vendas do dia', relacionamento: 'Relacionamento' };
-import { sinais, atencao, quadrante, reais, mediana } from '../painel-regras.js?v=20261117183018';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261117213456';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
-  const [p, cfg, tarefas] = await Promise.all([dados.painelGestor(), dados.config().catch(() => ({})),
-    dados.tarefas({ desde: somarDias(hojeIso, -21), unidade: ctx.unidade || undefined }).catch(() => [])]);
+  const seg = semanaDe(hojeIso).inicio;
+  const [p, cfg, tarefas, hojeContatos, semana] = await Promise.all([dados.painelGestor(), dados.config().catch(() => ({})),
+    dados.tarefas({ desde: somarDias(hojeIso, -21), unidade: ctx.unidade || undefined }).catch(() => []),
+    dados.contatosHoje(hojeIso).catch(() => ({})),
+    hojeIso > seg ? dados.desempenho(seg, somarDias(hojeIso, -1)).catch(() => []) : Promise.resolve([])]);
+  const pendentes = pendentesPorConsultora(tarefas, hojeIso);
+  const semanaDe_ = Object.fromEntries(semana.map((c) => [c.id, c]));
   const desligadas = Object.entries(ROTINAS_NOVAS).filter(([id]) => cfg[`evo_auto_${id}`] !== true).map(([, nome]) => nome);
   const ativaDe = (id) => ctx.unidades.find((x) => x.id === id)?.automacao_ativa;
   const unidades = (ctx.unidade ? p.unidades.filter((u) => u.id === ctx.unidade) : p.unidades).map((u) => ({ ...u, automacao_ativa: ativaDe(u.id) }));
@@ -33,36 +39,26 @@ export async function render(el, ctx) {
         : '<p class="dica">Nada fora do normal agora. 🎉</p>'}</div>
 
     <div class="cartao"><h2>Equipe hoje</h2>
-      ${todas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Hoje</th><th>Atrasados</th><th>Contatos (30 dias)</th><th>Deu resultado (30 dias)</th></tr></thead><tbody>
+      ${todas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Hoje</th><th>Pendentes</th><th>Atrasados</th><th>Último contato</th><th>Semana</th></tr></thead><tbody>
         ${todas.map((c) => {
           const cor = !c.minimo ? 'cinza' : c.feitos_hoje >= c.minimo ? 'verde' : c.feitos_hoje * 2 >= c.minimo ? 'laranja' : 'vermelho';
+          const pend = pendentes[c.id] || 0;
+          const ult = hojeContatos[c.id]?.ultimo;
+          const sem = semanaDe_[c.id];
           return `<tr><td class="nome">${esc(c.nome)}<span class="sub">${esc(c.unidade)}</span></td>
             <td><span class="selo ${cor}">${c.minimo ? `${c.feitos_hoje} de ${c.minimo}` : `${c.feitos_hoje} · sem mínimo`}</span></td>
+            <td>${pend ? pend : '<span class="selo azul" title="Não tem nada pendente: tem tempo para uma lista extra">livre</span>'}</td>
             <td>${c.atrasados ? `<b style="color:var(--danger)">${c.atrasados}</b>` : '—'}</td>
-            <td>${c.contatos_30d}</td>
-            <td>${c.decididos_30d ? `${Math.round((100 * c.positivos_30d) / c.decididos_30d)}% <span class="sub">${c.positivos_30d} de ${c.decididos_30d}</span>` : '<span class="dica">aguardando</span>'}</td></tr>`;
-        }).join('')}</tbody></table></div>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
+            <td>${ult ? dataHora(ult).slice(-5) : '<span class="dica">nenhum hoje</span>'}</td>
+            <td>${sem?.pct != null ? `${sem.pct}% <span class="sub">meta em ${sem.dias_bateu} de ${sem.dias} dia(s)</span>` : '<span class="dica">—</span>'}</td></tr>`;
+        }).join('')}</tbody></table></div>
+        <p class="dica" style="margin-top:8px">Pendentes = contatos em aberto em todas as listas dela. "Livre" = zerou as listas: dá para passar uma Lista a fazer. Semana = mínimo cumprido nos dias já fechados desta semana. Comparação de 30 dias: <a href="#/desempenho">Desempenho →</a></p>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
     </div>
 
     ${listasDaSemana(tarefas, hojeIso)}
 
-    ${quadroEsforco(todas)}
-
-    <div class="grade">
-      ${['semana', 'mes'].map((per) => {
-        const t = somar(ativas, per);
-        const ant = per === 'mes' ? somar(ativas, 'mes_anterior') : null;
-        return `<div class="cartao"><h2>${per === 'semana' ? 'Resultados desta semana' : 'Resultados do mês'}</h2>
-          <div class="linha-info"><b>💳 Pagaram depois da cobrança</b><span>${t.pagou}${t.valor ? ` · ${reais(t.valor)}` : ''}</span></div>
-          <div class="linha-info"><b>🏊 Voltaram a treinar depois do contato</b><span>${t.voltou}</span></div>
-          <div class="linha-info"><b>✍️ Viraram matrícula</b><span>${t.matriculou}</span></div>
-          <div class="linha-info"><b>🔁 Renovaram o contrato</b><span>${t.renovou}</span></div>
-          <div class="linha-info"><b>🤖 Resolveram sozinhos (saíram da lista)</b><span>${t.sozinhos}</span></div>
-          ${ant ? `<p class="dica" style="margin-top:8px">Mês anterior: ${ant.pagou} pagaram (${reais(ant.valor)}) · ${ant.voltou} voltaram · ${ant.matriculou} matrículas.</p>` : ''}
-        </div>`;
-      }).join('')}
-    </div>
-    <p class="dica" style="text-align:center">Quanto a Central trouxe de volta no mês: <a href="#/retorno">abrir o Retorno do mês →</a></p>`;
+    ${(() => { const t = somar(ativas, 'semana'); return `<p class="dica" style="text-align:center">Nesta semana: ${t.pagou} pagaram${t.valor ? ` (${reais(t.valor)})` : ''} · ${t.voltou} voltaram a treinar · ${t.matriculou} matrículas · ${t.renovou} renovações.
+      <a href="#/indicadores">Resultados →</a> · <a href="#/retorno">Retorno do mês →</a></p>`; })()}`;
 }
 
 function somar(unidades, per) {
@@ -71,18 +67,14 @@ function somar(unidades, per) {
   return t;
 }
 
-// Esforço (contatos) × resultado (% que deu certo), comparando cada uma com a mediana da equipe
-function quadroEsforco(todas) {
-  const comDados = todas.filter((c) => c.decididos_30d >= 5);
-  if (comDados.length < 2) return '';   // aparece quando houver pelo menos 2 consultoras com 5+ contatos com resultado
-  const medC = mediana(comDados.map((c) => c.contatos_30d));
-  const medT = mediana(comDados.map((c) => c.positivos_30d / c.decididos_30d));
-  return `<div class="cartao"><h2>Esforço × resultado <span class="selo cinza">últimos 30 dias</span></h2>
-    <p class="dica" style="margin-bottom:12px">Comparado com a própria equipe (mediana: ${medC} contatos e ${Math.round(medT * 100)}% de resultado).</p>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Como está</th><th>O que fazer</th></tr></thead><tbody>
-    ${comDados.map((c) => { const q = quadrante(c, medC, medT); return `<tr><td class="nome">${esc(c.nome)}<span class="sub">${c.contatos_30d} contatos · ${Math.round(100 * c.positivos_30d / c.decididos_30d)}% de resultado</span></td>
-      <td>${q.icone} <b>${esc(q.nome)}</b></td><td class="dica">${esc(q.acao)}</td></tr>`; }).join('')}
-    </tbody></table></div></div>`;
+// Contatos em aberto de cada consultora, somando todas as listas abertas (confirmações de aula que já passou não contam)
+function pendentesPorConsultora(tarefas, hoje) {
+  const por = {};
+  for (const t of tarefas) {
+    if (String(t.status).startsWith('concluida') || (t.controle_id === 'experimental_confirmar' && t.prazo < hoje)) continue;
+    por[t.responsavel_id] = (por[t.responsavel_id] || 0) + Math.max(0, (t.total || 0) - (t.feitos || 0));
+  }
+  return por;
 }
 
 // Andamento de cada lista: as abertas e as que venceram nesta semana, somando todas as consultoras

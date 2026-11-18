@@ -1,9 +1,9 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117183018';
-import * as dados from './dados.js?v=20261117183018';
-import { hojeSP } from './regras.js?v=20261117183018';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117183018';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261117183018';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261117213456';
+import * as dados from './dados.js?v=20261117213456';
+import { hojeSP } from './regras.js?v=20261117213456';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261117213456';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261117213456';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -14,34 +14,41 @@ const ICONES = {
   lista: '<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/>',
   escala: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
   ind: '<path d="M18 20V10M12 20V4M6 20v-6"/>',
-  ins: '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>',
+  renov: '<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  rel_aluno: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  alvo: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  equipe: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
   rel: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/>',
   conf: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
 };
 
 // Rotas. quem: 'admin' | 'consultora' | 'todos'. grupo: onde fica no menu (null = fora do menu, só por link).
 // frase: aparece embaixo do título e diz, em uma linha, o que fazer na tela.
-const GRUPOS = { inicio: '', listas: 'Listas de contato', acompanhar: 'Acompanhar', ajustes: 'Ajustes' };
+// O menu segue os objetivos do Painel: trazer alunos (vendas), manter alunos (retenção) e cobrança.
+const GRUPOS = { inicio: '', vendas: 'Trazer alunos', retencao: 'Manter alunos', cobranca: 'Cobrança', extras: 'Extras', acompanhar: 'Acompanhar', ajustes: 'Ajustes' };
 const ROTAS = {
-  painel: { titulo: 'Painel do gestor', modulo: 'painel', icone: 'ind', quem: 'admin', grupo: 'inicio', frase: 'O que pede sua atenção hoje e como a equipe está. Comece pelos cartões coloridos.' },
+  painel: { titulo: 'Painel do gestor', modulo: 'painel', icone: 'visao', quem: 'admin', grupo: 'inicio', frase: 'O que pede sua atenção hoje e como a equipe está agora. Comece pelos cartões coloridos.' },
   'meu-dia': { titulo: 'Meu dia', modulo: 'meu-dia', icone: 'tarefas', quem: 'consultora', grupo: 'inicio', frase: 'O que fazer hoje, na ordem certa. Toque em "Começar" e siga a lista.' },
   'minhas-tarefas': { titulo: 'Todas as minhas tarefas', modulo: 'minhas-tarefas', icone: 'tarefas', quem: 'consultora', grupo: null, frase: 'Todas as suas listas, separadas por situação.' },
-  inadimplencia: { titulo: 'Inadimplência', modulo: 'inadimplencia', icone: 'inad', quem: 'todos', grupo: 'listas', frase: 'Quem está com a mensalidade atrasada. Mande a mensagem pelo botão do WhatsApp.' },
-  risco: { titulo: 'Risco de abandono', modulo: 'risco', icone: 'risco', quem: 'todos', grupo: 'listas', frase: 'Alunos que pararam de vir. Pergunte o motivo e convide para voltar.' },
-  renovacao: { titulo: 'Renovação', modulo: 'renovacao', icone: 'escala', quem: 'todos', grupo: 'listas', frase: 'Contratos vencendo ou vencidos. Ofereça a renovação ou registre o motivo.' },
-  relacionamento: { titulo: 'Relacionamento', modulo: 'relacionamento', icone: 'lista', quem: 'todos', grupo: 'listas', frase: 'Alunos novos, quem cancelou e ex-alunos. Um contato atencioso faz a pessoa ficar ou voltar.' },
-  vendas: { titulo: 'Vendas do dia', modulo: 'vendas', icone: 'nf', quem: 'todos', grupo: 'listas', frase: 'Experimentais e interessados novos. O contato é hoje: interessado esfria rápido.' },
-  'nao-fechou': { titulo: 'Por que não fechou?', modulo: 'nao-fechou', icone: 'nf', quem: 'todos', grupo: 'listas', frase: 'Interessados do mês que não se matricularam. Escolha o motivo de cada um.' },
-  'lista-fazer': { titulo: 'Lista a fazer', modulo: 'lista-fazer', icone: 'lista', quem: 'todos', grupo: 'listas', frase: 'Listas extras montadas pelo gestor.' },
-  desempenho: { titulo: 'Desempenho', modulo: 'desempenho', icone: 'ind', quem: 'todos', grupo: 'acompanhar', frase: 'Quem cumpriu o mínimo de contatos e quantos deram resultado.' },
-  indicadores: { titulo: 'Resultados', modulo: 'indicadores', icone: 'ins', quem: 'admin', grupo: 'acompanhar', frase: 'O que os contatos trouxeram de verdade e o que os números dizem.' },
-  retorno: { titulo: 'Retorno do mês', modulo: 'retorno', icone: 'rel', quem: 'admin', grupo: 'acompanhar', frase: 'Quanto a equipe trouxe de volta em R$ com a Central.' },
+  vendas: { titulo: 'Vendas', modulo: 'vendas', icone: 'alvo', quem: 'todos', grupo: 'vendas', frase: 'Experimentais e interessados novos (todo dia) e ex-alunos (toda segunda). Interessado esfria rápido: o contato é hoje.' },
+  'nao-fechou': { titulo: 'Por que não fechou?', modulo: 'nao-fechou', icone: 'nf', quem: 'todos', grupo: 'vendas', frase: 'Interessados do mês que não se matricularam. Escolha o motivo de cada um.' },
+  risco: { titulo: 'Risco de abandono', modulo: 'risco', icone: 'risco', quem: 'todos', grupo: 'retencao', frase: 'Alunos que pararam de vir. Pergunte o motivo e convide para voltar.' },
+  renovacao: { titulo: 'Renovação', modulo: 'renovacao', icone: 'renov', quem: 'todos', grupo: 'retencao', frase: 'Contratos vencendo ou vencidos. Ofereça a renovação ou registre o motivo.' },
+  relacionamento: { titulo: 'Relacionamento', modulo: 'relacionamento', icone: 'rel_aluno', quem: 'todos', grupo: 'retencao', frase: 'Alunos novos e quem cancelou. Um contato atencioso faz a pessoa ficar.' },
+  inadimplencia: { titulo: 'Inadimplência', modulo: 'inadimplencia', icone: 'inad', quem: 'todos', grupo: 'cobranca', frase: 'Quem está com a mensalidade atrasada. Mande a mensagem pelo botão do WhatsApp.' },
+  'lista-fazer': { titulo: 'Lista a fazer', modulo: 'lista-fazer', icone: 'lista', quem: 'todos', grupo: 'extras', frase: 'Listas extras montadas pelo gestor.' },
+  // Acompanhar: uma pergunta por tela. Desempenho = as pessoas; Resultados = o que funciona; Relatórios = baixar e o retorno em R$.
+  desempenho: { titulo: 'Desempenho', modulo: 'desempenho', icone: 'equipe', quem: 'todos', grupo: 'acompanhar', frase: 'Quem cumpriu o mínimo de contatos, quanto deu resultado e como cada uma está comparada com a equipe.' },
+  indicadores: { titulo: 'Resultados', modulo: 'indicadores', icone: 'ind', quem: 'admin', grupo: 'acompanhar', frase: 'O que cada lista trouxe de verdade, os motivos e o que os números dizem.' },
   relatorios: { titulo: 'Relatórios', modulo: 'relatorios', icone: 'rel', quem: 'admin', grupo: 'acompanhar', frase: 'Escolha o período e baixe em PDF, Excel ou CSV.' },
+  retorno: { titulo: 'Retorno do mês', modulo: 'retorno', icone: 'rel', quem: 'admin', grupo: null, menu: 'relatorios', frase: 'Quanto a equipe trouxe de volta em R$ com a Central.' },
   // EM PREPARAÇÃO (pedido do usuário, 16/11/2026): só o admin vê a Escala até ele dizer que está 100% pronta.
   // Para abrir para as consultoras: trocar quem para 'todos' e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
   escala: { titulo: 'Escala', modulo: 'escala', icone: 'escala', quem: 'admin', grupo: 'ajustes', frase: 'Quem trabalha em cada fim de semana.' },
   configuracoes: { titulo: 'Configurações', modulo: 'configuracoes', icone: 'conf', quem: 'admin', grupo: 'ajustes', frase: 'Equipe, rodízio, mensagens, WhatsApp e a conexão com a EVO.' },
 };
+// grupos que são listas de contato (a consultora só vê as listas em que tem algo)
+const GRUPOS_LISTAS = ['vendas', 'retencao', 'cobranca', 'extras'];
 // telas antigas que foram juntadas a outras (links salvos continuam funcionando)
 const REDIRECIONA = { 'visao-geral': null, insights: 'indicadores' };
 const podeVer = (r) => r.quem === 'todos' || (r.quem === 'admin') === ehAdmin;
@@ -125,7 +132,7 @@ async function navegar() {
   const def = ROTAS[rota];
   if (!def || !podeVer(def)) { location.replace(`#/${padrao}`); return; }
   const { titulo, modulo } = def;
-  document.querySelectorAll('#menu a').forEach((a) => a.classList.toggle('ativo', a.dataset.rota === rota || (rota === 'minhas-tarefas' && a.dataset.rota === 'meu-dia')));
+  document.querySelectorAll('#menu a').forEach((a) => a.classList.toggle('ativo', a.dataset.rota === rota || a.dataset.rota === def.menu || (rota === 'minhas-tarefas' && a.dataset.rota === 'meu-dia')));
   $('titulo').textContent = titulo;
   $('subtitulo').textContent = def.frase || '';
   document.title = `${titulo} — Central de Tarefas`;
@@ -133,7 +140,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261117183018`);
+    const tela = await import(`./telas/${modulo}.js?v=20261117213456`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -165,7 +172,7 @@ function atualizarMenu() {
     const cont = li.querySelector('.cont');
     cont.hidden = !pend[rota];
     cont.textContent = pend[rota] > 99 ? '99+' : pend[rota] || '';
-    if (!ehAdmin && ROTAS[rota].grupo === 'listas') li.hidden = !tem[rota] && location.hash !== `#/${rota}`;
+    if (!ehAdmin && GRUPOS_LISTAS.includes(ROTAS[rota].grupo)) li.hidden = !tem[rota] && location.hash !== `#/${rota}`;
   });
   document.querySelectorAll('#menu li.grupo').forEach((g) => {   // título de grupo sem nenhum item visível some
     let n = g.nextElementSibling, algum = false;

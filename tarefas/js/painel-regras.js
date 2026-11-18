@@ -26,8 +26,8 @@ export function sinais(unidades) {
   const inad = pend('inadimplencia');
   const risco = pend('risco');
   const nf = pend('nao_fechou');
-  const novos = pend('lead_novo') + pend('experimental_confirmar') + pend('experimental_pos');
-  const relac = pend('renovacao_vencer') + pend('renovacao_venceu') + pend('primeiros_90') + pend('cancelou') + pend('ex_alunos');
+  const novos = pend('lead_novo') + pend('experimental_confirmar') + pend('experimental_pos') + pend('ex_alunos');
+  const relac = pend('renovacao_vencer') + pend('renovacao_venceu') + pend('primeiros_90') + pend('cancelou');
   const rc = mes('risco_contato'), rcv = mes('risco_contato_voltou'), rs = mes('risco_sem_contato'), rsv = mes('risco_sem_contato_voltou');
   const efeito = rc >= 10 && rs >= 10 ? ` Com contato, ${Math.round(100 * rcv / rc)}% voltaram; sem contato, ${Math.round(100 * rsv / rs)}%.` : '';
 
@@ -42,7 +42,7 @@ export function sinais(unidades) {
       acao: risco ? 'Peça para perguntarem o motivo da falta, não só "sentimos sua falta".' : '' },
     { area: 'Vendas', cor: nf || novos ? 'amarelo' : 'verde',
       titulo: mes('matriculou') ? `${plural(mes('matriculou'), 'matrícula recuperada', 'matrículas recuperadas')} no mês` : 'Oportunidades não fechadas',
-      texto: `${novos ? `${plural(novos, 'interessado novo ou experimental esperando contato', 'interessados novos e experimentais esperando contato')}. ` : ''}${nf ? `${plural(nf, 'interessado ainda sem motivo registrado', 'interessados ainda sem motivo registrado')}.` : 'Todos os interessados do mês já têm motivo registrado.'}`,
+      texto: `${novos ? `${plural(novos, 'contato de venda esperando (interessado, experimental ou ex-aluno)', 'contatos de venda esperando (interessados, experimentais e ex-alunos)')}. ` : ''}${nf ? `${plural(nf, 'interessado ainda sem motivo registrado', 'interessados ainda sem motivo registrado')}.` : 'Todos os interessados do mês já têm motivo registrado.'}`,
       acao: novos ? 'Interessado esfria rápido: o contato precisa sair hoje.' : nf ? 'Ofereça um horário de experimental já na primeira mensagem.' : '' },
     { area: 'Equipe', cor: atrasadas.length || vermelhas.length ? 'vermelho' : 'verde',
       titulo: atrasadas.length ? `${plural(atrasadas.length, 'consultora com atraso', 'consultoras com atraso')}` : vermelhas.length ? 'Ritmo abaixo hoje' : 'Equipe em dia',

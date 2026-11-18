@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261117183018';
+import { sb } from '../../shared/sessao.js?v=20261117213456';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
@@ -57,6 +57,19 @@ export async function itensComResultado({ desde, ate, unidade }) {
   if (ate) q = q.lte('feito_em', `${ate}T23:59:59-03:00`);
   if (unidade) q = q.eq('tarefas.unidade', unidade);
   return ok(await q.limit(20000));
+}
+
+// Contatos feitos hoje (para o Painel: último contato de cada consultora). Só o admin lê os de todas.
+export async function contatosHoje(hoje) {
+  const linhas = ok(await sb.from('itens').select('feito_por, feito_em').not('feito_por', 'is', null)
+    .gte('feito_em', `${hoje}T00:00:00-03:00`).limit(20000));
+  const por = {};
+  for (const l of linhas) {
+    const x = por[l.feito_por] ??= { n: 0, ultimo: null };
+    x.n++;
+    if (!x.ultimo || l.feito_em > x.ultimo) x.ultimo = l.feito_em;
+  }
+  return por;
 }
 
 export async function itensPeriodo({ controle, desde, ate, unidade }) {
@@ -165,6 +178,7 @@ export const painelGestor = () => rpc('painel_gestor', {});
 export const justificativaPendente = () => rpc('justificativa_pendente', {});
 export const justificarDia = (data, texto, naoTrabalhei) => rpc('justificar_dia', { p_data: data, p_texto: texto, p_nao_trabalhei: !!naoTrabalhei });
 export const meuDia = () => rpc('meu_dia', {});
+export const minhaMetaSemana = () => rpc('minha_meta_semana', {});
 export const desempenho = (de, ate) => rpc('desempenho', { p_de: de, p_ate: ate });
 export const retornoMes = (ano, mes) => rpc('retorno_mes', { p_ano: ano, p_mes: mes });
 export const descobrirFiliaisEvo = () => evoAcao('filiais');

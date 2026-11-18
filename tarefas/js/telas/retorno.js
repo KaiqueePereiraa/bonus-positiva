@@ -1,8 +1,9 @@
 // Retorno do mês — quanto a Central trouxe de volta: alunos que voltaram, cobranças recebidas, matrículas.
 // Conta só o que aconteceu DEPOIS do contato da equipe (quem resolveu sozinho fica à parte, como comparação).
-import * as dados from '../dados.js?v=20261117183018';
-import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261117183018';
-import { retornoTotais, reais } from '../painel-regras.js?v=20261117183018';
+import * as dados from '../dados.js?v=20261117213456';
+import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261117213456';
+import { retornoTotais, reais } from '../painel-regras.js?v=20261117213456';
+import { abasRelatorios } from './_comum.js?v=20261117213456';
 
 let escolhido = null;
 
@@ -20,7 +21,7 @@ export async function render(el, ctx) {
   const t = retornoTotais({ ...r, unidades });
   const fechado = r.fim < hoje && r.fim.slice(0, 7) !== hoje.slice(0, 7);
 
-  el.innerHTML = `
+  el.innerHTML = `${abasRelatorios('retorno')}
     <div class="cartao nao-imprimir"><div class="linha-acoes">
       <label class="campo">Mês<select class="ctrl" id="mes">${meses.map((m) => `<option value="${m.ano}-${m.mes}" ${m.ano === escolhido.ano && m.mes === escolhido.mes ? 'selected' : ''}>${nomeMesCap(m.ano, m.mes)}</option>`).join('')}</select></label>
       <button class="btn sec" id="imprimir">Baixar PDF / imprimir</button></div></div>

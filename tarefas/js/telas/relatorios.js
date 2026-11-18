@@ -1,17 +1,18 @@
 // Relatórios — escolhe período, controle e consultoras; mostra na tela e exporta PDF, Excel ou CSV.
-import * as dados from '../dados.js?v=20261117183018';
-import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261117183018';
-import { barras, imagem } from '../graficos.js?v=20261117183018';
-import { csv, excel, pdf } from '../exportar.js?v=20261117183018';
-import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261117183018';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto, ligarPeriodos } from './_analise.js?v=20261117183018';
+import * as dados from '../dados.js?v=20261117213456';
+import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261117213456';
+import { barras, imagem } from '../graficos.js?v=20261117213456';
+import { csv, excel, pdf } from '../exportar.js?v=20261117213456';
+import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261117213456';
+import { abasRelatorios } from './_comum.js?v=20261117213456';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto, ligarPeriodos } from './_analise.js?v=20261117213456';
 
 let filtros;
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
 
 export async function render(el, ctx) {
   filtros ||= filtrosPadrao(ctx);
-  el.innerHTML = `<div class="cartao"><h2>Montar relatório</h2>${htmlFiltros(filtros, ctx, { status: false })}
+  el.innerHTML = `${abasRelatorios('relatorios')}<div class="cartao"><h2>Montar relatório</h2>${htmlFiltros(filtros, ctx, { status: false })}
     <div class="linha-acoes" style="margin-top:16px">
       <button class="btn" data-exp="pdf">Baixar PDF</button><button class="btn sec" data-exp="xlsx">Baixar Excel</button><button class="btn sec" data-exp="csv">Baixar CSV</button>
     </div><p class="dica" style="margin-top:10px">O PDF abre numa janela para imprimir — escolha "Salvar como PDF". Telefones dos alunos não entram nos relatórios.</p></div>

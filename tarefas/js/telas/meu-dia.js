@@ -1,14 +1,17 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 3 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261117183018';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117183018';
+import * as dados from '../dados.js?v=20261117213456';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261117213456';
+import { resumoSemana } from '../bonus-meta.js?v=20261117213456';
 
 const CHAVE_GUIA = 'central_guia_meu_dia';
 const guiaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1'; } catch { return true; } };
 
 export async function render(el, ctx) {
-  const d = await dados.meuDia();
+  // meta da semana do Bônus (só um resumo; o detalhe fica na área do Bônus)
+  const temBonus = ctx.perfil.acesso_bonus && ctx.perfil.unidade;
+  const [d, meta] = await Promise.all([dados.meuDia(), temBonus ? dados.minhaMetaSemana().catch(() => null) : null]);
   const minimo = d.listas.reduce((s, l) => s + l.minimo, 0);
   const feitos = d.feitos_hoje;
   const ok = minimo === 0 || feitos >= minimo;
@@ -38,6 +41,8 @@ export async function render(el, ctx) {
       ${sem.dias ? `<p class="dica" style="margin-top:12px">Nesta semana: mínimo batido em ${sem.bateu} de ${sem.dias} dia(s).</p>` : ''}
     </div>
 
+    ${cartaoMeta(meta, d.hoje, ctx.perfil.unidade)}
+
     ${listas.length ? `<div class="cartao"><h2>Suas listas de hoje</h2>
       <div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Lista</th><th>Faltam</th><th>Prazo</th><th>Hoje, no mínimo</th><th></th></tr></thead><tbody>
       ${listas.map((l) => {
@@ -58,4 +63,15 @@ export async function render(el, ctx) {
     try { localStorage.setItem(CHAVE_GUIA, '1'); } catch { /* sem armazenamento */ }
     el.querySelector('.guia').remove();
   });
+}
+
+// Resumo da meta da semana do Bônus: contratos "de meta" dela na semana (mês dividido em 4, como no Bônus)
+function cartaoMeta(meta, hoje, unidade) {
+  if (!meta || !meta.publicado_em) return '';
+  const r = resumoSemana(meta.vendas || [], hoje, unidade);
+  const cor = r.faixa === 'Abaixo do básico' ? 'laranja' : 'verde';
+  return `<div class="cartao"><div class="linha-info"><b>🎯 Meta da semana ${r.semana} (${dataCurta(r.ini)} a ${dataCurta(r.fim)})</b>
+      <span><span class="selo ${cor}">${r.feitos} ${r.feitos === 1 ? 'contrato' : 'contratos'} · ${esc(r.faixa)}</span></span></div>
+    <p class="dica" style="margin-top:6px">${r.proxima ? `Faltam <b>${r.proxima.faltam}</b> para ${esc(r.proxima.nome === 'Básico' ? 'o Básico' : `a ${r.proxima.nome}`)}.` : 'Super meta batida! 🎉'}
+      Atualizado de madrugada pela EVO. <a href="../bonus/index.html">Ver detalhes no Bônus →</a></p></div>`;
 }

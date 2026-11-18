@@ -1,10 +1,10 @@
 // Resultados — o que os contatos trouxeram (conferido na EVO), o que os números dizem (frases automáticas, antes na
-// tela "Insights"), cumprimento dos prazos e os motivos do "Por que não fechou?". O ranking da equipe fica em Desempenho.
-import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, resultadosPorConsultora, gerarInsights, POSITIVO } from '../analises.js?v=20261117183018';
-import * as dados from '../dados.js?v=20261117183018';
-import { linha, barras } from '../graficos.js?v=20261117183018';
-import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261117183018';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261117183018';
+// tela "Insights"), cumprimento dos prazos e os motivos do "Por que não fechou?". O resultado de cada consultora e o ranking ficam em Desempenho.
+import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261117213456';
+import * as dados from '../dados.js?v=20261117213456';
+import { linha, barras } from '../graficos.js?v=20261117213456';
+import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261117213456';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261117213456';
 
 let filtros;
 
@@ -39,11 +39,6 @@ async function desenhar(el, ctx) {
   const reais = gruposReais(itensNf.filter((i) => i.motivo_id && i.feito_em), ctx.motivos);
   const res = resultadoDe(contatos);
   const listasRes = Object.keys(POSITIVO).filter((c) => res[c].contatos);
-  const resPessoas = resultadosPorConsultora(contatos, pessoas).map((l) => {
-    const t = Object.keys(POSITIVO).reduce((a, c) => ({ contatos: a.contatos + l[c].contatos, decididos: a.decididos + l[c].decididos,
-      positivos: a.positivos + l[c].positivos, valor: a.valor + l[c].valor }), { contatos: 0, decididos: 0, positivos: 0, valor: 0 });
-    return { nome: l.nome, ...t };
-  });
   const frases = gerarInsights({ tarefas, itensNaoFechou: itensNf, motivos: ctx.motivos, hoje });
 
   if (!tarefas.length && !contatos.length) { el.innerHTML = `<div class="cartao">${vazio('Nada no período escolhido. Tente "Últimos 3 meses".')}</div>`; return; }
@@ -63,12 +58,7 @@ async function desenhar(el, ctx) {
         : vazio('Os resultados aparecem conforme a equipe faz contatos e a EVO confere o que aconteceu depois.')}
     </div>
 
-    ${resPessoas.length ? `<div class="cartao"><h2>Resultado por consultora</h2>
-      <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Contatos</th><th>Deu certo</th><th>R$ recebido</th></tr></thead><tbody>
-      ${resPessoas.map((l) => `<tr><td class="nome">${esc(l.nome)}</td><td>${l.contatos}</td>
-        <td>${l.decididos ? `<b>${Math.round(100 * l.positivos / l.decididos)}%</b> <span class="sub">${l.positivos} de ${l.decididos}</span>` : '<span class="dica">aguardando</span>'}</td>
-        <td>${l.valor ? reais$(l.valor) : '—'}</td></tr>`).join('')}
-      </tbody></table></div><p class="dica" style="margin-top:8px">Mínimo do dia e ranking da equipe: <a href="#/desempenho">Desempenho →</a></p></div>` : ''}
+    <p class="dica" style="text-align:center">Resultado de cada consultora e ranking da equipe: <a href="#/desempenho">Desempenho →</a> · R$ por consultora: <a href="#/retorno">Retorno do mês →</a></p>
 
     ${tarefas.length ? `<div class="numeros">
       ${numero('Listas no período', r.total, 'escuro')}
