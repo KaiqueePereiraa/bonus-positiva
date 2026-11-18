@@ -1,9 +1,9 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118194527';
-import * as dados from './dados.js?v=20261118194527';
-import { hojeSP } from './regras.js?v=20261118194527';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118194527';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118194527';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118194851';
+import * as dados from './dados.js?v=20261118194851';
+import { hojeSP } from './regras.js?v=20261118194851';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118194851';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118194851';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -140,7 +140,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261118194527`);
+    const tela = await import(`./telas/${modulo}.js?v=20261118194851`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -229,20 +229,30 @@ try {
   await carregarBase();
 } catch (e) { erro(e); }
 
-// Plano do dia: quem não bateu o mínimo de um dia útil conta o que aconteceu antes de seguir (texto livre;
-// "não trabalhei" tira o dia da conta). O gestor recebe no WhatsApp.
+// Plano do dia: quem não bateu o mínimo de um dia útil conta o que aconteceu ANTES de usar a plataforma (pedido de
+// 18/11/2026: obrigatório). A janela não fecha com Esc nem clicando fora, e o menu e as telas só aparecem depois de
+// justificar todos os dias pendentes. "Não trabalhei" tira o dia da conta. O gestor recebe no WhatsApp.
 async function pedirJustificativas() {
-  for (let volta = 0; volta < 10; volta++) {
-    const p = await dados.justificativaPendente().catch(() => null);
+  let anterior = null, aviso = '';
+  for (;;) {
+    let p;
+    try { p = await dados.justificativaPendente(); } catch { return; }   // sem conexão: não prende a consultora
     if (!p) return;
+    if (anterior === p.data && !aviso) return;   // salvou mas o dia continua pendente: não trava a tela por erro do sistema
     const dia = `${p.data.slice(8, 10)}/${p.data.slice(5, 7)}`;
-    const r = await modal(`Como foi o dia ${dia}?`, `<p style="margin-bottom:10px">Você fez <b>${p.feitos} de ${p.minimo}</b> contatos do mínimo desse dia. Conta pra gente o que aconteceu — vai para o gestor.</p>
+    const r = await modal(`Antes de começar: como foi o dia ${dia}?`, `<p style="margin-bottom:10px">Você fez <b>${p.feitos} de ${p.minimo}</b> contatos do mínimo desse dia.
+        Para continuar usando a Central, conte o que aconteceu — vai para o gestor.</p>
+      ${aviso ? `<p class="faixa urgente" style="margin-bottom:10px">${esc(aviso)}</p>` : ''}
       <textarea class="ctrl" id="just-texto" rows="4" style="width:100%" placeholder="Ex.: muitas matrículas na recepção, reunião, sistema fora…"></textarea>
       <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="just-nao"> Não trabalhei nesse dia (folga, falta ou atestado)</label>`,
-      { acoes: [{ rotulo: 'Enviar', valor: 'enviar' }], ler: true });
-    if (r.valor !== 'enviar') { toast('Antes de continuar, conte o que aconteceu nesse dia.', 'erro'); continue; }
-    try { await dados.justificarDia(p.data, r.campos['just-texto'], r.campos['just-nao']); toast('Obrigado! Enviado ao gestor.'); }
-    catch (e) { erro(e); }
+      { acoes: [{ rotulo: 'Enviar e continuar', valor: 'enviar' }], ler: true, travado: true });
+    const texto = String(r.campos['just-texto'] || '').trim();
+    if (texto.length < 10) { aviso = 'Escreva pelo menos uma frase curta (10 letras ou mais).'; continue; }
+    try {
+      await dados.justificarDia(p.data, texto, r.campos['just-nao']);
+      toast('Obrigado! Enviado ao gestor.');
+      anterior = p.data; aviso = '';
+    } catch (e) { aviso = e?.message || 'Não foi possível enviar. Tente de novo.'; }
   }
 }
 if (!ehAdmin) await pedirJustificativas();

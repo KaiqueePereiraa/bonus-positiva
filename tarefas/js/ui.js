@@ -70,7 +70,8 @@ export function erro(e) {
 
 // ── Janela modal simples ──
 // Com { ler: true } resolve { valor, campos } — campos = valores dos inputs/selects pelo id.
-export function modal(titulo, corpoHtml, { acoes = [], ler = false } = {}) {
+// travado: não fecha com Esc nem clicando fora (só pelos botões) — usado na justificativa obrigatória
+export function modal(titulo, corpoHtml, { acoes = [], ler = false, travado = false } = {}) {
   return new Promise((resolve) => {
     const fundo = document.createElement('div');
     fundo.className = 'modal-fundo';
@@ -85,9 +86,9 @@ export function modal(titulo, corpoHtml, { acoes = [], ler = false } = {}) {
       fundo.remove(); document.removeEventListener('keydown', tecla);
       resolve(ler ? { valor, campos } : valor);
     };
-    const tecla = (e) => { if (e.key === 'Escape') fechar(null); };
+    const tecla = (e) => { if (e.key === 'Escape' && !travado) fechar(null); };
     fundo.addEventListener('click', (e) => {
-      if (e.target === fundo) return fechar(null);
+      if (e.target === fundo) return travado ? undefined : fechar(null);
       const b = e.target.closest('[data-i]');
       if (b) fechar(acoes[b.dataset.i].valor ?? acoes[b.dataset.i].rotulo);
     });

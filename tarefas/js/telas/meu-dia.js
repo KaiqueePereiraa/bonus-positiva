@@ -1,11 +1,11 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 3 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118194527';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118194527';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118194527';
-import { pendentesAtePrazo } from '../regras.js?v=20261118194527';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118194527';
+import * as dados from '../dados.js?v=20261118194851';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118194851';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118194851';
+import { pendentesAtePrazo } from '../regras.js?v=20261118194851';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118194851';
 
 const CHAVE_GUIA = 'central_guia_meu_dia';
 const guiaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1'; } catch { return true; } };
@@ -50,7 +50,7 @@ export async function render(el, ctx) {
     </div>
 
 
-    ${listas.length ? `<div class="cartao"><h2>Suas listas de hoje</h2>
+    ${listas.length ? `<div class="cartao"><h2>📅 Para fazer hoje <span class="selo verde">mínimo do dia</span></h2>
       <div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Lista</th><th>Faltam</th><th>Prazo</th><th>Hoje, no mínimo</th><th></th></tr></thead><tbody>
       ${listas.map((l) => {
         const atrasada = l.prazo < d.hoje;
@@ -63,7 +63,8 @@ export async function render(el, ctx) {
       }).join('')}</tbody></table></div>
       <p class="dica" style="margin-top:8px">O mínimo de hoje é o que falta dividido pelos dias úteis até o prazo. Um pouco por dia rende mais que tudo no último dia.</p></div>` : ''}
 
-    ${pendentes.length ? `<div class="cartao"><h2>📋 Tudo o que você tem até o prazo <span class="selo cinza">${faltamTotal} ${faltamTotal === 1 ? 'contato' : 'contatos'}</span></h2>
+    ${pendentes.length ? `<div class="cartao"><h2>🗂️ Todas as minhas tarefas <span class="selo cinza">${faltamTotal} ${faltamTotal === 1 ? 'contato' : 'contatos'} no total</span></h2>
+      <p class="dica" style="margin:-6px 0 10px">Não é tudo para hoje: é o que falta em cada lista até o prazo dela. Para hoje, siga o <b>mínimo do dia</b> acima.</p>
       <div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Lista</th><th>Faltam</th><th>Prazo</th><th></th></tr></thead><tbody>
       ${pendentes.map((t) => {
         const atrasada = t.prazo < d.hoje;
@@ -74,7 +75,7 @@ export async function render(el, ctx) {
           <td class="oculta-cel">${atrasada ? 'atrasada' : `${diaSemana(t.prazo)} ${dataCurta(t.prazo)}`}</td>
           <td class="acoes"><a class="btn sec peq" href="#/${ROTA_CONTROLE[t.controle_id]}/${t.id}">Abrir</a></td></tr>`;
       }).join('')}</tbody></table></div>
-      <p class="dica" style="margin-top:8px">Tudo o que ainda falta em cada lista até o prazo dela. O "mínimo de hoje" lá em cima é esse total dividido pelos dias que faltam.</p></div>` : ''}
+</div>` : ''}
     <p class="dica" style="text-align:center"><a href="#/minhas-tarefas">Ver todas as minhas tarefas →</a></p>`;
 
   el.querySelector('#guia-ok')?.addEventListener('click', () => {
