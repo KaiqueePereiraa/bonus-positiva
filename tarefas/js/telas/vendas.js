@@ -1,6 +1,6 @@
 // Vendas — experimentais (confirmar e pós-aula) e interessados novos, que chegam sozinhos da EVO de segunda a sexta
 // de manhã (contato no mesmo dia), e ex-alunos (campanha de volta), que chegam toda segunda com prazo na sexta.
-import { criarTela } from './_grupo.js?v=20261118095302';
+import { criarTela } from './_grupo.js?v=20261118102052';
 
 export const render = criarTela({
   rota: 'vendas', titulo: 'Vendas',

@@ -1,8 +1,8 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261118095302';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118095302';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118095302';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118095302';
+import * as dados from '../dados.js?v=20261118102052';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118102052';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118102052';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118102052';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -98,7 +98,7 @@ export async function listaContatos(el, ctx, tarefa) {
     : `<td style="min-width:200px"><input class="ctrl" data-campo="obs" placeholder="Observação (opcional)" value="${esc(i.observacao || '')}" style="width:100%" maxlength="500"></td>`);
 
   // resolvido sozinho (conferido na EVO de madrugada): não precisa mais de contato
-  const SOZINHO = { pagou_sem_contato: 'Já pagou', voltou_sem_contato: 'Já voltou a treinar', matriculou_sem_contato: 'Já se matriculou' };
+  const SOZINHO = { pagou_sem_contato: 'Já pagou', voltou_sem_contato: 'Já voltou a treinar', matriculou_sem_contato: 'Já se matriculou', renovou_sem_contato: 'Já renovou' };
   const linha = (i) => {
     const tel = normalizarTelefone(i.celular);
     if (SOZINHO[i.resultado]) {
