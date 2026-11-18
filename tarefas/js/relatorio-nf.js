@@ -1,7 +1,7 @@
 // Relatório do "Por que não fechou?" para apresentar à diretoria (cálculo puro; testado em tests/relatorio-nf.test.js).
 // itens: linhas de `itens` (controle nao_fechou) — inclui quem ainda não tem consultora.
 // importacoes: linhas de `importacoes` { id, unidade, referencia_inicio } das listas escolhidas.
-import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261118192412';
+import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261118193752';
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -98,4 +98,13 @@ export function linhasInteressados(itens, { motivos, nomeDe, nomeUnidade }) {
     .map((i) => [nomeUnidade(i.unidade), nomeMesRef(i.periodo_inicio), i.responsavel_id ? nomeDe(i.responsavel_id) : 'Sem responsável', i.nome, i.evo_id,
       dataBR(i.dados?.data_cadastro), i.dados?.idade ?? '', i.dados?.como_conheceu || '', i.dados?.interesse || '', i.dados?.consultor_evo || '',
       preenchido(i) ? 'Motivo preenchido' : 'Pendente', nomeMotivo(i.motivo_id), i.motivo_texto || '', classificacaoAuto(i, nomeMotivo), i.observacao || '']);
+}
+
+// Aba "Interessados" completa. A coluna "Classificação automática" só aparece quando a IA já classificou alguém
+// (com a IA desligada, a planilha fica como antes).
+export function tabelaInteressados(itens, opcoes) {
+  const linhas = [CABECALHO_INTERESSADOS, ...linhasInteressados(itens, opcoes)];
+  if (itens.some((i) => i.classificado_auto || i.motivo_ia_sugestao)) return linhas;
+  const k = CABECALHO_INTERESSADOS.indexOf('Classificação automática');
+  return linhas.map((l) => l.filter((_, j) => j !== k));
 }

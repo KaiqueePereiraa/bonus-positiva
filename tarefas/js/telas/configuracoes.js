@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261118192412';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118192412';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118192412';
+import * as dados from '../dados.js?v=20261118193752';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118193752';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118193752';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -320,6 +320,11 @@ async function evo(el, ctx) {
     <div class="linha-acoes" style="margin-top:8px"><button class="btn sec peq" id="salvar-palavras">Salvar palavras</button></div>
     <p class="dica" style="margin-top:6px">Ficam de fora automaticamente os contratos com categoria na EVO (VIP, Colaborador, Personal, Wellhub, Totalpass, Classpass, Freepass, Locação, Gogood, GuruPass — só \"Nenhuma\" entra). Também sai quem tem contrato com uma dessas palavras, ou foi registrado pela consultora (Gympass/convênios, benefício colaborador, contrato VIP), não entra na lista. A simulação mostra quais contratos foram excluídos.</p>
 
+    <h2 style="font-size:14px;margin:26px 0 10px">IA do Claude <span class="selo ${cfg.ia_ativa === true ? 'verde' : 'cinza'}">${cfg.ia_ativa === true ? 'ligada' : 'desligada'}</span></h2>
+    <p class="dica" style="max-width:760px">Duas tarefas: <b>classificar o "Outro motivo"</b> (toda madrugada, Haiku) e escrever a <b>leitura do mês</b> que entra no Retorno do dia 1º (Sonnet). Desligada, nada disso roda e a Central funciona normalmente com a escolha da consultora.
+      Para ligar: resgate os créditos de API do plano Max (claude.ai → Configurações → Cobrança → API credits) e salve a chave no Supabase como <b>ANTHROPIC_API_KEY</b>.</p>
+    <div class="linha-acoes" style="margin-top:8px"><button class="btn ${cfg.ia_ativa === true ? 'sec' : ''} peq" data-acao="ia">${cfg.ia_ativa === true ? 'Desligar IA' : 'Ligar IA'}</button></div>
+
     <h2 style="font-size:14px;margin:26px 0 10px">4. Últimas execuções</h2>
     ${execs.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Quando</th><th>Rotina</th><th>Unidade</th><th>Origem</th><th>Resultado</th></tr></thead><tbody>
       ${execs.map((e) => `<tr><td>${dataHora(e.criado_em)}</td><td>${esc(e.tipo === 'filiais' ? 'Buscar filiais' : e.tipo === 'bonus' ? 'Bônus automático (vendas do mês)' : e.tipo === 'limpeza' ? 'Limpeza trimestral (arquivos e registros técnicos)' : e.tipo === 'ia_classificar' ? 'IA: classificar o "Outro motivo"' : e.tipo === 'ia_analise_mes' ? 'IA: leitura do mês' : (ROTINAS_EVO.find((r) => r.id === e.tipo)?.titulo || e.tipo))}${e.simulacao ? ' <span class="etiqueta">simulação</span>' : ''}</td>
@@ -371,6 +376,12 @@ async function evo(el, ctx) {
       const tr = b.closest('tr');
       const v = tr.querySelector('[data-c="filial"]').value;
       try { await dados.ligarUnidadeEvo(tr.dataset.u, v ? +v : null); toast('Ligação salva.'); } catch (err) { erro(err); }
+      return;
+    }
+    if (b.dataset.acao === 'ia') {
+      const ligar = cfg.ia_ativa !== true;
+      if (ligar && !(await confirmar('Ligar a IA', 'Só ligue depois de resgatar os créditos de API do plano Max e salvar a chave ANTHROPIC_API_KEY no Supabase. Sem a chave, a IA não faz nada. Ligar agora?', 'Ligar'))) return;
+      try { await dados.salvarConfig('ia_ativa', ligar); toast(ligar ? 'IA ligada.' : 'IA desligada.'); evo(el, ctx); } catch (err) { erro(err); }
       return;
     }
     const cartao = b.closest('[data-rotina]');

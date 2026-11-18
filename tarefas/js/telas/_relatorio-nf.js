@@ -2,12 +2,12 @@
 //  • Excel completo: resumo, motivos, por unidade/consultora/origem/interesse/faixa etária, insights e TODOS os interessados;
 //  • PDF executivo: números, gráfico de motivos, tabelas e insights.
 // Telefones nunca entram.
-import * as dados from '../dados.js?v=20261118192412';
-import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261118192412';
-import { comMotivoEfetivo } from '../analises.js?v=20261118192412';
-import { barras, imagem } from '../graficos.js?v=20261118192412';
-import { excel, pdf } from '../exportar.js?v=20261118192412';
-import { esc, toast, erro } from '../ui.js?v=20261118192412';
+import * as dados from '../dados.js?v=20261118193752';
+import { montarRelatorioNF, tabelaInteressados, nomeMesRef } from '../relatorio-nf.js?v=20261118193752';
+import { comMotivoEfetivo } from '../analises.js?v=20261118193752';
+import { barras, imagem } from '../graficos.js?v=20261118193752';
+import { excel, pdf } from '../exportar.js?v=20261118193752';
+import { esc, toast, erro } from '../ui.js?v=20261118193752';
 
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
 const slug = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -82,7 +82,7 @@ async function baixarExcel(rel, ctx, { quando, onde, base }) {
     { nome: 'Interesse', linhas: [CAB_GRUPO('Interesse'), ...rel.porInteresse.map(linhaGrupo)] },
     { nome: 'Faixa etária', linhas: [CAB_GRUPO('Faixa etária'), ...rel.porFaixa.map(linhaGrupo)] },
     { nome: 'Insights', linhas: [['Insight', 'Base'], ...(rel.insights.length ? rel.insights.map((i) => [i.texto, i.base]) : [['Ainda não há dados suficientes para gerar insights (mínimo de 10 justificativas).', '']])] },
-    { nome: 'Interessados', linhas: [CABECALHO_INTERESSADOS, ...linhasInteressados(rel.itens, ctx)] },
+    { nome: 'Interessados', linhas: tabelaInteressados(rel.itens, ctx) },
   ]);
 }
 
