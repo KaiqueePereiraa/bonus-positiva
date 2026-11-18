@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261118105612';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118105612';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118105612';
+import * as dados from '../dados.js?v=20261118140655';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118140655';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118140655';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -227,6 +227,8 @@ const ROTINAS_EVO = [
     texto: 'Monta três listas da semana: alunos nas semanas 1, 2, 4 e 8 depois da matrícula (quem veio menos aparece primeiro), quem CANCELOU na semana passada (entrevista de saída com motivo; troca de plano e transferência ficam fora) e EX-ALUNOS cujo contrato terminou há uns 3 ou 6 meses e não voltaram. Tira contratos especiais, registrados e quem já está em outra lista de contato (uma conversa por vez). Prazo na sexta.' },
   { id: 'resultados', titulo: 'Resultado dos contatos', quando: 'Todo dia, de madrugada',
     texto: 'Toda madrugada confere na EVO: quem ainda está esperando contato e JÁ pagou, voltou a treinar ou se matriculou sai da lista sozinho (ninguém manda mensagem à toa). E para quem já recebeu contato, registra se deu certo — aparece em Indicadores, no desempenho e no retorno do mês. Não manda mensagem para ninguém.' },
+  { id: 'lembrete_experimental', titulo: 'Lembrete da aula experimental (WhatsApp oficial)', quando: 'De 30 em 30 minutos, das 8h às 20h30',
+    texto: 'Manda pelo número oficial da unidade (WasFit, fila 9 - Suporte) dois lembretes para quem marcou aula experimental: na VÉSPERA, a partir das 18h, e umas 2 HORAS ANTES da aula (aulas a partir de 9h30). Cada lembrete sai uma vez só e quem já se matriculou não recebe. Só Laranjeiras e República, que têm webhook. ATENÇÃO: ligada, manda mensagem de verdade para os interessados.' },
 ];
 const ROTULOS_RESUMO = {
   debitos_lidos: 'Débitos lidos na EVO', da_unidade: 'Da unidade', clientes_em_atraso: 'Clientes em atraso', inativos_ignorados: 'Inativos ignorados',
@@ -372,7 +374,7 @@ async function evo(el, ctx) {
     const saida = cartao.querySelector('.res-rotina');
     if (b.dataset.acao === 'alternar') {
       const ligar = cfg[`evo_auto_${id}`] !== true;
-      if (ligar && !(await confirmar('Ligar automático', `A rotina de ${ROTINAS_EVO.find((r) => r.id === id).titulo} passará a rodar sozinha no horário combinado${id === 'resultados' ? '' : ' e as consultoras receberão aviso no WhatsApp quando uma lista nova entrar'}. Já fez a simulação?`, 'Ligar'))) return;
+      if (ligar && !(await confirmar('Ligar automático', `A rotina de ${ROTINAS_EVO.find((r) => r.id === id).titulo} passará a rodar sozinha no horário combinado${id === 'resultados' ? '' : id === 'lembrete_experimental' ? ' e os interessados com aula experimental passarão a receber os lembretes pelo número oficial' : ' e as consultoras receberão aviso no WhatsApp quando uma lista nova entrar'}. Já fez a simulação?`, 'Ligar'))) return;
       try { await dados.salvarConfig(`evo_auto_${id}`, ligar); toast(ligar ? 'Rotina ligada.' : 'Rotina desligada.'); evo(el, ctx); } catch (err) { erro(err); }
       return;
     }

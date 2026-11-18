@@ -1,7 +1,7 @@
 // Inadimplência — rodízio semanal; a lista chega sozinha da EVO e a responsável marca quem recebeu mensagem.
-import * as dados from '../dados.js?v=20261118105612';
-import { esc, dataCurta, diaSemana, seloStatus, toast, erro, vazio, modal } from '../ui.js?v=20261118105612';
-import { cabecalhoTarefa, listaContatos, baixarArquivo } from './_comum.js?v=20261118105612';
+import * as dados from '../dados.js?v=20261118140655';
+import { esc, dataCurta, diaSemana, seloStatus, toast, erro, vazio, modal } from '../ui.js?v=20261118140655';
+import { cabecalhoTarefa, listaContatos, baixarArquivo } from './_comum.js?v=20261118140655';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
