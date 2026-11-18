@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261118184740';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118184740';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118184740';
+import * as dados from '../dados.js?v=20261118185017';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118185017';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118185017';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -322,9 +322,9 @@ async function evo(el, ctx) {
 
     <h2 style="font-size:14px;margin:26px 0 10px">4. Últimas execuções</h2>
     ${execs.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Quando</th><th>Rotina</th><th>Unidade</th><th>Origem</th><th>Resultado</th></tr></thead><tbody>
-      ${execs.map((e) => `<tr><td>${dataHora(e.criado_em)}</td><td>${esc(e.tipo === 'filiais' ? 'Buscar filiais' : e.tipo === 'bonus' ? 'Bônus automático (vendas do mês)' : e.tipo === 'limpeza' ? 'Limpeza trimestral (arquivos e registros técnicos)' : (ROTINAS_EVO.find((r) => r.id === e.tipo)?.titulo || e.tipo))}${e.simulacao ? ' <span class="etiqueta">simulação</span>' : ''}</td>
+      ${execs.map((e) => `<tr><td>${dataHora(e.criado_em)}</td><td>${esc(e.tipo === 'filiais' ? 'Buscar filiais' : e.tipo === 'bonus' ? 'Bônus automático (vendas do mês)' : e.tipo === 'limpeza' ? 'Limpeza trimestral (arquivos e registros técnicos)' : e.tipo === 'ia_classificar' ? 'IA: classificar o "Outro motivo"' : e.tipo === 'ia_analise_mes' ? 'IA: leitura do mês' : (ROTINAS_EVO.find((r) => r.id === e.tipo)?.titulo || e.tipo))}${e.simulacao ? ' <span class="etiqueta">simulação</span>' : ''}</td>
         <td>${e.unidade ? esc(nomeUni(e.unidade)) : '—'}</td><td>${esc(e.origem)}</td>
-        <td><span class="selo ${SELO_EXEC[e.status] || 'cinza'}">${esc(e.status)}</span><span class="sub">${esc(e.erro || e.resumo?.mensagem || '')}</span></td></tr>`).join('')}</tbody></table></div>`
+        <td><span class="selo ${SELO_EXEC[e.status] || 'cinza'}">${esc(e.status)}</span><span class="sub">${esc(e.erro || e.resumo?.mensagem || (e.tipo === 'ia_classificar' && e.resumo ? `${e.resumo.classificados ?? 0} classificados, ${e.resumo.motivo_novo ?? 0} com sugestão de motivo novo` : ''))}</span></td></tr>`).join('')}</tbody></table></div>`
       : vazio('Nenhuma execução ainda.')}`;
 
   const rodar = async (fn, alvo, rotulo) => {
