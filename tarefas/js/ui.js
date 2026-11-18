@@ -47,7 +47,7 @@ export const NOMES_CONTROLE = { inadimplencia: 'Inadimplência', risco: 'Risco d
 export const ROTA_CONTROLE = { inadimplencia: 'inadimplencia', risco: 'risco', nao_fechou: 'nao-fechou', lista_fazer: 'lista-fazer', renovacao_vencer: 'renovacao', renovacao_venceu: 'renovacao',
   experimental_confirmar: 'vendas', experimental_pos: 'vendas', lead_novo: 'vendas', primeiros_90: 'relacionamento', cancelou: 'relacionamento', ex_alunos: 'vendas' };
 // listas que chegam todo dia (as demais semanais/mensais)
-export const LISTAS_DIARIAS = ['experimental_confirmar', 'experimental_pos', 'lead_novo'];
+export const LISTAS_DIARIAS = ['nao_fechou', 'experimental_confirmar', 'experimental_pos', 'lead_novo'];
 
 // ── Avisos rápidos ──
 let toastTimer;

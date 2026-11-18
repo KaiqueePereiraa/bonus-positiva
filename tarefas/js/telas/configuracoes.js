@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261118102052';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118102052';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118102052';
+import * as dados from '../dados.js?v=20261118105612';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261118105612';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261118105612';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -219,12 +219,10 @@ const ROTINAS_EVO = [
     texto: 'Busca na EVO os clientes ATIVOS com dívida em aberto há MAIS DE 3 DIAS (prazo para a pessoa se ajustar) e sobe a lista na tarefa da inadimplência da sexta. Inativos não aparecem. Se a responsável já subiu a planilha à mão, não mexe.' },
   { id: 'risco', titulo: 'Risco de abandono', quando: 'Toda segunda-feira',
     texto: 'Busca os clientes ativos com mais de 15 dias sem vir, tira quem está registrado (Gympass, benefício colaborador, contrato VIP) e os contratos listados abaixo, e divide entre as consultoras da unidade.' },
-  { id: 'nao_fechou', titulo: 'Por que não fechou?', quando: 'Todo dia 1º do mês',
-    texto: 'Busca as oportunidades (cadastros) do mês anterior que não viraram cliente, tira quem já é aluno ativo (mesmo nome) e as oportunidades repetidas (mesmo celular), marca quem tem o celular de um aluno ativo e sobe a lista do mês para as consultoras justificarem.' },
+  { id: 'nao_fechou', titulo: 'Por que não fechou?', quando: 'De segunda a sexta, 6h da manhã',
+    texto: 'Monta a lista do dia com os interessados PARADOS há 5 dias, em duas etapas: quem se cadastrou e não marcou aula experimental, e quem fez a experimental e não se matriculou (na segunda, também os que completaram 5 dias no fim de semana). Tira quem já se matriculou, quem já é aluno (mesmo nome), cadastros repetidos (mesmo celular) e quem já esteve na lista nessa etapa. Fica com quem cadastrou; cada consultora registra o motivo até o próximo dia útil.' },
   { id: 'renovacao', titulo: 'Renovação de contratos', quando: 'Toda segunda-feira',
     texto: 'Monta duas listas: "a vencer" (contratos que vencem na próxima semana — na primeira vez, também nesta) e "venceu e não renovou" (venceram na semana passada). Tira quem já renovou, contratos com categoria (VIP, Colaborador, Wellhub…), registrados e quem está na inadimplência, e divide entre as consultoras.' },
-  { id: 'vendas_dia', titulo: 'Vendas do dia (experimental e interessados novos)', quando: 'De segunda a sexta, 6h da manhã',
-    texto: 'Monta três listas do dia: experimentais do próximo dia útil para CONFIRMAR (na sexta, também sábado, domingo e segunda), experimentais do último dia útil para o PÓS-AULA e INTERESSADOS NOVOS cadastrados desde o último dia útil. Tira quem já se matriculou, quem já é aluno (mesmo nome) e cadastros repetidos (mesmo celular); quem está numa experimental não entra de novo como interessado. Divide entre as consultoras; prazo no mesmo dia.' },
   { id: 'relacionamento', titulo: 'Relacionamento (primeiros 90 dias, cancelou, ex-alunos)', quando: 'Toda segunda-feira, 5h30',
     texto: 'Monta três listas da semana: alunos nas semanas 1, 2, 4 e 8 depois da matrícula (quem veio menos aparece primeiro), quem CANCELOU na semana passada (entrevista de saída com motivo; troca de plano e transferência ficam fora) e EX-ALUNOS cujo contrato terminou há uns 3 ou 6 meses e não voltaram. Tira contratos especiais, registrados e quem já está em outra lista de contato (uma conversa por vez). Prazo na sexta.' },
   { id: 'resultados', titulo: 'Resultado dos contatos', quando: 'Todo dia, de madrugada',

@@ -1,10 +1,11 @@
 // Relatório do "Por que não fechou?" para apresentar à diretoria (cálculo puro; testado em tests/relatorio-nf.test.js).
 // itens: linhas de `itens` (controle nao_fechou) — inclui quem ainda não tem consultora.
 // importacoes: linhas de `importacoes` { id, unidade, referencia_inicio } das listas escolhidas.
-import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261118102052';
+import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261118105612';
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const ETAPA_NOME = { fez_experimental: 'Fez experimental e não fechou', sem_experimental: 'Cadastrou e não fez experimental' };
 export const nomeMesRef = (iso) => (iso ? `${MESES[+iso.slice(5, 7) - 1][0].toUpperCase()}${MESES[+iso.slice(5, 7) - 1].slice(1)}/${iso.slice(0, 4)}` : '—');
 
 const FAIXAS = [['Até 12 anos', 0, 12], ['13 a 17 anos', 13, 17], ['18 a 39 anos', 18, 39], ['40 a 59 anos', 40, 59], ['60 anos ou mais', 60, 200]];
@@ -38,7 +39,8 @@ export function montarRelatorioNF({ itens, motivos, importacoes, nomeDe = (id) =
   const imp = new Map(importacoes.map((i) => [i.id, i]));
   const todos = itens.map((i) => {
     const m = imp.get(i.importacao_id);
-    return { ...i, unidade: m?.unidade || '', periodo_inicio: m?.referencia_inicio || '' };
+    // listas diárias: o relatório agrupa pelo mês da lista
+    return { ...i, unidade: m?.unidade || '', periodo_inicio: m?.referencia_inicio ? `${m.referencia_inicio.slice(0, 7)}-01` : '' };
   });
   const comMotivo = todos.filter(preenchido);
   const total = todos.length;
@@ -51,6 +53,7 @@ export function montarRelatorioNF({ itens, motivos, importacoes, nomeDe = (id) =
   const porInteresse = agrupar(todos, (i) => i.dados?.interesse || 'Não informado', motivos);
   const ordemFaixa = (a, b) => [...FAIXAS.map((f) => f[0]), 'Sem idade informada'].indexOf(a.rotulo) - [...FAIXAS.map((f) => f[0]), 'Sem idade informada'].indexOf(b.rotulo);
   const porFaixa = agrupar(todos, (i) => faixaIdade(i.dados?.idade), motivos, { ordem: ordemFaixa });
+  const porEtapa = agrupar(todos, (i) => ETAPA_NOME[i.dados?.etapa] || 'Lista mensal (antes de 19/11/2026)', motivos);
   const porMes = agrupar(todos, (i) => i.periodo_inicio || 'Sem mês', motivos, { ordem: (a, b) => a.rotulo.localeCompare(b.rotulo) })
     .map((l) => ({ ...l, rotulo: nomeMesRef(l.rotulo) }));
 
@@ -70,7 +73,7 @@ export function montarRelatorioNF({ itens, motivos, importacoes, nomeDe = (id) =
     insights.push({ texto: `${resumo.pendentes} interessado(s) ainda estão sem motivo preenchido (${pct(resumo.pendentes, total)}% do total).`, base: `${total} interessados no período` });
   }
 
-  return { resumo, motivos: lista, porUnidade, porConsultora, porOrigem, porInteresse, porFaixa, porMes, insights, itens: todos };
+  return { resumo, motivos: lista, porUnidade, porConsultora, porOrigem, porInteresse, porFaixa, porMes, porEtapa, insights, itens: todos };
 }
 
 // Uma linha por interessado (sem telefone): para a aba "Interessados" do Excel.

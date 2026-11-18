@@ -1,7 +1,7 @@
 // Avisos do sino, calculados na hora a partir do estado das tarefas (nada fica "velho").
 // As mesmas regras alimentam o resumo diário do WhatsApp (supabase/migrations/008_whatsapp.sql).
-import { diaDaSemana, semanaDe } from './regras.js?v=20261118102052';
-import { dataCurta, nomeMes, ROTA_CONTROLE, NOMES_CONTROLE } from './ui.js?v=20261118102052';
+import { diaDaSemana, semanaDe } from './regras.js?v=20261118105612';
+import { dataCurta, ROTA_CONTROLE, NOMES_CONTROLE } from './ui.js?v=20261118105612';
 
 const ABERTA = (t) => t.status !== 'concluida' && t.status !== 'concluida_atraso';
 const faltam = (t) => t.total - t.feitos;
@@ -31,13 +31,7 @@ export function avisosConsultora({ tarefas, semResponsavel = 0, hoje, titulos = 
       if (t.status === 'atrasada') lista.push(aviso(`lf-atr-${t.id}`, 'urgente', `${nome} está atrasada: faltam ${faltam(t)} de ${t.total} contatos.`, rota, t.prazo));
       else if (t.prazo === hoje) lista.push(aviso(`lf-hoje-${t.id}`, 'urgente', `Último dia da lista ${nome}: faltam ${faltam(t)} de ${t.total} contatos.`, rota, hoje));
       else lista.push(aviso(`lf-novo-${t.id}`, 'info', `Nova lista a fazer ${nome}: ${t.total} contatos até ${dataCurta(t.prazo)}.`, rota, t.criada_em?.slice(0, 10) || hoje));
-    } else if (t.controle_id === 'nao_fechou') {
-      const mes = nomeMes(+t.periodo_inicio.slice(0, 4), +t.periodo_inicio.slice(5, 7));
-      if (t.status === 'atrasada') lista.push(aviso(`nf-atr-${t.id}`, 'urgente', `"Por que não fechou?" de ${mes} está atrasado: faltam ${faltam(t)} motivos.`, rota, t.prazo));
-      else if (t.prazo === hoje) lista.push(aviso(`nf-hoje-${t.id}`, 'urgente', `Último dia do "Por que não fechou?" de ${mes}: faltam ${faltam(t)} motivos.`, rota, hoje));
-      else if (+hoje.slice(8, 10) >= 5) lista.push(aviso(`nf-5-${t.id}`, 'alerta', `"Por que não fechou?" de ${mes}: faltam ${faltam(t)} motivos até ${dataCurta(t.prazo)}.`, rota, hoje));
-      else lista.push(aviso(`nf-novo-${t.id}`, 'info', `Lista de ${mes} disponível: ${t.total} interessados para justificar.`, rota, t.criada_em?.slice(0, 10) || hoje));
-    } else if (NOMES_CONTROLE[t.controle_id]) {   // renovação, vendas do dia e relacionamento
+    } else if (NOMES_CONTROLE[t.controle_id]) {   // não fechou, renovação, ex-alunos e relacionamento
       const nome = NOMES_CONTROLE[t.controle_id];
       if (t.status === 'atrasada') lista.push(aviso(`ls-atr-${t.id}`, 'urgente', `${nome} (${dataCurta(t.periodo_inicio)}) atrasada: faltam ${faltam(t)} de ${t.total}.`, rota, t.prazo));
       else if (t.prazo === hoje) lista.push(aviso(`ls-hoje-${t.id}`, t.periodo_inicio === hoje ? 'alerta' : 'urgente', `${nome}: faltam ${faltam(t)} de ${t.total} até hoje.`, rota, hoje));

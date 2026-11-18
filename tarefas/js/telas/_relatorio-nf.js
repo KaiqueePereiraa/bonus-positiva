@@ -2,11 +2,11 @@
 //  • Excel completo: resumo, motivos, por unidade/consultora/origem/interesse/faixa etária, insights e TODOS os interessados;
 //  • PDF executivo: números, gráfico de motivos, tabelas e insights.
 // Telefones nunca entram.
-import * as dados from '../dados.js?v=20261118102052';
-import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261118102052';
-import { barras, imagem } from '../graficos.js?v=20261118102052';
-import { excel, pdf } from '../exportar.js?v=20261118102052';
-import { esc, toast, erro } from '../ui.js?v=20261118102052';
+import * as dados from '../dados.js?v=20261118105612';
+import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261118105612';
+import { barras, imagem } from '../graficos.js?v=20261118105612';
+import { excel, pdf } from '../exportar.js?v=20261118105612';
+import { esc, toast, erro } from '../ui.js?v=20261118105612';
 
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
 const slug = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -14,10 +14,11 @@ const slug = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 export async function cartaoRelatorioDiretoria(el, ctx) {
   if (!el) return;
   let imports;
-  try { imports = await dados.importacoes('nao_fechou', { limite: 100 }); } catch (e) { erro(e); return; }
+  try { imports = await dados.importacoes('nao_fechou', { limite: 2000 }); } catch (e) { erro(e); return; }
   if (!imports.length) { el.innerHTML = ''; return; }
 
-  const meses = [...new Set(imports.map((i) => i.referencia_inicio))].sort().reverse();
+  const mesDe = (i) => `${String(i.referencia_inicio).slice(0, 7)}-01`;   // as listas são diárias: o seletor é por mês
+  const meses = [...new Set(imports.map(mesDe))].sort().reverse();
   const unidades = ctx.unidades.filter((u) => imports.some((i) => i.unidade === u.id));
   const opt = (v, r, sel) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(r)}</option>`;
   el.innerHTML = `<div class="cartao"><h2>Relatório para a diretoria</h2>
@@ -30,7 +31,7 @@ export async function cartaoRelatorioDiretoria(el, ctx) {
     <div class="linha-acoes"><button class="btn" data-r-exp="xlsx">Baixar Excel</button><button class="btn sec" data-r-exp="pdf">Baixar PDF</button></div></div>`;
 
   const escolha = () => ({ mes: el.querySelector('[data-r="mes"]').value, unidade: el.querySelector('[data-r="unidade"]').value });
-  const selecionadas = () => { const f = escolha(); return imports.filter((i) => (!f.mes || i.referencia_inicio === f.mes) && (!f.unidade || i.unidade === f.unidade)); };
+  const selecionadas = () => { const f = escolha(); return imports.filter((i) => (!f.mes || mesDe(i) === f.mes) && (!f.unidade || i.unidade === f.unidade)); };
   const info = () => {
     const sel = selecionadas();
     el.querySelector('#rel-info').textContent = sel.length
@@ -71,6 +72,7 @@ async function baixarExcel(rel, ctx, { quando, onde, base }) {
       ['% do motivo mais comum', top ? top.pct : '']] },
     { nome: 'Motivos', linhas: [['Motivo', 'Quantidade', '% dos preenchidos'], ...rel.motivos.map((m) => [m.nome, m.n, m.pct])] },
     { nome: 'Por mês', linhas: [CAB_GRUPO('Mês'), ...rel.porMes.map(linhaGrupo)] },
+    { nome: 'Por etapa', linhas: [CAB_GRUPO('Etapa'), ...rel.porEtapa.map(linhaGrupo)] },
     { nome: 'Por unidade', linhas: [CAB_GRUPO('Unidade'), ...rel.porUnidade.map(linhaGrupo)] },
     { nome: 'Por consultora', linhas: [CAB_GRUPO('Consultora'), ...rel.porConsultora.map(linhaGrupo)] },
     { nome: 'Como conheceu', linhas: [CAB_GRUPO('Como conheceu'), ...rel.porOrigem.map(linhaGrupo)] },
@@ -112,6 +114,7 @@ function baixarPdf(rel, { quando, onde }) {
     ${rel.motivos.length ? `<h2>Motivos de não fechamento</h2>${img ? `<img class="grafico" src="${img}" alt="Gráfico de motivos">` : ''}
       <table><thead><tr><th>Motivo</th><th>Qtd.</th><th>%</th></tr></thead><tbody>${rel.motivos.map((m) => `<tr><td>${esc(m.nome)}</td><td>${m.n}</td><td>${m.pct}%</td></tr>`).join('')}</tbody></table>` : ''}
     ${rel.insights.length ? `<h2>Principais insights</h2>${rel.insights.map((i) => `<div class="insight">${esc(i.texto)}<small>Base: ${esc(i.base)}</small></div>`).join('')}` : ''}
+    ${rel.porEtapa.length > 1 ? grupo('Por etapa', 'Etapa', rel.porEtapa) : ''}
     ${rel.porMes.length > 1 ? grupo('Por mês', 'Mês', rel.porMes) : ''}
     ${rel.porUnidade.length > 1 ? grupo('Por unidade', 'Unidade', rel.porUnidade) : ''}
     ${grupo('Por consultora', 'Consultora', rel.porConsultora)}

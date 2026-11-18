@@ -2,15 +2,15 @@
 // Consultora: as listas mais recentes de cada tipo + as anteriores que ainda têm pendência.
 // Admin: o progresso de cada consultora na lista mais recente de cada tipo, com link para o detalhe.
 // Lista com motivos cadastrados (ex.: "venceu e não renovou", "cancelou") pede o motivo; as demais, "Marcar enviada".
-import * as dados from '../dados.js?v=20261118102052';
-import { esc, dataCurta, vazio, NOMES_CONTROLE, LISTAS_DIARIAS } from '../ui.js?v=20261118102052';
-import { cabecalhoTarefa, listaContatos, linhaProgresso } from './_comum.js?v=20261118102052';
-import { formMotivos } from './nao-fechou.js?v=20261118102052';
+import * as dados from '../dados.js?v=20261118105612';
+import { esc, dataCurta, vazio, NOMES_CONTROLE, LISTAS_DIARIAS } from '../ui.js?v=20261118105612';
+import { cabecalhoTarefa, listaContatos, linhaProgresso } from './_comum.js?v=20261118105612';
+import { formMotivos } from './_motivos.js?v=20261118105612';
 
 const CONCLUIDA = (t) => t.status === 'concluida' || t.status === 'concluida_atraso';
 const quando = (t) => (LISTAS_DIARIAS.includes(t.controle_id) ? dataCurta(t.periodo_inicio) : `semana ${dataCurta(t.periodo_inicio)}`);
 
-export function criarTela({ rota, titulo, controles, ajuda, vazioTexto }) {
+export function criarTela({ rota, titulo, controles, ajuda, vazioTexto, extraAdmin }) {
   const temMotivo = (ctx, c) => (ctx.motivos || []).some((m) => (m.controle_id || 'nao_fechou') === c);
 
   async function montarLista(el, ctx, t, editavel) {
@@ -31,7 +31,11 @@ export function criarTela({ rota, titulo, controles, ajuda, vazioTexto }) {
     if (id) return detalhe(el, ctx, id);
     const todas = (await dados.tarefas(ctx.ehAdmin ? { unidade: ctx.unidade || undefined } : { responsavel: ctx.perfil.id }))
       .filter((t) => controles.includes(t.controle_id));
-    if (!todas.length) { el.innerHTML = `<div class="cartao">${vazio(vazioTexto)}</div>`; return; }
+    if (!todas.length) {
+      el.innerHTML = `<div class="cartao">${vazio(vazioTexto)}</div>`;
+      if (ctx.ehAdmin && extraAdmin) await extraAdmin(el, ctx);
+      return;
+    }
     const ultimaDe = (c) => todas.filter((t) => t.controle_id === c).map((t) => t.periodo_inicio).sort().at(-1);
 
     if (!ctx.ehAdmin) {
@@ -61,5 +65,6 @@ export function criarTela({ rota, titulo, controles, ajuda, vazioTexto }) {
         ${ts.length ? ts.map((t) => `<a href="#/${rota}/${t.id}" style="text-decoration:none;color:inherit">${linhaProgresso(`${ctx.nomeDe(t.responsavel_id)} · ${ctx.nomeUnidade(t.unidade).replace('Positiva ', '')}`, t.feitos, t.total, t.status)}</a>`).join('')
           + `<p class="dica" style="margin-top:8px">Equipe: ${feitos} de ${total}.</p>` : vazio('Ainda não chegou nenhuma lista deste tipo.')}</div>`;
     }).join('');
+    if (extraAdmin) await extraAdmin(el, ctx);
   };
 }
