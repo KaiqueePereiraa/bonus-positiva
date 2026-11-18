@@ -224,3 +224,14 @@ export function pendentesAtePrazo(tarefas, hoje) {
       && !(t.controle_id === 'inadimplencia' && t.status === 'nao_iniciada' && t.prazo > somarDias(hoje, 7)))
     .sort((a, b) => a.prazo.localeCompare(b.prazo));
 }
+
+// Recado do "mínimo do dia" no Meu dia (aprovado pelo usuário em 18/11/2026): as opções A e D se revezam, uma por dia,
+// para lembrar que o mínimo é só o piso — não a meta.
+export const RECADOS_MINIMO = [
+  { selo: 'mínimo do mínimo', frase: 'Esse número é só o piso para suas listas não atrasarem. Quem bate a meta faz muito mais do que isso. 💪' },
+  { selo: 'mínimo do dia', frase: 'Fazer só o mínimo não bate a meta da semana. Use o mínimo como ponto de partida, não como chegada.' },
+];
+export function recadoMinimo(hoje) {
+  const dia = Math.round(Date.parse(`${hoje}T12:00:00Z`) / 864e5);
+  return RECADOS_MINIMO[((dia % 2) + 2) % 2];
+}
