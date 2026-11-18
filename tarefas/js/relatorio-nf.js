@@ -1,7 +1,7 @@
 // Relatório do "Por que não fechou?" para apresentar à diretoria (cálculo puro; testado em tests/relatorio-nf.test.js).
 // itens: linhas de `itens` (controle nao_fechou) — inclui quem ainda não tem consultora.
 // importacoes: linhas de `importacoes` { id, unidade, referencia_inicio } das listas escolhidas.
-import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261118181330';
+import { contarMotivos, cruzamento, gerarInsights } from './analises.js?v=20261118184740';
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -82,8 +82,13 @@ export function montarRelatorioNF({ itens, motivos, importacoes, nomeDe = (id) =
   return { resumo, motivos: lista, porUnidade, porConsultora, porOrigem, porInteresse, porFaixa, porMes, porEtapa, motivosPorEtapa, insights, itens: todos };
 }
 
+// "Outro motivo" lido pela IA: diz que o motivo foi classificado automaticamente (e o que a consultora marcou) ou a
+// sugestão de motivo novo, para o coordenador conferir.
+const classificacaoAuto = (i, nomeMotivo) => (i.classificado_auto ? `Sim (a consultora marcou "${nomeMotivo(i.motivo_escolhido_id)}")`
+  : i.motivo_ia_sugestao ? `Nenhum motivo da lista serve; sugestão: "${i.motivo_ia_sugestao}"` : '');
+
 // Uma linha por interessado (sem telefone): para a aba "Interessados" do Excel.
-export const CABECALHO_INTERESSADOS = ['Unidade', 'Mês de referência', 'Consultora', 'Nome', 'ID EVO', 'Data de cadastro', 'Idade', 'Como conheceu', 'Interesse', 'Consultora no EVO', 'Situação', 'Motivo', 'Detalhe do motivo', 'Observação'];
+export const CABECALHO_INTERESSADOS = ['Unidade', 'Mês de referência', 'Consultora', 'Nome', 'ID EVO', 'Data de cadastro', 'Idade', 'Como conheceu', 'Interesse', 'Consultora no EVO', 'Situação', 'Motivo', 'Detalhe do motivo', 'Classificação automática', 'Observação'];
 
 export function linhasInteressados(itens, { motivos, nomeDe, nomeUnidade }) {
   const nomeMotivo = (id) => motivos.find((m) => m.id === id)?.nome || '';
@@ -92,5 +97,5 @@ export function linhasInteressados(itens, { motivos, nomeDe, nomeUnidade }) {
     .sort((a, b) => (a.unidade || '').localeCompare(b.unidade || '') || (a.periodo_inicio || '').localeCompare(b.periodo_inicio || '') || (a.nome || '').localeCompare(b.nome || ''))
     .map((i) => [nomeUnidade(i.unidade), nomeMesRef(i.periodo_inicio), i.responsavel_id ? nomeDe(i.responsavel_id) : 'Sem responsável', i.nome, i.evo_id,
       dataBR(i.dados?.data_cadastro), i.dados?.idade ?? '', i.dados?.como_conheceu || '', i.dados?.interesse || '', i.dados?.consultor_evo || '',
-      preenchido(i) ? 'Motivo preenchido' : 'Pendente', nomeMotivo(i.motivo_id), i.motivo_texto || '', i.observacao || '']);
+      preenchido(i) ? 'Motivo preenchido' : 'Pendente', nomeMotivo(i.motivo_id), i.motivo_texto || '', classificacaoAuto(i, nomeMotivo), i.observacao || '']);
 }

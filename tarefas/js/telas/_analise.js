@@ -1,7 +1,8 @@
 // Filtros e carga de dados compartilhados por Indicadores e Relatórios.
-import * as dados from '../dados.js?v=20261118181330';
-import { esc, STATUS, NOMES_CONTROLE } from '../ui.js?v=20261118181330';
-import { somarDias, semanaDe } from '../regras.js?v=20261118181330';
+import * as dados from '../dados.js?v=20261118184740';
+import { esc, STATUS, NOMES_CONTROLE } from '../ui.js?v=20261118184740';
+import { somarDias, semanaDe } from '../regras.js?v=20261118184740';
+import { comMotivoEfetivo } from '../analises.js?v=20261118184740';
 
 // Períodos de um clique (o resto dos filtros fica em "Mais filtros")
 export function periodos(hoje) {
@@ -62,7 +63,8 @@ export function pessoasDoFiltro(f, ctx) {
 }
 
 // Tarefas (filtradas pelo prazo no período) e itens do "Por que não fechou?" das mesmas tarefas.
-export async function carregar(f) {
+// Com `motivos`, o "Outro motivo" classificado automaticamente conta como o motivo classificado.
+export async function carregar(f, motivos) {
   const unidade = f.unidade || undefined;
   const [todas, itensNf] = await Promise.all([
     dados.tarefas({ desde: f.desde, ate: f.ate, unidade }),
@@ -71,7 +73,7 @@ export async function carregar(f) {
   const tarefas = todas.filter((t) => (!f.consultora || t.responsavel_id === f.consultora)
     && (!f.controle || t.controle_id === f.controle) && (!f.status || t.status === f.status));
   const itens = itensNf.filter((i) => !f.consultora || i.responsavel_id === f.consultora);
-  return { tarefas, itensNf: itens };
+  return { tarefas, itensNf: motivos ? comMotivoEfetivo(itens, motivos) : itens };
 }
 
 export const periodoTexto = (f, ctx) => (f.unidade && ctx ? `${ctx.nomeUnidade(f.unidade)} · ` : '') + `${f.desde.split('-').reverse().join('/')} a ${f.ate.split('-').reverse().join('/')}`;

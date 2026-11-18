@@ -1,9 +1,9 @@
 // Formulário de motivos: "Por que não fechou?" (etapas "fez experimental" e "não fez experimental"), "Renovação: venceu
 // e não renovou" e "Cancelou". Usado pela tela do "Por que não fechou?" e pelas telas de grupo (_grupo.js).
-import * as dados from '../dados.js?v=20261118181330';
-import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261118181330';
-import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261118181330';
-import { atualizarCabecalho } from './_comum.js?v=20261118181330';
+import * as dados from '../dados.js?v=20261118184740';
+import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261118184740';
+import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261118184740';
+import { atualizarCabecalho } from './_comum.js?v=20261118184740';
 
 // Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
 async function confirmarExclusao(nome) {

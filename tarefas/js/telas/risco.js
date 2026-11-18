@@ -1,8 +1,8 @@
 // Risco de abandono — a lista chega sozinha da EVO toda segunda; o admin acompanha e a consultora marca as mensagens.
-import * as dados from '../dados.js?v=20261118181330';
-import { semanaDe, prazoSemanal, CLASSES_RISCO } from '../regras.js?v=20261118181330';
-import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261118181330';
-import { cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, escolherUnidade } from './_comum.js?v=20261118181330';
+import * as dados from '../dados.js?v=20261118184740';
+import { semanaDe, prazoSemanal, CLASSES_RISCO } from '../regras.js?v=20261118184740';
+import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261118184740';
+import { cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, escolherUnidade } from './_comum.js?v=20261118184740';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);

@@ -2,7 +2,7 @@
 // lerXlsx/lerCsv produzem uma matriz (linhas x colunas de texto); matrizParaRegistros
 // aplica o mapeamento do controle e devolve registros prontos para a função de importação.
 
-import { normalizarCabecalho, normalizarTelefone } from './regras.js?v=20261118181330';
+import { normalizarCabecalho, normalizarTelefone } from './regras.js?v=20261118184740';
 
 // Sinônimos já normalizados (ver normalizarCabecalho).
 export const MAPEAMENTOS = {

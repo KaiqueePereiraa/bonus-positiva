@@ -2,11 +2,12 @@
 //  • Excel completo: resumo, motivos, por unidade/consultora/origem/interesse/faixa etária, insights e TODOS os interessados;
 //  • PDF executivo: números, gráfico de motivos, tabelas e insights.
 // Telefones nunca entram.
-import * as dados from '../dados.js?v=20261118181330';
-import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261118181330';
-import { barras, imagem } from '../graficos.js?v=20261118181330';
-import { excel, pdf } from '../exportar.js?v=20261118181330';
-import { esc, toast, erro } from '../ui.js?v=20261118181330';
+import * as dados from '../dados.js?v=20261118184740';
+import { montarRelatorioNF, linhasInteressados, CABECALHO_INTERESSADOS, nomeMesRef } from '../relatorio-nf.js?v=20261118184740';
+import { comMotivoEfetivo } from '../analises.js?v=20261118184740';
+import { barras, imagem } from '../graficos.js?v=20261118184740';
+import { excel, pdf } from '../exportar.js?v=20261118184740';
+import { esc, toast, erro } from '../ui.js?v=20261118184740';
 
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
 const slug = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -47,7 +48,7 @@ export async function cartaoRelatorioDiretoria(el, ctx) {
     if (!sel.length) return toast('Nenhuma lista importada com essa combinação.', 'erro');
     b.disabled = true;
     try {
-      const itens = await dados.itensDasImportacoes(sel.map((i) => i.id));
+      const itens = comMotivoEfetivo(await dados.itensDasImportacoes(sel.map((i) => i.id)), ctx.motivos);
       const rel = montarRelatorioNF({ itens, motivos: ctx.motivos, importacoes: sel, nomeDe: ctx.nomeDe, nomeUnidade: ctx.nomeUnidade, hoje: ctx.hoje() });
       const f = escolha();
       const quando = f.mes ? nomeMesRef(f.mes) : 'Todos os meses';

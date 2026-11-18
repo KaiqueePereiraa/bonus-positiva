@@ -2,7 +2,7 @@
 // tarefa: linha de tarefas_status { controle_id, responsavel_id, prazo, periodo_inicio, status, total, feitos }
 // item:   linha de itens (do "Por que não fechou?") com motivo_id, dados, tarefas.periodo_inicio
 
-import { semanaDe } from './regras.js?v=20261118181330';
+import { semanaDe } from './regras.js?v=20261118184740';
 
 const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -53,6 +53,13 @@ export function evolucao(tarefas, por = 'semana', hoje) {
 }
 
 // ── Motivos do "Por que não fechou?" ──
+// "Outro motivo" classificado automaticamente (IA): nos relatórios conta como o motivo classificado. A escolha da
+// consultora continua guardada (motivo_escolhido_id) e o texto dela também. Usar só em telas de leitura/relatório.
+export function comMotivoEfetivo(itens, motivos) {
+  const pedeTexto = new Set((motivos || []).filter((m) => m.exige_texto).map((m) => m.id));
+  return itens.map((i) => (i.motivo_ia_id && pedeTexto.has(i.motivo_id)
+    ? { ...i, motivo_id: i.motivo_ia_id, motivo_escolhido_id: i.motivo_id, classificado_auto: true } : i));
+}
 const preenchidos = (itens) => itens.filter((i) => i.motivo_id && i.feito_em);
 const mesRef = (i) => (i.tarefas?.periodo_inicio || i.periodo_inicio || '').slice(0, 7);
 

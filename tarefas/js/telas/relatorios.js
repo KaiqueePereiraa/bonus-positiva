@@ -1,11 +1,11 @@
 // Relatórios — escolhe período, controle e consultoras; mostra na tela e exporta PDF, Excel ou CSV.
-import * as dados from '../dados.js?v=20261118181330';
-import { resumo, porConsultora, contarMotivos, gerarInsights } from '../analises.js?v=20261118181330';
-import { barras, imagem } from '../graficos.js?v=20261118181330';
-import { csv, excel, pdf } from '../exportar.js?v=20261118181330';
-import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261118181330';
-import { abasRelatorios } from './_comum.js?v=20261118181330';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto, ligarPeriodos } from './_analise.js?v=20261118181330';
+import * as dados from '../dados.js?v=20261118184740';
+import { resumo, porConsultora, contarMotivos, gerarInsights, comMotivoEfetivo } from '../analises.js?v=20261118184740';
+import { barras, imagem } from '../graficos.js?v=20261118184740';
+import { csv, excel, pdf } from '../exportar.js?v=20261118184740';
+import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261118184740';
+import { abasRelatorios } from './_comum.js?v=20261118184740';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto, ligarPeriodos } from './_analise.js?v=20261118184740';
 
 let filtros;
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
@@ -36,7 +36,7 @@ export async function render(el, ctx) {
 // Dados + HTML do relatório (o mesmo HTML vai para o PDF).
 async function montar(el, ctx) {
   el.innerHTML = '<div class="vazio">Montando relatório…</div>';
-  const { tarefas, itensNf } = await carregar(filtros);
+  const { tarefas, itensNf } = await carregar(filtros, ctx.motivos);
   const pessoas = pessoasDoFiltro(filtros, ctx);
   const r = resumo(tarefas);
   const linhas = porConsultora(tarefas, pessoas);
@@ -97,8 +97,9 @@ async function exportar(tipo, a, ctx) {
 async function linhasRegistros(a, ctx) {
   const ids = new Set(a.tarefas.map((t) => t.id));
   const controles = filtros.controle ? [filtros.controle] : ['inadimplencia', 'risco', 'nao_fechou', 'lista_fazer'];
-  const itens = (await Promise.all(controles.map((c) => dados.itensPeriodo({ controle: c, desde: filtros.desde, ate: filtros.ate, unidade: filtros.unidade || undefined }))))
+  const itensBrutos = (await Promise.all(controles.map((c) => dados.itensPeriodo({ controle: c, desde: filtros.desde, ate: filtros.ate, unidade: filtros.unidade || undefined }))))
     .flat().filter((i) => ids.has(i.tarefa_id));
+  const itens = comMotivoEfetivo(itensBrutos, ctx.motivos);   // "Outro motivo" classificado automaticamente → motivo classificado
   const motivo = (id) => ctx.motivos.find((m) => m.id === id)?.nome || '';
   return [['Controle', 'Unidade', 'Consultora', 'Prazo', 'ID EVO', 'Nome', 'Situação', 'Data da ação', 'Motivo', 'Detalhe do motivo', 'Observação'],
     ...itens.map((i) => [NOMES_CONTROLE[i.controle_id], ctx.nomeUnidade(i.tarefas?.unidade), ctx.nomeDe(i.responsavel_id), i.tarefas?.prazo, i.evo_id, i.nome,

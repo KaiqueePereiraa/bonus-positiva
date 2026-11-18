@@ -1,10 +1,10 @@
 // Resultados — o que os contatos trouxeram (conferido na EVO), o que os números dizem (frases automáticas, antes na
 // tela "Insights"), cumprimento dos prazos e os motivos do "Por que não fechou?". O resultado de cada consultora e o ranking ficam em Desempenho.
-import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261118181330';
-import * as dados from '../dados.js?v=20261118181330';
-import { linha, barras } from '../graficos.js?v=20261118181330';
-import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261118181330';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261118181330';
+import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261118184740';
+import * as dados from '../dados.js?v=20261118184740';
+import { linha, barras } from '../graficos.js?v=20261118184740';
+import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261118184740';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261118184740';
 
 let filtros;
 
@@ -26,7 +26,7 @@ const PALAVRA = { pagou: 'pagaram', voltou: 'voltaram a treinar', matriculou: 's
 
 async function desenhar(el, ctx) {
   el.innerHTML = '<div class="esqueleto"><i></i><i></i></div>';
-  const [{ tarefas, itensNf }, contatosTodos] = await Promise.all([carregar(filtros),
+  const [{ tarefas, itensNf }, contatosTodos] = await Promise.all([carregar(filtros, ctx.motivos),
     dados.itensComResultado({ desde: filtros.desde, ate: filtros.ate, unidade: filtros.unidade || undefined }).catch(() => [])]);
   const contatos = contatosTodos.filter((i) => (!filtros.consultora || i.responsavel_id === filtros.consultora) && (!filtros.controle || i.controle_id === filtros.controle));
   const hoje = ctx.hoje();
