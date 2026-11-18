@@ -1,11 +1,11 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 3 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118201245';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118201245';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118201245';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118201245';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118201245';
+import * as dados from '../dados.js?v=20261118201435';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118201435';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118201435';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118201435';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118201435';
 
 const CHAVE_GUIA = 'central_guia_meu_dia';
 const guiaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1'; } catch { return true; } };
@@ -19,6 +19,10 @@ export async function render(el, ctx) {
   const pendentes = pendentesAtePrazo(tarefas, d.hoje);
   const faltamTotal = pendentes.reduce((s, t) => s + (t.total - t.feitos), 0);
   const recado = recadoMinimo(d.hoje);   // A e D se revezam, um por dia
+  // nome da lista: a Lista a fazer aparece pelo título que o coordenador deu (ex.: "Oportunidades Experimentais")
+  const nomeLista = (l) => (l.controle_id === 'lista_fazer'
+    ? tituloTarefa(tarefas.find((t) => t.id === l.tarefa_id) || { controle_id: 'lista_fazer' }, listasFazer)
+    : NOMES_CONTROLE[l.controle_id] || l.controle_id);
   const minimo = d.listas.reduce((s, l) => s + l.minimo, 0);
   const feitos = d.feitos_hoje;
   const ok = minimo === 0 || feitos >= minimo;
@@ -47,7 +51,7 @@ export async function render(el, ctx) {
       ${minimo ? `<p style="font-size:17px;margin:6px 0 10px">Hoje: <b>${feitos} de ${minimo}</b> contatos do mínimo${ok ? ' — mínimo batido! ✅' : ` — faltam <b>${minimo - feitos}</b>.`}</p>
         ${barra(Math.min(feitos, minimo), minimo)}
         <p style="margin-top:10px;font-size:14px;font-weight:700;color:var(--navy)">${esc(recado.frase)}</p>` : '<p style="font-size:16px">Nada pendente hoje. Bom trabalho! 🎉</p>'}
-      ${primeira ? `<div style="margin-top:16px"><a class="btn verde grande" href="#/${ROTA_CONTROLE[primeira.controle_id]}/${primeira.tarefa_id}">Começar: ${esc(NOMES_CONTROLE[primeira.controle_id] || '')} →</a></div>` : ''}
+      ${primeira ? `<div style="margin-top:16px"><a class="btn verde grande" href="#/${ROTA_CONTROLE[primeira.controle_id]}/${primeira.tarefa_id}">Começar: ${esc(nomeLista(primeira))} →</a></div>` : ''}
       ${sem.dias ? `<p class="dica" style="margin-top:12px">Nesta semana: mínimo batido em ${sem.bateu} de ${sem.dias} dia(s).</p>` : ''}
     </div>
 
@@ -56,7 +60,7 @@ export async function render(el, ctx) {
       <div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Lista</th><th>Faltam</th><th>Prazo</th><th>Hoje, no mínimo</th><th></th></tr></thead><tbody>
       ${listas.map((l) => {
         const atrasada = l.prazo < d.hoje;
-        return `<tr><td class="nome">${l.nova ? '🆕 ' : ''}${esc(NOMES_CONTROLE[l.controle_id] || l.controle_id)}
+        return `<tr><td class="nome">${l.nova ? '🆕 ' : ''}${esc(nomeLista(l))}
             <span class="sub">${atrasada ? `<span class="selo vermelho">atrasada desde ${dataCurta(l.prazo)}</span>` : l.prazo === d.hoje ? '<span class="selo laranja">último dia hoje</span>' : `prazo ${diaSemana(l.prazo)} ${dataCurta(l.prazo)}`} · faltam ${l.faltam_agora}</span></td>
           <td class="oculta-cel">${l.faltam_agora}</td>
           <td class="oculta-cel">${atrasada ? 'atrasada' : l.prazo === d.hoje ? 'hoje' : `${diaSemana(l.prazo)} ${dataCurta(l.prazo)}`}</td>
