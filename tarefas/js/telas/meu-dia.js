@@ -1,13 +1,13 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 4 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118222102';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118222102';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118222102';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118222102';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118222102';
-import { anel, sequencia, trilhaSemana, conquistas, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118222102';
-import { anelSvg, animar, trilhaHtml, conquistasHtml, festaMinimoUmaVez, celebrar } from '../jogo-visual.js?v=20261118222102';
+import * as dados from '../dados.js?v=20261118223121';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118223121';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118223121';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118223121';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118223121';
+import { circulos, disponivelDe, sequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118223121';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar } from '../jogo-visual.js?v=20261118223121';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -46,12 +46,15 @@ export async function render(el, ctx) {
   // avisos que não são das listas (estas já aparecem abaixo): pedido de troca de escala e interessados sem responsável
   const urgentes = ctx.avisos().filter((a) => a.nivel !== 'info' && (a.id.startsWith('escala-') || a.id === 'nf-pool'));
 
-  // placar do dia: anel (1ª volta = mínimo, depois volta extra), sequência de dias e trilha da semana
+  // placar do dia: círculos (1º = mínimo; fechou, abre o próximo por dentro), sequência de dias e trilha da semana
   const hojeInfo = minimo ? { feitos, minimo } : null;
-  const a = anel(feitos, minimo);
+  const c = circulos(feitos, minimo, disponivelDe(d));
   const seq = sequencia(dias, hojeInfo);
   const trilha = trilhaSemana(dias, d.hoje, hojeInfo);
-  const premios = conquistas(dias, hojeInfo, d.hoje, res?.total || 0);
+  const premios = conquistasDoMes(dias, d.hoje, hojeInfo, meusRes || []);
+  const subCirculo = !c ? '' : c.zerou ? 'listas zeradas' : c.nivel === 1 ? 'mínimo do dia' : `círculo ${c.nivel}${c.ultimo ? ' · o último' : ''}`;
+  const tituloPlacar = !c ? '' : c.zerou ? 'Listas zeradas! 🏆' : !c.bateuMinimo ? `Faltam <em>${c.falta}</em> para o mínimo`
+    : `Círculo ${c.nivel}: faltam <em>${c.falta}</em>`;
   const nome = esc((ctx.perfil.nome || '').split(' ')[0]);
 
   el.innerHTML = `
@@ -63,29 +66,30 @@ export async function render(el, ctx) {
       <ol>
         <li>Toque no botão verde <b>Começar</b>: ele abre a lista mais urgente.</li>
         <li>Em cada pessoa, toque em <b>WhatsApp</b>: a mensagem já vai pronta e o contato fica marcado sozinho.</li>
-        <li>Faça pelo menos o <b>mínimo do dia</b> (o anel abaixo). Se não der, no dia seguinte a Central pergunta o que aconteceu.</li>
+        <li>Feche pelo menos o <b>1º círculo</b> (o mínimo do dia). Fechou? Abre o próximo círculo para ir além. Se não der, no dia seguinte a Central pergunta o que aconteceu.</li>
         <li>Mantenha a <b>sequência 🔥</b>: cada dia útil com o mínimo batido soma um dia. Folga não quebra.</li>
       </ol>
       <div class="linha-acoes" style="margin-top:12px"><button class="btn sec peq" id="guia-ok">Entendi</button></div></div>`}
 
-    <section class="cartao placar ${a.bateu ? 'bateu' : ''}">
-      <div class="placar-anel">${minimo
-        ? anelSvg(a, { centro: `<b data-contar="${feitos}">0</b><span>/${minimo}</span>`, sub: a.bateu ? (a.extra ? `+${a.extra} extra` : 'mínimo batido') : 'mínimo do dia' })
-        : anelSvg({ pct: 100, bateu: true, extraPct: 0, voltas: 0 }, { centro: '<b>✓</b>', sub: 'nada pendente' })}</div>
+    <section class="cartao placar ${c?.bateuMinimo ? 'bateu' : ''}">
+      <div class="placar-anel">${c
+        ? aneisSvg(c, { tam: 196, traco: 11, gap: 4, centro: `<b data-contar="${feitos}">0</b><span>/${c.alvo}</span>`, sub: subCirculo })
+        : aneisSvg({ nivel: 1, completos: 1, pct: 100, bateuMinimo: true }, { centro: '<b>✓</b>', sub: 'nada pendente' })}</div>
       <div class="placar-info">
         <small class="placar-ola">Olá, ${nome}! ${ok ? '🎉' : '💪'}</small>
-        ${minimo ? `<h2 class="placar-titulo">${a.bateu ? 'Mínimo batido!' : `Faltam <em>${a.falta}</em> para o mínimo`}</h2>
-          <p class="placar-frase">Hoje: <b>${feitos} de ${minimo}</b> contatos do mínimo. ${esc(fraseDoDia(a, seq, d.hoje))}</p>
+        ${minimo ? `<h2 class="placar-titulo">${tituloPlacar}</h2>
+          <p class="placar-frase">Hoje: <b>${feitos}</b> contatos (mínimo ${minimo}). ${esc(fraseDoDia(c, seq, d.hoje))}</p>
           <p class="placar-recado">${esc(recado.frase)}</p>`
         : '<h2 class="placar-titulo">Nada pendente hoje</h2><p class="placar-frase">Bom trabalho! 🎉 Aproveite para adiantar o que tiver prazo mais à frente.</p>'}
         <div class="placar-chips">
           <span class="chip-fogo ${seq.atual ? 'aceso' : ''} ${seq.emJogo ? 'em-jogo' : ''}" title="Dias úteis seguidos com o mínimo batido (folga não quebra)">
             <i>🔥</i><b>${seq.atual}</b> ${seq.atual === 1 ? 'dia seguido' : 'dias seguidos'}</span>
           ${seq.recorde > 1 ? `<span class="chip-recorde">recorde: <b>${seq.recorde}</b></span>` : ''}
+          ${c?.completos ? `<span class="chip-circulos">⭕ <b>${c.completos}</b> ${c.completos === 1 ? 'círculo fechado' : 'círculos fechados'} hoje</span>` : ''}
           ${sem.dias ? `<span class="chip-recorde">semana: <b>${sem.bateu} de ${sem.dias}</b> dias batidos</span>` : ''}
         </div>
         ${trilhaHtml(trilha)}
-        ${primeira ? `<a class="btn verde grande btn-comecar" href="#/${ROTA_CONTROLE[primeira.controle_id]}/${primeira.tarefa_id}"><span>${a.bateu ? 'Volta extra' : feitos ? 'Continuar' : 'Começar'}: ${esc(nomeLista(primeira))}</span><i>→</i></a>` : ''}
+        ${primeira ? `<a class="btn verde grande btn-comecar" href="#/${ROTA_CONTROLE[primeira.controle_id]}/${primeira.tarefa_id}"><span>${c?.bateuMinimo ? `Círculo ${c.nivel}` : feitos ? 'Continuar' : 'Começar'}: ${esc(nomeLista(primeira))}</span><i>→</i></a>` : ''}
       </div>
     </section>
 
@@ -125,8 +129,8 @@ export async function render(el, ctx) {
     <p class="dica" style="text-align:center"><a href="#/minhas-tarefas">Ver todas as minhas tarefas →</a></p>`;
 
   animar(el);
-  // comemoração do mínimo uma vez por dia (se ela bateu numa lista, a festa já aconteceu lá)
-  const festejouMinimo = minimo && a.bateu ? festaMinimoUmaVez(d.hoje, feitos, minimo, ctx.perfil.id) : false;
+  // festa do círculo fechado, uma vez por círculo por dia (se ela fechou numa lista, a festa já aconteceu lá)
+  const festejouMinimo = festaCirculo(d.hoje, c, ctx.perfil.id);
   const festa = res && fraseResultado(res.novos);
   if (res?.ultimo) { try { localStorage.setItem(chaveResultados(ctx.perfil.id), res.ultimo); } catch { /* sem armazenamento */ } }
   if (festa) setTimeout(() => celebrar(festa.titulo, festa.texto, { icone: '🌟' }), festejouMinimo ? 4600 : 400);

@@ -219,3 +219,35 @@ body[data-rota="meu-dia"] .hud{display:none}
   color:var(--dark);font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
 .btn-topo-ver-como:hover{background:var(--green)}
 @media (max-width:760px){.btn-topo-ver-como span{display:none}.btn-topo-ver-como{padding:8px 10px;font-size:16px}}
+
+/* ── Círculos do dia ── */
+.chip-circulos{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;
+  background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
+.chip-circulos b{font-size:17px;font-weight:900;font-style:italic}
+.hud-circ{font-size:12px}
+.aneis .anel-volta{filter:drop-shadow(0 0 4px rgba(255,255,255,.25))}
+@media (max-width:760px){.hud-circ{display:none}}
+
+/* ── Medalhas do mês por nível ── */
+.medalha.nivel-0{background:#ECEEF1;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--line);filter:grayscale(1);font-size:20px;opacity:.75}
+.medalha.nivel-1{background:radial-gradient(circle at 35% 30%,#FFE2C2,#D99A5B 50%,#9C5F25 100%);box-shadow:0 0 0 3px #fff,0 0 0 5px #E8BC8D,0 6px 14px rgba(156,95,37,.35)}
+.medalha.nivel-2{background:radial-gradient(circle at 35% 30%,#FFFFFF,#C9D0DA 50%,#8B95A3 100%);box-shadow:0 0 0 3px #fff,0 0 0 5px #D5DAE1,0 6px 14px rgba(110,120,135,.35)}
+.medalha.nivel-3{background:radial-gradient(circle at 35% 30%,#FFF6CC,#F5D76E 45%,#C48A00 100%);box-shadow:0 0 0 3px #fff,0 0 0 5px #F5E3A3,0 6px 16px rgba(196,138,0,.45)}
+.medalha.alvo{filter:grayscale(.55);opacity:.9}
+.medalhas li.em-defesa .medalha{filter:grayscale(.7);opacity:.85;box-shadow:0 0 0 3px #fff,0 0 0 5px #F39C12;animation:alerta-medalha 1.8s ease-in-out infinite}
+.nivel-rotulo{font-style:normal;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;padding:2px 8px;border-radius:999px;background:#ECEEF1;color:#5B6472}
+.nivel-rotulo.n1{background:#F6E1CC;color:#7A4517}.nivel-rotulo.n2{background:#E6EAEF;color:#3F4A59}.nivel-rotulo.n3{background:#FBEDB8;color:#7A5600}
+.medalhas li.em-defesa .nivel-rotulo{background:#FFF0DC;color:#B45309}
+.degraus{display:flex;gap:4px;margin-top:4px}
+.degraus i{font-style:normal;font-size:10px;font-weight:800;min-width:26px;padding:2px 4px;border-radius:6px;background:#EEF1F4;color:var(--mid)}
+.degraus i:nth-child(1).ok{background:#F6E1CC;color:#7A4517}.degraus i:nth-child(2).ok{background:#E6EAEF;color:#3F4A59}.degraus i:nth-child(3).ok{background:#FBEDB8;color:#7A5600}
+.medalhas small.vezes{color:#7A5600;font-weight:700}
+.estante .defesa{background:#FFF4E5;border:1px solid #FFD8A8;color:#8A4B00;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px}
+.estante .defesa ul{margin:6px 0 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.estante h2 .selo.cinza{margin-left:0}
+@keyframes alerta-medalha{50%{box-shadow:0 0 0 3px #fff,0 0 0 7px rgba(243,156,18,.5)}}
+@media (prefers-reduced-motion:reduce){.medalhas li.em-defesa .medalha{animation:none}}
+.medalhas{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+@media (max-width:760px){.medalhas{grid-template-columns:repeat(2,1fr)}}
+.placar .aneis .anel-centro b{font-size:46px}
+.placar .aneis .anel-centro span{font-size:17px}

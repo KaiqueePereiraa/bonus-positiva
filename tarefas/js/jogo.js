@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia, e o que passar dele aparece como "volta extra".
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261118222102';
+import { hojeSP } from './regras.js?v=20261118223121';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -71,57 +71,121 @@ export function anel(feitos, minimo) {
   };
 }
 
-// Conquistas: tudo calculado do histórico de dias fechados + hoje. Cada uma diz quanto falta quando ainda está trancada.
-const MARCOS_SEQ = [[3, 'Embalada', 'dias seguidos com o mínimo'], [5, 'Semana em chamas', 'dias seguidos com o mínimo'],
-  [10, 'Imparável', 'dias seguidos com o mínimo'], [20, 'Lenda da Positiva', 'dias seguidos com o mínimo']];
-const MARCOS_CONTATOS = [[50, 'Aquecimento', 'contatos feitos'], [200, 'Ritmo forte', 'contatos feitos'],
-  [500, 'Maratonista', 'contatos feitos'], [1000, 'Mil contatos', 'contatos feitos']];
-
-// resultados = contatos dela que deram certo (aluno voltou, pagou, matriculou, renovou), conferidos pela EVO
-const MARCOS_RESULTADOS = [[1, '🌱', 'Primeiro resultado', 'Um contato seu deu certo'], [10, '🌟', 'Fez a diferença', '10 contatos que deram certo'],
-  [50, '💎', 'Transformadora', '50 contatos que deram certo']];
-
-export function conquistas(dias, hojeInfo = null, hoje = null, resultados = 0) {
-  const seq = sequencia(dias, hojeInfo);
-  const comHoje = hojeInfo ? [...dias, { data: '9999-12-31', minimo: hojeInfo.minimo, feitos: hojeInfo.feitos, bateu: hojeInfo.feitos >= hojeInfo.minimo, trabalhou: true }] : dias;
-  const validos = comHoje.filter((d) => d.trabalhou && d.minimo > 0);
-  const contatos = comHoje.reduce((s, d) => s + (d.feitos || 0), 0);
-  const algumBateu = validos.some((d) => d.bateu);
-  const dobrou = validos.some((d) => d.feitos >= 2 * d.minimo);
-  // semana perfeita: uma semana (já fechada) com 3+ dias trabalhados e o mínimo batido em todos
-  const semanas = {};
-  const semanaAtual = hoje ? segundaDe(hoje) : null;   // a semana em andamento não conta (não dá para ganhar e perder)
-  for (const d of dias.filter((x) => x.trabalhou && x.minimo > 0 && segundaDe(x.data) !== semanaAtual)) (semanas[segundaDe(d.data)] ||= []).push(d);
-  const perfeita = Object.values(semanas).some((ds) => ds.length >= 3 && ds.every((d) => d.bateu));
-
-  const lista = [
-    { id: 'primeiro', icone: '⚡', nome: 'Primeiro mínimo', desc: 'Bateu o mínimo do dia pela 1ª vez', ok: algumBateu, falta: algumBateu ? '' : 'Bata o mínimo de hoje' },
-    ...MARCOS_SEQ.map(([n, nome, txt]) => ({ id: `seq${n}`, icone: '🔥', nome, desc: `${n} ${txt}`, ok: seq.recorde >= n,
-      progresso: Math.min(1, seq.atual / n), falta: `Faltam ${n - Math.min(n, seq.atual)} dia(s) seguidos` })),
-    { id: 'perfeita', icone: '🏅', nome: 'Semana perfeita', desc: 'Mínimo batido em todos os dias de uma semana', ok: perfeita, falta: 'Bata o mínimo todos os dias da semana' },
-    { id: 'dobro', icone: '🚀', nome: 'Dobrou o mínimo', desc: 'Fez o dobro do mínimo num dia', ok: dobrou,
-      falta: hojeInfo?.minimo ? `Hoje: ${hojeInfo.feitos} de ${2 * hojeInfo.minimo}` : 'Faça o dobro do mínimo num dia',
-      progresso: hojeInfo?.minimo ? Math.min(1, hojeInfo.feitos / (2 * hojeInfo.minimo)) : 0 },
-    ...MARCOS_RESULTADOS.map(([n, icone, nome, desc]) => ({ id: `r${n}`, icone, nome, desc, ok: resultados >= n,
-      progresso: Math.min(1, resultados / n), falta: `Faltam ${Math.max(0, n - resultados)} resultado(s)` })),
-    ...MARCOS_CONTATOS.map(([n, nome, txt]) => ({ id: `c${n}`, icone: '💬', nome, desc: `${n} ${txt}`, ok: contatos >= n,
-      progresso: Math.min(1, contatos / n), falta: `Faltam ${Math.max(0, n - contatos)} contatos` })),
-  ];
-  // a próxima a destravar: a trancada com mais progresso
-  const proxima = lista.filter((c) => !c.ok).sort((a, b) => (b.progresso || 0) - (a.progresso || 0))[0] || null;
-  return { lista, ganhas: lista.filter((c) => c.ok).length, proxima, contatos, sequencia: seq };
+// ── Círculos do dia ──
+// 1º círculo = o mínimo (piso). Fechou, abre o próximo: + metade do mínimo (pelo menos 3). O último é "zerar as listas":
+// não dá para pedir mais contatos do que existem. disponivel = contatos ainda pendentes nas listas dela.
+export function circulos(feitos, minimo, disponivel = Infinity) {
+  if (!minimo) return null;
+  const passo = Math.max(3, Math.ceil(minimo / 2));
+  const teto = feitos + Math.max(0, disponivel);
+  const alvos = [minimo];
+  while (alvos[alvos.length - 1] < teto && alvos.length < 60) alvos.push(Math.min(alvos[alvos.length - 1] + passo, teto));
+  let k = alvos.findIndex((a) => feitos < a);
+  const tudo = k === -1;
+  if (tudo) k = alvos.length - 1;
+  const alvo = alvos[k], ini = k ? alvos[k - 1] : 0;
+  return {
+    nivel: k + 1, completos: tudo ? alvos.length : k, alvo, ini, passo,
+    pct: tudo ? 100 : Math.max(0, Math.round((100 * (feitos - ini)) / (alvo - ini))),
+    falta: tudo ? 0 : alvo - feitos,
+    bateuMinimo: feitos >= minimo,
+    zerou: Number.isFinite(disponivel) && disponivel <= 0 && feitos >= minimo,
+    ultimo: k === alvos.length - 1 && teto > minimo,   // o círculo em andamento é o de zerar as listas
+  };
 }
 
-// Frase do placar do dia, conforme o andamento (troca de texto a cada dia para não ficar repetitiva).
-export function fraseDoDia(a, seq, hoje) {
+// Contatos ainda pendentes nas listas dela, a partir de meu_dia (a Lista a fazer entra pelo campo próprio se ainda não
+// estiver entre as listas do mínimo — ela passou a contar no mínimo em 19/11/2026).
+export function disponivelDe(d) {
+  const nasListas = (d.listas || []).reduce((s, l) => s + (l.faltam_agora || 0), 0);
+  return nasListas + ((d.listas || []).some((l) => l.controle_id === 'lista_fazer') ? 0 : d.lista_fazer || 0);
+}
+
+// ── Conquistas do mês (temporada) ──
+// Valem só no mês: no mês seguinte a medalha do mês anterior fica "em defesa" e só continua se for conquistada de novo.
+// Três níveis (Bronze, Prata, Ouro). Calibrado em 18/11/2026 com o histórico real (20 a 40 contatos nos dias com lista).
+export const NIVEIS = ['Bronze', 'Prata', 'Ouro'];
+export const FAMILIAS = [
+  { id: 'seq', icone: '🔥', nome: 'Sequência', unid: 'dias úteis seguidos com o mínimo', niveis: [5, 10, 15] },
+  { id: 'contatos', icone: '💬', nome: 'Volume', unid: 'contatos no mês', niveis: [150, 300, 500] },
+  { id: 'resultados', icone: '🌟', nome: 'Fez a diferença', unid: 'contatos que deram certo no mês', niveis: [20, 50, 100] },
+  { id: 'semanas', icone: '🏅', nome: 'Semana perfeita', unid: 'semanas com o mínimo em todos os dias', niveis: [1, 2, 3] },
+  { id: 'dobro', icone: '🚀', nome: 'Dobradinha', unid: 'dias com o dobro do mínimo (mínimo de 5 ou mais)', niveis: [2, 5, 8] },
+  { id: 'impecavel', icone: '👑', nome: 'Mês impecável', unid: 'mínimo batido em todos os dias do mês (12 dias ou mais)', niveis: [1], soOuro: true },
+];
+const MESES_NOME = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+export const nomeDoMes = (ym) => MESES_NOME[+ym.slice(5, 7) - 1];
+const mesAnterior = (ym) => { const [a, m] = ym.split('-').map(Number); return m === 1 ? `${a - 1}-12` : `${a}-${String(m - 1).padStart(2, '0')}`; };
+const ultimoDiaDoMes = (ym) => iso(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0) + 12 * 3600e3);
+
+// Números de um mês. dias: fechados (+ hoje, se for o mês atual); res: datas (AAAA-MM-DD) dos resultados; fechado: o mês acabou
+function metricasDoMes(dias, res, fechado, hoje) {
+  const validos = dias.filter((d) => d.trabalhou && d.minimo > 0).sort((a, b) => a.data.localeCompare(b.data));
+  let seq = 0, corrida = 0;
+  for (const d of validos) {
+    if (d.data === hoje && !d.bateu) continue;   // hoje ainda em andamento não quebra
+    corrida = d.bateu ? corrida + 1 : 0; seq = Math.max(seq, corrida);
+  }
+  const semanaAtual = hoje ? segundaDe(hoje) : null;
+  const porSemana = {};
+  for (const d of validos.filter((x) => x.data !== hoje)) (porSemana[segundaDe(d.data)] ||= []).push(d);
+  const semanas = Object.entries(porSemana).filter(([seg, ds]) => seg !== semanaAtual && ds.length >= 4 && ds.every((d) => d.bateu)).length;
+  const fechadosValidos = validos.filter((d) => d.data !== hoje);
+  return {
+    seq, semanas,
+    contatos: dias.reduce((s, d) => s + (d.feitos || 0), 0),
+    resultados: res.length,
+    dobro: validos.filter((d) => d.minimo >= 5 && d.feitos >= 2 * d.minimo).length,
+    impecavel: fechado && fechadosValidos.length >= 12 && fechadosValidos.every((d) => d.bateu) ? 1 : 0,
+    semFalhar: fechadosValidos.every((d) => d.bateu), diasValidos: fechadosValidos.length,
+  };
+}
+const nivelDe = (f, v) => f.niveis.filter((n) => v >= n).length;   // 0 = nenhum
+const rotuloNivel = (f, n) => (f.soOuro ? 'Ouro' : NIVEIS[n - 1]);
+
+// dias: dias fechados; hojeInfo { feitos, minimo }; resultados: [{ quando }]. Devolve o mês atual, com defesa do anterior.
+export function conquistasDoMes(dias, hoje, hojeInfo = null, resultados = []) {
+  const ym = hoje.slice(0, 7), antes = mesAnterior(ym);
+  const comHoje = hojeInfo && hojeInfo.minimo > 0
+    ? [...dias.filter((d) => d.data !== hoje), { data: hoje, minimo: hojeInfo.minimo, feitos: hojeInfo.feitos, bateu: hojeInfo.feitos >= hojeInfo.minimo, trabalhou: true }]
+    : dias;
+  const resDatas = resultados.filter((r) => r.quando).map((r) => hojeSP(new Date(r.quando)));
+  const doMes = (m) => metricasDoMes(comHoje.filter((d) => d.data.startsWith(m)), resDatas.filter((x) => x.startsWith(m)), m < ym, hoje);
+  const agora = doMes(ym), passado = doMes(antes);
+  // histórico: em quantos meses fechados ganhou cada uma (melhor nível)
+  const meses = [...new Set([...comHoje.map((d) => d.data.slice(0, 7)), ...resDatas.map((x) => x.slice(0, 7))])].filter((m) => m < ym);
+  const hist = Object.fromEntries(FAMILIAS.map((f) => [f.id, meses.map((m) => nivelDe(f, doMes(m)[f.id])).filter((n) => n > 0)]));
+  const fimDoMes = ultimoDiaDoMes(ym);
+  const lista = FAMILIAS.map((f) => {
+    const valor = agora[f.id], nivel = nivelDe(f, valor), nivelAntes = nivelDe(f, passado[f.id]);
+    const prox = f.niveis[nivel];
+    let falta = prox != null ? `Faltam ${prox - valor} para o ${rotuloNivel(f, nivel + 1)}` : 'Nível máximo do mês!';
+    if (f.id === 'impecavel') falta = !agora.semFalhar ? 'Neste mês não dá mais: teve dia sem o mínimo' : `Em jogo: ${agora.diasValidos} dia(s) sem falhar — vale no fim do mês`;
+    if (f.id === 'seq' && prox != null) falta = `Faltam ${prox - valor} dia(s) seguidos para o ${rotuloNivel(f, nivel + 1)}`;
+    return { ...f, valor, nivel, nivelAntes, rotulo: nivel ? rotuloNivel(f, nivel) : null, falta,
+      progresso: prox != null ? Math.min(1, valor / prox) : 1,
+      emDefesa: nivelAntes > nivel,   // ganhou mais no mês passado: precisa reconquistar até o fim do mês
+      defesa: nivelAntes > nivel ? `Defenda o ${rotuloNivel(f, nivelAntes)} de ${nomeDoMes(antes)}: ${f.soOuro ? 'repita o mês sem falhas' : `chegue a ${f.niveis[nivelAntes - 1]} até ${fimDoMes.slice(8, 10)}/${fimDoMes.slice(5, 7)}`}` : null,
+      vezes: hist[f.id].length };
+  });
+  const proxima = lista.filter((c) => c.nivel < c.niveis.length && !(c.id === 'impecavel'))
+    .sort((a, b) => b.progresso - a.progresso)[0] || null;
+  return { mes: nomeDoMes(ym), mesAntes: nomeDoMes(antes), lista, ganhas: lista.filter((c) => c.nivel).length,
+    emDefesa: lista.filter((c) => c.emDefesa), proxima, fimDoMes };
+}
+
+// Frase do placar do dia, conforme os círculos (troca de texto a cada dia para não ficar repetitiva).
+export function fraseDoDia(c, seq, hoje) {
   const n = Math.round(t(hoje) / DIA);
   const pick = (xs) => xs[((n % xs.length) + xs.length) % xs.length];
-  if (a.bateu && a.extra > 0) return pick([`+${a.extra} além do mínimo. Cada contato extra é aluno a mais na academia.`, `Volta extra: +${a.extra}. Quem passa do piso faz a diferença no mês.`]);
-  if (a.bateu) return pick(['Agora é volta extra — o mínimo é só o piso.', 'Piso garantido ✅ Bora para a volta extra?']);
-  if (seq.emJogo) return `Sua sequência de ${seq.atual} ${seq.atual === 1 ? 'dia' : 'dias'} 🔥 está em jogo: faltam ${a.falta} para mantê-la.`;
-  if (a.pct === 0) return pick(['Primeiro contato do dia é o mais difícil. Depois embala!', 'Bora começar? Um toque no WhatsApp e o dia anda.']);
-  if (a.pct >= 70) return `Reta final: só ${a.falta} para o mínimo!`;
-  return pick([`Faltam ${a.falta} para o mínimo. Um de cada vez!`, `Você já fez ${a.pct}% do mínimo. Segue o ritmo!`]);
+  if (c.zerou) return 'Listas zeradas! Não sobrou ninguém para chamar hoje. 🏆';
+  if (c.bateuMinimo && c.ultimo) return `Último círculo: faltam ${c.falta} para zerar todas as suas listas!`;
+  if (c.bateuMinimo) return pick([`${c.completos} ${c.completos === 1 ? 'círculo fechado' : 'círculos fechados'}. Faltam ${c.falta} para fechar o círculo ${c.nivel}.`,
+    `Círculo ${c.nivel}: mais ${c.falta} e ele fecha. Cada contato extra é aluno a mais na academia.`]);
+  if (seq.emJogo) return `Sua sequência de ${seq.atual} ${seq.atual === 1 ? 'dia' : 'dias'} 🔥 está em jogo: faltam ${c.falta} para mantê-la.`;
+  if (c.pct === 0) return pick(['Primeiro contato do dia é o mais difícil. Depois embala!', 'Bora começar? Um toque no WhatsApp e o dia anda.']);
+  if (c.pct >= 70) return `Reta final: só ${c.falta} para o mínimo!`;
+  return pick([`Faltam ${c.falta} para o mínimo. Um de cada vez!`, `Você já fez ${c.pct}% do mínimo. Segue o ritmo!`]);
 }
 
 // ── Resultados: o que dá sentido ao trabalho é o contato que deu certo (não o toque no WhatsApp) ──

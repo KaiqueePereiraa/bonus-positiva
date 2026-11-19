@@ -1,7 +1,7 @@
 // Peças visuais da gamificação: anel do dia, trilha da semana, estante de conquistas e os efeitos
 // (confete, "+1" flutuante, número contando). Sem biblioteca: SVG + CSS (css/jogo.css).
 // Quem prefere menos movimento (prefers-reduced-motion) não vê confete nem contagem animada.
-import { esc } from './ui.js?v=20261118222102';
+import { esc } from './ui.js?v=20261118223121';
 
 const calmo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -16,6 +16,27 @@ export function anelSvg(a, { tam = 168, traco = 14, centro = '', sub = '' } = {}
       ${arco(a.pct, 'anel-volta')}
       ${a.extraPct || a.voltas ? arco(a.voltas && !a.extraPct ? 100 : a.extraPct, 'anel-extra', 700) : ''}
     </svg>
+    <div class="anel-centro">${centro ? `<div class="anel-valor">${centro}</div>` : ''}${sub ? `<small>${sub}</small>` : ''}</div></div>`;
+}
+
+// Círculos do dia, concêntricos: o de fora é o mínimo; cada círculo fechado fica cheio e abre um novo por dentro.
+// Mostra até 3 (os 2 últimos fechados + o atual). c = circulos(...).
+const CORES_CIRCULO = ['#BEF575', '#FFFFFF', '#F5D76E', '#7FD8F5', '#FF9FB2'];
+export function aneisSvg(c, { tam = 168, traco = 13, gap = 4, centro = '', sub = '' } = {}) {
+  const meio = tam / 2;
+  const ultimo = c.completos >= c.nivel ? c.nivel : c.nivel;   // círculo em andamento (ou o último, se tudo fechado)
+  const primeiro = Math.max(1, ultimo - 2);
+  let aneis = '';
+  for (let n = primeiro; n <= ultimo; n++) {
+    const i = n - primeiro, r = (tam - traco) / 2 - 2 - i * (traco + gap), comp = 2 * Math.PI * r;
+    const pct = n < c.nivel || c.completos >= n ? 100 : c.pct;
+    const cor = CORES_CIRCULO[(n - 1) % CORES_CIRCULO.length];
+    aneis += `<circle class="anel-trilha" cx="${meio}" cy="${meio}" r="${r}" stroke-width="${traco}"/>
+      <circle class="anel-volta" cx="${meio}" cy="${meio}" r="${r}" stroke-width="${traco}" style="stroke:${cor};--atraso:${i * 250}ms"
+        stroke-dasharray="${comp}" stroke-dashoffset="${comp}" data-alvo="${comp * (1 - pct / 100)}"/>`;
+  }
+  return `<div class="anel aneis${c.bateuMinimo ? ' bateu' : ''}" style="width:${tam}px;height:${tam}px">
+    <svg viewBox="0 0 ${tam} ${tam}" aria-hidden="true">${aneis}</svg>
     <div class="anel-centro">${centro ? `<div class="anel-valor">${centro}</div>` : ''}${sub ? `<small>${sub}</small>` : ''}</div></div>`;
 }
 
@@ -44,14 +65,24 @@ const TITULO_DIA = { bateu: 'mínimo batido', 'hoje-ok': 'mínimo batido hoje', 
 export const trilhaHtml = (trilha) => `<ol class="trilha" aria-label="Sua semana">${trilha.map((d) =>
   `<li class="${d.estado}" title="${d.nome}: ${TITULO_DIA[d.estado]}"><i>${ICONE_DIA[d.estado]}</i><span>${d.nome}</span></li>`).join('')}</ol>`;
 
+// Estante do mês: uma medalha por família, na cor do nível (Bronze/Prata/Ouro). Trancada = cinza.
+// "Em defesa" = ganhou no mês passado e ainda não reconquistou neste mês.
 export function conquistasHtml(c) {
   const prox = c.proxima;
+  const medalha = (m) => `<span class="medalha nivel-${m.nivel ? (m.soOuro ? 3 : m.nivel) : 0}">${m.nivel ? m.icone : m.emDefesa ? m.icone : '🔒'}</span>`;
   return `<div class="cartao estante">
-    <h2>🏆 Conquistas <span class="selo verde">${c.ganhas} de ${c.lista.length}</span></h2>
-    ${prox ? `<div class="proxima"><span class="medalha trancada grande">${prox.icone}</span><div><small>Próxima conquista</small><b>${esc(prox.nome)}</b>
-      <span>${esc(prox.falta)}</span>${prox.progresso != null ? `<div class="mini-barra"><i data-largura="${Math.round(100 * (prox.progresso || 0))}%"></i></div>` : ''}</div></div>` : '<p class="dica">Você destravou todas! 👑</p>'}
-    <ul class="medalhas">${c.lista.map((m, k) => `<li class="${m.ok ? 'ganha' : ''}" style="--k:${k}" title="${esc(m.desc)}${m.ok ? '' : ` — ${esc(m.falta)}`}">
-      <span class="medalha ${m.ok ? '' : 'trancada'}">${m.ok ? m.icone : '🔒'}</span><b>${esc(m.nome)}</b><small>${esc(m.desc)}</small></li>`).join('')}</ul></div>`;
+    <h2>🏆 Conquistas de ${esc(c.mes)} <span class="selo verde">${c.ganhas} de ${c.lista.length}</span><span class="selo cinza">renovam todo mês</span></h2>
+    <p class="dica" style="margin:-6px 0 14px">Cada medalha vale só no mês. Para continuar com ela, conquiste de novo no mês seguinte — senão ela se perde.</p>
+    ${c.emDefesa.length ? `<div class="defesa"><b>⏳ Defenda suas medalhas de ${esc(c.mesAntes)}</b>
+      <ul>${c.emDefesa.map((m) => `<li>${m.icone} ${esc(m.defesa)}</li>`).join('')}</ul></div>` : ''}
+    ${prox ? `<div class="proxima"><span class="medalha nivel-${prox.nivel + 1} grande alvo">${prox.icone}</span><div><small>Próxima: ${esc(prox.nome)} ${esc(prox.soOuro ? 'Ouro' : ['Bronze', 'Prata', 'Ouro'][prox.nivel])}</small><b>${esc(prox.falta)}</b>
+      <span>${esc(prox.unid)}: ${prox.valor} até agora</span><div class="mini-barra"><i data-largura="${Math.round(100 * prox.progresso)}%"></i></div></div></div>` : ''}
+    <ul class="medalhas">${c.lista.map((m, k) => `<li class="${m.nivel ? 'ganha' : ''} ${m.emDefesa ? 'em-defesa' : ''}" style="--k:${k}" title="${esc(m.unid)}">
+      ${medalha(m)}<b>${esc(m.nome)}</b>
+      <em class="nivel-rotulo n${m.nivel ? (m.soOuro ? 3 : m.nivel) : 0}">${m.nivel ? esc(m.rotulo) : m.emDefesa ? '⏳ em defesa' : 'trancada'}</em>
+      <small>${esc(m.falta)}</small>
+      ${m.soOuro ? '' : `<div class="degraus">${m.niveis.map((n, j) => `<i class="${m.valor >= n ? 'ok' : ''}" title="${['Bronze', 'Prata', 'Ouro'][j]}: ${n}">${n}</i>`).join('')}</div>`}
+      ${m.vezes ? `<small class="vezes">🏆 ganhou em ${m.vezes} ${m.vezes === 1 ? 'mês' : 'meses'}</small>` : ''}</li>`).join('')}</ul></div>`;
 }
 
 // ── Efeitos ──
@@ -97,11 +128,17 @@ export function celebrar(titulo, texto, { icone = '🎉', confetes = true } = {}
   setTimeout(() => { f.classList.remove('visivel'); setTimeout(() => f.remove(), 400); }, 4200);
 }
 
-// Mínimo batido: festa uma vez por dia (guardado no navegador; sem armazenamento, pode repetir — sem problema).
-// quem: id da consultora — a chave é por pessoa (computador da recepção pode ser dividido; coordenador no "ver como")
-export function festaMinimoUmaVez(hoje, feitos, minimo, quem = '') {
-  const chave = `central_festa_minimo_${quem}`;
-  try { if (localStorage.getItem(chave) === hoje) return false; localStorage.setItem(chave, hoje); } catch { /* segue */ }
-  celebrar('Mínimo do dia batido!', `${feitos} de ${minimo}. Agora é volta extra — o mínimo é só o piso.`, { icone: '⚡' });
+// Festa quando um círculo fecha: uma vez por círculo por dia (guardado no navegador, por pessoa).
+// c = circulos(...). Devolve true se festejou.
+export function festaCirculo(hoje, c, quem = '') {
+  if (!c || !c.completos) return false;
+  const chave = `central_festa_circulo_${quem}`;
+  let ja = 0;
+  try { const [dia, n] = String(localStorage.getItem(chave) || '').split(':'); if (dia === hoje) ja = +n || 0; } catch { /* segue */ }
+  if (c.completos <= ja) return false;
+  try { localStorage.setItem(chave, `${hoje}:${c.completos}`); } catch { /* segue */ }
+  if (c.zerou) celebrar('Listas zeradas!', 'Não sobrou ninguém para chamar hoje. Dia completo! 🏆', { icone: '🏆' });
+  else if (c.completos === 1) celebrar('Mínimo do dia batido!', `Círculo 1 fechado. Agora o círculo 2: mais ${c.passo} contatos.`, { icone: '⚡' });
+  else celebrar(`Círculo ${c.completos} fechado!`, c.ultimo ? `Último círculo: faltam ${c.falta} para zerar as listas.` : `Agora o círculo ${c.completos + 1}: mais ${c.passo} contatos.`, { icone: '⭕' });
   return true;
 }
