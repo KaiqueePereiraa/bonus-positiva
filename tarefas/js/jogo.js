@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261119000717';
+import { hojeSP } from './regras.js?v=20261119001955';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -13,14 +13,14 @@ const segundaDe = (s) => { const d = new Date(t(s)).getUTCDay(); return somar(s,
 
 // ── Sequência 🔥, escudos 🛡️ e chama que evolui (pedido de 18/11/2026) ──
 // Dia útil com o mínimo batido soma 1. Folga/falta/atestado (trabalhou=false) e dia sem mínimo não contam nem quebram.
-// A cada 12 dias seguidos ela ganha um ESCUDO (guarda no máximo 2). Num dia sem o mínimo, um escudo é gasto sozinho e a
+// A cada 13 dias seguidos ela ganha um ESCUDO (guarda no máximo 2). Num dia sem o mínimo, um escudo é gasto sozinho e a
 // sequência continua (o dia não soma). Sem escudo, a sequência volta a zero. O escudo protege SÓ a sequência do jogo:
 // o dia sem mínimo continua pedindo justificativa normalmente.
-export const ESCUDO_A_CADA = 12;
+export const ESCUDO_A_CADA = 13;   // 19/11: separado do Imparável (12) e da chama azul (11) — um prêmio por dia
 export const ESCUDOS_MAX = 2;
 export const CHAMAS = [
   { min: 0, id: 'apagada', nome: 'Chama apagada' }, { min: 1, id: 'acesa', nome: 'Chama acesa' },
-  { min: 5, id: 'forte', nome: 'Chama forte' }, { min: 12, id: 'azul', nome: 'Chama azul' },
+  { min: 6, id: 'forte', nome: 'Chama forte' }, { min: 11, id: 'azul', nome: 'Chama azul' },
   { min: 25, id: 'roxa', nome: 'Chama roxa' }, { min: 40, id: 'lendaria', nome: 'Chama lendária' },
 ];
 export const chamaDe = (n) => [...CHAMAS].reverse().find((c) => n >= c.min);
@@ -46,7 +46,7 @@ export function caminhoSequencia(dias, hojeInfo = null) {
     }
     recorde = Math.max(recorde, atual);
   }
-  // próximos prêmios do caminho: escudo (a cada 12) e cada cor nova de chama
+  // próximos prêmios do caminho: escudo (a cada 13) e cada cor nova de chama
   const proximos = [];
   const proxEscudo = (Math.floor(atual / ESCUDO_A_CADA) + 1) * ESCUDO_A_CADA;
   proximos.push({ dias: proxEscudo, falta: proxEscudo - atual, icone: '🛡️',
@@ -107,21 +107,53 @@ export function anel(feitos, minimo) {
   };
 }
 
-// ── Círculos do dia ──
-// 1º círculo = o mínimo (piso). Fechou, abre o próximo: + metade do mínimo (pelo menos 3). O último é "zerar as listas":
+// ── Níveis do dia (opção D escolhida em 19/11/2026: nomes divertidos + barra + recorde) ──
+// 1º nível = o mínimo (piso). Depois, cada nível soma metade do mínimo (pelo menos 3 contatos). O último é "Lista zerada":
 // não dá para pedir mais contatos do que existem. disponivel = contatos ainda pendentes nas listas dela.
-export function circulos(feitos, minimo, disponivel = Infinity) {
+// Os nomes NÃO repetem os das medalhas (Embalada, Imparável…).
+// Quantidades (19/11/2026): cada nível é uma fração de TUDO o que ela tem pendente hoje nas listas, para puxar a zerar
+// a lista o quanto antes — 1/3, metade, 3/4 e tudo. Lista que vence hoje entra inteira em todos (nunca abaixo do mínimo).
+export const NIVEIS_DIA = [
+  { nome: 'Mínimo', icone: '✓', desc: 'para não atrasar nenhuma lista' },
+  { nome: 'No pique', icone: '💪', fracao: 1 / 3, desc: '1/3 das suas listas' },
+  { nome: 'Pegando fogo', icone: '🔥', fracao: 1 / 2, desc: 'metade das suas listas' },
+  { nome: 'Voando', icone: '✈️', fracao: 3 / 4, desc: '3/4 das suas listas' },
+];
+const ZERADA = { nome: 'Lista zerada', icone: '🏁', desc: 'todas as suas listas' };
+const nivelDia = (k) => NIVEIS_DIA[Math.min(k, NIVEIS_DIA.length - 1)];
+
+// Maior número de contatos num dia fechado (o recorde pessoal; hoje ainda não conta — fecha às 23h55)
+export const recordeDoDia = (dias) => dias.reduce((m, d) => Math.max(m, d.feitos || 0), 0);
+
+// listas: as de meu_dia ({ faltam_inicio, minimo }). Sem listas (testes antigos), sobe de metade do mínimo em metade.
+export function circulos(feitos, minimo, disponivel = Infinity, listas = null) {
   if (!minimo) return null;
   const passo = Math.max(3, Math.ceil(minimo / 2));
   const teto = feitos + Math.max(0, disponivel);
-  const alvos = [minimo];
-  while (alvos[alvos.length - 1] < teto && alvos.length < 60) alvos.push(Math.min(alvos[alvos.length - 1] + passo, teto));
+  let alvos, nomes;
+  if (listas?.length) {
+    const nivel = (f) => listas.reduce((s, l) => s + Math.max(l.minimo || 0, Math.ceil((l.faltam_inicio || 0) * f)), 0);
+    const zerar = Math.max(teto, listas.reduce((s, l) => s + (l.faltam_inicio || 0), 0));
+    const brutos = [[minimo, NIVEIS_DIA[0]], ...NIVEIS_DIA.slice(1).map((n) => [nivel(n.fracao), n]), [zerar, ZERADA]];
+    alvos = []; nomes = [];
+    for (const [a, n] of brutos) {   // nível que dá igual (ou menos) que o anterior não aparece; "Lista zerada" sempre fica
+      if (alvos.length && a <= alvos[alvos.length - 1]) { if (n === ZERADA) { nomes[nomes.length - 1] = n; } continue; }
+      alvos.push(Math.min(a, zerar)); nomes.push(n);
+    }
+  } else {
+    alvos = [minimo];
+    while (alvos[alvos.length - 1] < teto && alvos.length < 60) alvos.push(Math.min(alvos[alvos.length - 1] + passo, teto));
+  }
   let k = alvos.findIndex((a) => feitos < a);
   const tudo = k === -1;
   if (tudo) k = alvos.length - 1;
   const alvo = alvos[k], ini = k ? alvos[k - 1] : 0;
+  const finalZerar = Number.isFinite(disponivel) && teto > minimo;
+  const niveis = alvos.map((a, j) => ({ alvo: a, ...(nomes ? nomes[j] : finalZerar && j === alvos.length - 1 ? ZERADA : nivelDia(j)) }));
+  const completos = tudo ? alvos.length : k;
   return {
-    nivel: k + 1, completos: tudo ? alvos.length : k, alvo, ini, passo,
+    niveis, proximo: tudo ? null : niveis[k], atingido: completos ? niveis[completos - 1] : null,
+    nivel: k + 1, completos, alvo, ini, passo,
     pct: tudo ? 100 : Math.max(0, Math.round((100 * (feitos - ini)) / (alvo - ini))),
     falta: tudo ? 0 : alvo - feitos,
     bateuMinimo: feitos >= minimo,
@@ -224,14 +256,13 @@ export function conquistasDoMes(dias, hoje, hojeInfo = null, resultados = []) {
 export function fraseDoDia(c, seq, hoje) {
   const n = Math.round(t(hoje) / DIA);
   const pick = (xs) => xs[((n % xs.length) + xs.length) % xs.length];
-  if (c.zerou) return 'Listas zeradas! Não sobrou ninguém para chamar hoje. 🏆';
-  if (c.bateuMinimo && c.ultimo) return `Último círculo: faltam ${c.falta} para zerar todas as suas listas!`;
-  if (c.bateuMinimo) return pick([`${c.completos} ${c.completos === 1 ? 'círculo fechado' : 'círculos fechados'}. Faltam ${c.falta} para fechar o círculo ${c.nivel}.`,
-    `Círculo ${c.nivel}: mais ${c.falta} e ele fecha. Cada contato extra é aluno a mais na academia.`]);
-  if (seq.emJogo && seq.escudos) return `Sua sequência de ${seq.atual} dias 🔥 está em jogo (você tem ${seq.escudos === 1 ? '1 escudo' : '2 escudos'} 🛡️ de reserva). Faltam ${c.falta}.`;
-  if (seq.emJogo) return `Sua sequência de ${seq.atual} ${seq.atual === 1 ? 'dia' : 'dias'} 🔥 está em jogo: faltam ${c.falta} para mantê-la.`;
+  const contatos = (n) => `${n} ${n === 1 ? 'contato' : 'contatos'}`;
+  if (c.zerou) return 'Não sobrou ninguém para chamar hoje. Dia completo! 🏁';
+  if (c.bateuMinimo && c.proximo) return `Faltam ${contatos(c.falta)} para ${c.proximo.icone} ${c.proximo.nome}${c.proximo.desc ? ` (${c.proximo.desc} hoje)` : ''}.`;
+  if (seq.emJogo && seq.escudos) return `Sua sequência de ${seq.atual} dias 🔥 está em jogo (você tem ${seq.escudos === 1 ? '1 escudo' : '2 escudos'} 🛡️ de reserva). Faltam ${contatos(c.falta)}.`;
+  if (seq.emJogo) return `Sua sequência de ${seq.atual} ${seq.atual === 1 ? 'dia' : 'dias'} 🔥 está em jogo: faltam ${contatos(c.falta)} para mantê-la.`;
   if (c.pct === 0) return pick(['Primeiro contato do dia é o mais difícil. Depois embala!', 'Bora começar? Um toque no WhatsApp e o dia anda.']);
-  if (c.pct >= 70) return `Reta final: só ${c.falta} para o mínimo!`;
+  if (c.pct >= 70) return `Reta final: só ${contatos(c.falta)} para o mínimo!`;
   return pick(['Um de cada vez: cada contato conta.', `Você já fez ${c.pct}% do mínimo. Segue o ritmo!`]);   // o título já diz quanto falta
 }
 

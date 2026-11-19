@@ -1,7 +1,7 @@
 // Peças visuais da gamificação: anel do dia, trilha da semana, estante de conquistas e os efeitos
 // (confete, "+1" flutuante, número contando). Sem biblioteca: SVG + CSS (css/jogo.css).
 // Quem prefere menos movimento (prefers-reduced-motion) não vê confete nem contagem animada.
-import { esc } from './ui.js?v=20261119000717';
+import { esc } from './ui.js?v=20261119001955';
 
 const calmo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -19,25 +19,35 @@ export function anelSvg(a, { tam = 168, traco = 14, centro = '', sub = '' } = {}
     <div class="anel-centro">${centro ? `<div class="anel-valor">${centro}</div>` : ''}${sub ? `<small>${sub}</small>` : ''}</div></div>`;
 }
 
-// Círculos do dia, concêntricos: o de fora é o mínimo; cada círculo fechado fica cheio e abre um novo por dentro.
-// Mostra até 3 (os 2 últimos fechados + o atual). c = circulos(...).
-const CORES_CIRCULO = ['#BEF575', '#FFFFFF', '#F5D76E', '#7FD8F5', '#FF9FB2'];
-export function aneisSvg(c, { tam = 168, traco = 13, gap = 4, centro = '', sub = '' } = {}) {
-  const meio = tam / 2;
-  const ultimo = c.completos >= c.nivel ? c.nivel : c.nivel;   // círculo em andamento (ou o último, se tudo fechado)
-  const primeiro = Math.max(1, ultimo - 2);
-  let aneis = '';
-  for (let n = primeiro; n <= ultimo; n++) {
-    const i = n - primeiro, r = (tam - traco) / 2 - 2 - i * (traco + gap), comp = 2 * Math.PI * r;
-    const pct = n < c.nivel || c.completos >= n ? 100 : c.pct;
-    const cor = CORES_CIRCULO[(n - 1) % CORES_CIRCULO.length];
-    aneis += `<circle class="anel-trilha" cx="${meio}" cy="${meio}" r="${r}" stroke-width="${traco}"/>
-      <circle class="anel-volta" cx="${meio}" cy="${meio}" r="${r}" stroke-width="${traco}" style="stroke:${cor};--atraso:${i * 250}ms"
-        stroke-dasharray="${comp}" stroke-dashoffset="${comp}" data-alvo="${comp * (1 - pct / 100)}"/>`;
-  }
+// Anel do dia: um anel só, com o progresso até o PRÓXIMO nível (cor do nível). c = circulos(...).
+const CORES_CIRCULO = ['#BEF575', '#FFFFFF', '#FF9A3D', '#7FD8F5', '#F5D76E', '#FF9FB2'];
+export function aneisSvg(c, { tam = 168, traco = 13, centro = '', sub = '' } = {}) {
+  const meio = tam / 2, r = (tam - traco) / 2 - 2, comp = 2 * Math.PI * r;
+  const cor = CORES_CIRCULO[Math.min(c.nivel - 1, CORES_CIRCULO.length - 1)];
   return `<div class="anel aneis${c.bateuMinimo ? ' bateu' : ''}" style="width:${tam}px;height:${tam}px">
-    <svg viewBox="0 0 ${tam} ${tam}" aria-hidden="true">${aneis}</svg>
+    <svg viewBox="0 0 ${tam} ${tam}" aria-hidden="true">
+      <circle class="anel-trilha" cx="${meio}" cy="${meio}" r="${r}" stroke-width="${traco}"/>
+      <circle class="anel-volta" cx="${meio}" cy="${meio}" r="${r}" stroke-width="${traco}" style="stroke:${cor}"
+        stroke-dasharray="${comp}" stroke-dashoffset="${comp}" data-alvo="${comp * (1 - c.pct / 100)}"/></svg>
     <div class="anel-centro">${centro ? `<div class="anel-valor">${centro}</div>` : ''}${sub ? `<small>${sub}</small>` : ''}</div></div>`;
+}
+
+// Barra dos níveis do dia (mesma linguagem da meta da semana): marcos com nome e número de contatos, até 2 níveis
+// além do atual, e o recorde pessoal como marquinho (ou como texto, se estiver mais longe).
+export function barraNiveisHtml(c, feitos, recorde = 0) {
+  const ate = Math.min(c.niveis.length - 1, (c.proximo ? c.nivel : c.niveis.length) );   // índice do último marco mostrado
+  const mostrados = c.niveis.slice(0, ate + 1);
+  const max = mostrados[mostrados.length - 1].alvo;
+  const pos = (n) => Math.max(0, Math.min(100, (100 * n) / max));
+  const recDentro = recorde > 0 && recorde <= max;
+  return `<div class="niveis-dia">
+    <div class="nd-trilha"><div class="nd-fill" style="width:0" data-largura="${pos(feitos)}%"></div>
+      ${mostrados.map((n) => `<i class="${feitos >= n.alvo ? 'ok' : ''}" style="left:${pos(n.alvo)}%"></i>`).join('')}
+      ${recDentro ? `<i class="recorde" style="left:${pos(recorde)}%" title="Seu recorde: ${recorde} contatos num dia"></i>` : ''}</div>
+    <div class="nd-marcos">${mostrados.map((n, k) => (k < mostrados.length - 4 ? '' : `<span class="${feitos >= n.alvo ? 'ok' : ''} ${k === mostrados.length - 1 ? 'ultimo' : ''} ${k === 0 ? 'primeiro' : ''} ${n === c.proximo ? 'alvo' : ''}" style="left:${pos(n.alvo)}%">
+      <em class="nd-nome">${feitos >= n.alvo ? n.icone : ''} ${esc(n.nome)}</em><small>${n.alvo}</small></span>`)).join('')}</div>
+    ${recorde > 0 ? `<p class="nd-recorde">🏆 Seu recorde: <b>${recorde}</b> contatos num dia${feitos > recorde ? ' — <b>batido hoje!</b>' : feitos ? ` · faltam ${recorde - feitos + 1} para bater` : ''}</p>` : ''}
+  </div>`;
 }
 
 // Liga a animação dos anéis e dos números (data-contar) dentro de `raiz`.
@@ -167,10 +177,20 @@ export function festaCirculo(hoje, c, quem = '') {
   try { const [dia, n] = String(localStorage.getItem(chave) || '').split(':'); if (dia === hoje) ja = +n || 0; } catch { /* segue */ }
   if (c.completos <= ja) return false;
   try { localStorage.setItem(chave, `${hoje}:${c.completos}`); } catch { /* segue */ }
-  if (c.zerou) celebrar('Listas zeradas!', 'Não sobrou ninguém para chamar hoje. Dia completo! 🏆', { icone: '🏆' });
-  else if (c.completos === 1) celebrar('Mínimo do dia batido!', `Círculo 1 fechado. Agora o círculo 2: mais ${c.passo} contatos.`, { icone: '⚡' });
-  else celebrar(`Círculo ${c.completos} fechado!`, c.ultimo ? `Último círculo: faltam ${c.falta} para zerar as listas.` : `Agora o círculo ${c.completos + 1}: mais ${c.passo} contatos.`, { icone: '⭕' });
+  const n = c.atingido, prox = c.proximo;
+  const depois = prox ? `Próximo: ${prox.icone} ${prox.nome} — mais ${prox.alvo - n.alvo} contatos.` : 'Não sobrou ninguém para chamar hoje. Dia completo!';
+  if (c.zerou) celebrar('Lista zerada! 🏁', 'Não sobrou ninguém para chamar hoje. Dia completo!', { icone: '🏁' });
+  else if (c.completos === 1) celebrar('Mínimo do dia batido!', depois, { icone: '⚡' });
+  else celebrar(`${n.nome}! ${n.icone}`, depois, { icone: n.icone });
   return true;
+}
+
+// Novo recorde pessoal de contatos num dia: festa uma vez por dia
+export function festaRecorde(hoje, feitos, recorde, quem = '') {
+  if (!recorde || feitos <= recorde) return;
+  const chave = `central_festa_recorde_${quem}`;
+  try { if (localStorage.getItem(chave) === hoje) return; localStorage.setItem(chave, hoje); } catch { /* segue */ }
+  celebrar('Novo recorde pessoal! 🏆', `${feitos} contatos hoje — o seu recorde era ${recorde}.`, { icone: '🏆' });
 }
 
 // ── Sequência: chama, escudos e o caminho dos próximos prêmios ──
@@ -178,7 +198,7 @@ export function chipsSequencia(cam) {
   const escudos = Array.from({ length: 2 }, (_, i) => `<i class="${i < cam.escudos ? 'tem' : ''}">🛡️</i>`).join('');
   return `<span class="chip-fogo chama-${cam.chama.id} ${cam.emJogo ? 'em-jogo' : ''}" title="${esc(cam.chama.nome)}: dias úteis seguidos com o mínimo (folga não quebra)">
       <i>🔥</i><b>${cam.atual}</b> ${cam.atual === 1 ? 'dia seguido' : 'dias seguidos'}<em>${esc(cam.chama.nome)}</em></span>
-    ${cam.escudos ? '' : '<!-- sem escudo: o caminho já diz quando vem o próximo -->'}<span class="chip-escudos${cam.escudos ? '' : ' vazio'}" title="Escudos: a cada 12 dias seguidos você ganha 1 (guarda até 2). Num dia sem o mínimo, ele salva a sequência sozinho. A justificativa do dia continua valendo.">${escudos}<b>${cam.escudos}</b></span>`;
+    ${cam.escudos ? '' : '<!-- sem escudo: o caminho já diz quando vem o próximo -->'}<span class="chip-escudos${cam.escudos ? '' : ' vazio'}" title="Escudos: a cada 13 dias seguidos você ganha 1 (guarda até 2). Num dia sem o mínimo, ele salva a sequência sozinho. A justificativa do dia continua valendo.">${escudos}<b>${cam.escudos}</b></span>`;
 }
 export function caminhoHtml(cam) {
   if (!cam.proximos.length) return '';
@@ -186,7 +206,7 @@ export function caminhoHtml(cam) {
     `<li class="${p.chama ? `chama-${p.chama}` : 'escudo'}"><i>${p.icone}</i><span><b>${p.falta === 1 ? 'amanhã' : `em ${p.falta} dias`}</b> ${esc(p.premio)}</span></li>`).join('')}</ol></div>`;
 }
 
-// Festas dos escudos: ganhou (a cada 12 dias) e usou (salvou a sequência). Uma vez cada, por pessoa.
+// Festas dos escudos: ganhou (a cada 13 dias) e usou (salvou a sequência). Uma vez cada, por pessoa.
 // Na primeira vez que a pessoa abre (sem registro), só festeja os eventos dos últimos 3 dias.
 export function festasDaSequencia(cam, hoje, quem = '') {
   const chave = `central_festa_seq_${quem}`;

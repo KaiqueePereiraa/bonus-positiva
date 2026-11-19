@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119000717';
-import * as dados from './dados.js?v=20261119000717';
-import { hojeSP } from './regras.js?v=20261119000717';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119000717';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119000717';
-import { circulos, disponivelDe, caminhoSequencia } from './jogo.js?v=20261119000717';
-import { resumoSemana } from './bonus-meta.js?v=20261119000717';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia } from './jogo-visual.js?v=20261119000717';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119001955';
+import * as dados from './dados.js?v=20261119001955';
+import { hojeSP } from './regras.js?v=20261119001955';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119001955';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119001955';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119001955';
+import { resumoSemana } from './bonus-meta.js?v=20261119001955';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119001955';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -165,8 +165,8 @@ function ligarVerComo() {
 // Mostra, sem salvar nada, as comemorações que a consultora vê (contato marcado, mínimo batido, resultado)
 function mostrarComemoracoes() {
   maisUm($('hud').hidden ? $('titulo') : $('hud'));
-  celebrar('Círculo 2 fechado!', 'Exemplo: assim aparece quando ela fecha um círculo. Agora o círculo 3: mais 4 contatos.', { icone: '⭕' });
-  celebrar('Escudo conquistado! 🛡️', 'Exemplo: 12 dias seguidos com o mínimo. Se um dia não der, ele salva a sequência sozinho.', { icone: '🛡️' });
+  celebrar('Pegando fogo! 🔥', 'Exemplo: assim aparece quando ela sobe de nível no dia. Próximo: ✈️ Voando — mais 4 contatos.', { icone: '🔥' });
+  celebrar('Escudo conquistado! 🛡️', 'Exemplo: 13 dias seguidos com o mínimo. Se um dia não der, ele salva a sequência sozinho.', { icone: '🛡️' });
   celebrar('Seu contato deu resultado!', 'Exemplo: Maria voltou a treinar depois da sua mensagem.', { icone: '🌟' });
 }
 
@@ -217,7 +217,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261119000717`);
+    const tela = await import(`./telas/${modulo}.js?v=20261119001955`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -343,15 +343,15 @@ async function atualizarHud(animarMudanca = false) {
     const d = await dados.meuDia();
     const minimo = d.listas.reduce((s, l) => s + l.minimo, 0), feitos = d.feitos_hoje;
     if (!minimo && !feitos) { el.hidden = true; return; }
-    const c = circulos(feitos, minimo, disponivelDe(d));
+    const c = circulos(feitos, minimo, disponivelDe(d), d.listas);   // níveis = frações do pendente (1/3, metade, 3/4, tudo)
     const seq = caminhoSequencia(diasFechados, minimo ? { feitos, minimo } : null);
     el.hidden = false;
     el.className = `hud${c?.bateuMinimo ? ' bateu' : ''}`;
-    el.title = c ? `Hoje: ${feitos} contatos · ${c.zerou ? 'listas zeradas' : `círculo ${c.nivel}: faltam ${c.falta}`} · ${seq.atual} dia(s) seguidos` : '';
-    el.innerHTML = `${c ? aneisSvg(c, { tam: 38, traco: 4, gap: 1 }) : ''}<span class="hud-num"><b>${feitos}</b>/${c ? c.alvo : '–'}</span>${c && c.nivel > 1 ? `<span class="hud-circ">⭕${c.completos}</span>` : ''}${seq.atual ? `<span class="hud-fogo chama-${seq.chama.id}">🔥${seq.atual}</span>` : ''}${seq.escudos ? `<span class="hud-escudo">🛡️${seq.escudos > 1 ? seq.escudos : ''}</span>` : ''}${hudMeta(d.hoje)}`;
+    el.title = c ? `Hoje: ${feitos} contatos · ${c.zerou ? 'lista zerada' : !c.bateuMinimo ? `faltam ${c.falta} para o mínimo` : `${c.atingido.nome} · faltam ${c.falta} para ${c.proximo.nome}`} · ${seq.atual} dia(s) seguidos` : '';
+    el.innerHTML = `${c ? aneisSvg(c, { tam: 38, traco: 4 }) : ''}<span class="hud-num"><b>${feitos}</b>/${c ? c.alvo : '–'}</span>${c?.atingido && c.completos > 1 ? `<span class="hud-circ" title="${c.atingido.nome}">${c.atingido.icone}</span>` : ''}${seq.atual ? `<span class="hud-fogo chama-${seq.chama.id}">🔥${seq.atual}</span>` : ''}${seq.escudos ? `<span class="hud-escudo">🛡️${seq.escudos > 1 ? seq.escudos : ''}</span>` : ''}${hudMeta(d.hoje)}`;
     animar(el);
     if (animarMudanca && ultimoFeitos != null && feitos > ultimoFeitos) maisUm(el, `+${feitos - ultimoFeitos}`);
-    if (ultimoFeitos != null && feitos > ultimoFeitos) { festaCirculo(d.hoje, c, perfil.id); festasDaSequencia(seq, d.hoje, perfil.id); }   // fechou um círculo / ganhou escudo agora
+    if (ultimoFeitos != null && feitos > ultimoFeitos) { festaCirculo(d.hoje, c, perfil.id); festaRecorde(d.hoje, feitos, recordeDoDia(diasFechados), perfil.id); festasDaSequencia(seq, d.hoje, perfil.id); }   // subiu de nível / recorde / escudo
     ultimoFeitos = feitos;
   } catch (e) { console.error(e); }
 }
