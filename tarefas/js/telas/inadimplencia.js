@@ -1,8 +1,8 @@
 // Inadimplência — toda sexta a lista chega sozinha da EVO e é DIVIDIDA por igual entre as consultoras da unidade
 // (ou do grupo de unidades). Cada uma marca quem recebeu mensagem. Não há mais revezamento/plantão.
-import * as dados from '../dados.js?v=20261119192232';
-import { esc, dataCurta, diaSemana, seloStatus, vazio } from '../ui.js?v=20261119192232';
-import { cabecalhoTarefa, listaContatos, baixarArquivo, linhaProgresso } from './_comum.js?v=20261119192232';
+import * as dados from '../dados.js?v=20261119192511';
+import { esc, dataCurta, diaSemana, seloStatus, vazio } from '../ui.js?v=20261119192511';
+import { cabecalhoTarefa, listaContatos, baixarArquivo, linhaProgresso } from './_comum.js?v=20261119192511';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
@@ -39,7 +39,7 @@ export async function render(el, ctx, [tarefaId]) {
   const proximas = grupos.filter((g) => g.prazo >= hoje).sort((a, b) => a.prazo.localeCompare(b.prazo) || a.unidade.localeCompare(b.unidade));
   const passadas = grupos.filter((g) => g.prazo < hoje).sort((a, b) => b.prazo.localeCompare(a.prazo) || a.unidade.localeCompare(b.unidade));
   if (!grupos.length) {
-    el.innerHTML = `<div class="cartao">${vazio(`A inadimplência${ctx.unidade ? ` da ${ctx.nomeUnidade(ctx.unidade)}` : ''} ainda não começou. Defina a primeira sexta em Configurações → Rodízio.`)}</div>`;
+    el.innerHTML = `<div class="cartao">${vazio(`A inadimplência${ctx.unidade ? ` da ${ctx.nomeUnidade(ctx.unidade)}` : ''} ainda não começou. Ela chega sozinha toda sexta quando a automação da EVO da unidade estiver ligada.`)}</div>`;
     return;
   }
   el.innerHTML = `<div class="cartao"><h2>Próximas sextas</h2>${proximas.length ? proximas.map(bloco).join('') : vazio('Nenhuma data futura.')}

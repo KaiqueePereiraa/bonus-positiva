@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119192232';
-import * as dados from './dados.js?v=20261119192232';
-import { hojeSP } from './regras.js?v=20261119192232';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119192232';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119192232';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119192232';
-import { resumoSemana } from './bonus-meta.js?v=20261119192232';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119192232';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119192511';
+import * as dados from './dados.js?v=20261119192511';
+import { hojeSP } from './regras.js?v=20261119192511';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119192511';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119192511';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119192511';
+import { resumoSemana } from './bonus-meta.js?v=20261119192511';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119192511';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -50,7 +50,7 @@ const ROTAS = {
   // Para abrir para as consultoras: trocar quem para 'todos' e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
   escala: { titulo: 'Escala', modulo: 'escala', icone: 'escala', quem: 'admin', grupo: 'ajustes', frase: 'Quem trabalha em cada fim de semana.' },
   historico: { titulo: 'Histórico', modulo: 'historico', icone: 'hist', quem: 'admin', grupo: 'ajustes', frase: 'Tudo o que foi feito na plataforma: quem fez, quando e o quê.' },
-  configuracoes: { titulo: 'Configurações', modulo: 'configuracoes', icone: 'conf', quem: 'admin', grupo: 'ajustes', frase: 'Equipe, rodízio, mensagens, WhatsApp e a conexão com a EVO.' },
+  configuracoes: { titulo: 'Configurações', modulo: 'configuracoes', icone: 'conf', quem: 'admin', grupo: 'ajustes', frase: 'Equipe, unidades e grupos, mensagens, WhatsApp e a conexão com a EVO.' },
 };
 // grupos que são listas de contato (a consultora só vê as listas em que tem algo)
 const GRUPOS_LISTAS = ['vendas', 'retencao', 'cobranca', 'extras'];
@@ -236,7 +236,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261119192232`);
+    const tela = await import(`./telas/${modulo}.js?v=20261119192511`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

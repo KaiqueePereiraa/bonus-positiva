@@ -1,7 +1,7 @@
 // Histórico — tudo o que as pessoas fizeram na plataforma (Central e Bônus): quem, quando, o quê e em qual unidade.
 // O banco já devolve só as unidades que o coordenador pode ver; o administrador geral vê tudo.
-import * as dados from '../dados.js?v=20261119192232';
-import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261119192232';
+import * as dados from '../dados.js?v=20261119192511';
+import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261119192511';
 
 const TABELAS = {
   profiles: 'Cadastro', config_central: 'Configuração', controles: 'Configuração das listas', motivos: 'Motivo',
@@ -27,7 +27,7 @@ const ROTULO_CAMPO = {
   nome: 'nome', nome_evo: 'nome no EVO', whatsapp: 'WhatsApp', unidade: 'unidade', papel_tarefas: 'Central', papel_bonus: 'Bônus',
   ordem_rodizio: 'rodízio', ativo: 'ativo', unidades_coord: 'unidades que coordena', nome_bonus: 'nome no bônus', valor: 'valor',
   justificativa: 'justificativa', trabalhou: 'trabalhou', status: 'situação', resolution: 'decisão', amount: 'valor', reason: 'motivo',
-  inadimplencia_inicio: 'início do rodízio', automacao_ativa: 'rotinas da EVO', value: 'valor',
+  inadimplencia_inicio: 'início da inadimplência', grupo: 'grupo de unidades', automacao_ativa: 'rotinas da EVO', value: 'valor',
 };
 
 const curto = (v) => {

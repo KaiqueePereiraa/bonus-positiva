@@ -1,11 +1,11 @@
-// Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261119192232';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119192232';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119192232';
+// Configurações (só admin): usuários, unidades e grupos, feriados, motivos, mensagens e WhatsApp.
+import * as dados from '../dados.js?v=20261119192511';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119192511';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119192511';
 
-const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
+const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
-// coordenador de unidade: só a equipe e o rodízio das unidades dele (o resto vale para todas e fica com o administrador geral)
+// coordenador de unidade: só a equipe e as unidades dele (o resto vale para todas e fica com o administrador geral)
 const ABAS_COORD = ['usuarios', 'rodizio'];
 
 export async function render(el, ctx, [aba = 'usuarios']) {
@@ -28,7 +28,7 @@ const formPerfil = (p = {}, ctx, { comEmail = false } = {}) => `
   <label class="campo">Central de Tarefas<select id="papel_tarefas"><option value="">Sem acesso</option><option value="consultora" ${p.papel_tarefas === 'consultora' ? 'selected' : ''}>Consultora</option>${ctx.ehSuper ? `<option value="admin" ${p.papel_tarefas === 'admin' ? 'selected' : ''}>Coordenador (administrador)</option>` : ''}</select></label>
   ${ctx.ehSuper && !p.super_admin ? `<fieldset class="campo unidades-coord"><legend>Unidades que coordena <span class="dica">(só vale para coordenador; sem nenhuma marcada ele não vê unidade nenhuma)</span></legend>
     ${ctx.unidades.map((u) => `<label><input type="checkbox" id="coord_${u.id}" ${(p.unidades_coord || []).includes(u.id) ? 'checked' : ''}> ${esc(u.nome.replace('Positiva ', ''))}</label>`).join('')}</fieldset>` : ''}
-  <label class="campo">Ordem no rodízio/divisão da unidade (vazio = fora)<input id="ordem_rodizio" type="number" min="1" value="${p.ordem_rodizio ?? ''}"></label>
+  <label class="campo">Entra na divisão das listas? Ordem (vazio = fora da divisão)<input id="ordem_rodizio" type="number" min="1" value="${p.ordem_rodizio ?? ''}"></label>
   <label class="campo">Controle de Bônus<select id="papel_bonus"><option value="">Sem acesso</option><option value="consultant" ${p.papel_bonus === 'consultant' ? 'selected' : ''}>Consultor</option>${ctx.ehSuper ? `<option value="coordinator" ${p.papel_bonus === 'coordinator' ? 'selected' : ''}>Coordenador</option>` : ''}</select></label>
   <label class="campo">Nome nas vendas do bônus (igual ao relatório)<input id="nome_bonus" value="${esc(p.nome_bonus || '')}"></label>
   <label class="campo" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="ativo" ${p.ativo !== false ? 'checked' : ''}> Ativo</label>`;
@@ -65,7 +65,7 @@ async function usuarios(el, ctx) {
   const perfis = await dados.perfis();
   el.innerHTML = `<div class="linha-acoes" style="margin-bottom:14px"><button class="btn verde" data-acao="convidar">+ Convidar pessoa</button>
     <span class="dica">A pessoa recebe um e-mail com o link para criar a própria senha.</span></div>
-    ${perfis.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Pessoa</th><th>Central</th><th>Bônus</th><th>Rodízio</th><th>WhatsApp</th><th></th></tr></thead><tbody>
+    ${perfis.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Pessoa</th><th>Central</th><th>Bônus</th><th>Divisão</th><th>WhatsApp</th><th></th></tr></thead><tbody>
     ${perfis.map((p) => `<tr data-id="${p.id}"><td class="nome">${esc(p.nome || '(sem nome)')}${p.ativo ? '' : ' <span class="selo vermelho">inativo</span>'}<span class="sub">${esc(p.email || '')}${p.nome_evo ? ` · EVO: ${esc(p.nome_evo)}` : ''}${p.nome_bonus ? ` · Bônus: ${esc(p.nome_bonus)}` : ''}</span></td>
       <td>${rotuloCentral(p, ctx)}</td>
       <td>${p.acesso_bonus ? (p.papel_bonus === 'coordinator' ? 'Coordenador' : 'Consultor') : '—'}</td>
@@ -109,7 +109,7 @@ async function usuarios(el, ctx) {
   };
 }
 
-// ── Rodízio (um por unidade) e grupos de unidades ──
+// ── Unidades e grupos de unidades (a rota continua #/configuracoes/rodizio para links antigos) ──
 // Grupo: unidades no mesmo grupo dividem TODAS as listas entre as consultoras do grupo (cada uma fica primeiro com os
 // alunos da própria unidade; a sobra completa as da outra). Só o administrador geral muda.
 // Grupos disponíveis: um para cada unidade cadastrada (Grupo 1 = 'A', Grupo 2 = 'B'…); unidade nova = grupo novo disponível.
@@ -121,36 +121,27 @@ async function rodizio(el, ctx) {
   const unidades = todasUnidades.filter((u) => ctx.unidades.some((x) => x.id === u.id));
   const GRUPOS = gruposPara(todasUnidades.length);
   const nomeGrupo = (g) => GRUPOS.find(([id]) => id === (g || ''))?.[1] || g;
-  el.innerHTML = `<p class="dica" style="margin-bottom:14px">A inadimplência chega toda sexta a partir da primeira sexta abaixo e é dividida por igual entre as consultoras da unidade (ou do grupo). A ordem (em Usuários) só define quem recebe a sobra quando a conta não fecha.</p>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Consultoras</th><th>Primeira sexta</th><th>Divide as listas</th><th></th></tr></thead><tbody>
+  el.innerHTML = `<p class="dica" style="margin-bottom:14px">Todas as listas — inclusive a inadimplência, que chega toda sexta — são divididas por igual entre as consultoras da unidade (ou do grupo). Quem entra na divisão é definido em Usuários.</p>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Consultoras na divisão</th><th>Divide as listas</th>${ctx.ehSuper ? '<th></th>' : ''}</tr></thead><tbody>
     ${unidades.map((u) => `<tr data-u="${u.id}"><td class="nome">${esc(u.nome)}</td>
-      <td>${ctx.consultorasDa(u.id).map((c) => esc(c.nome)).join(' → ') || '<span class="dica">sem consultoras</span>'}</td>
-      <td><input class="ctrl" type="date" data-campo="inicio" value="${u.inadimplencia_inicio || ''}"></td>
+      <td>${ctx.consultorasDa(u.id).map((c) => esc(c.nome)).join(', ') || '<span class="dica">sem consultoras</span>'}</td>
       <td>${ctx.ehSuper ? `<select class="ctrl" data-campo="grupo">${GRUPOS.map(([id, r]) => `<option value="${id}" ${id === (u.grupo || '') ? 'selected' : ''}>${r}</option>`).join('')}</select>`
         : esc(nomeGrupo(u.grupo))}</td>
-      <td class="acoes"><button class="btn peq" data-acao="salvar">Salvar</button></td></tr>`).join('')}
+      ${ctx.ehSuper ? '<td class="acoes"><button class="btn peq" data-acao="salvar">Salvar</button></td>' : ''}</tr>`).join('')}
     </tbody></table></div>
-    <p class="dica" style="margin-top:10px"><b>Divide as listas:</b> unidades no mesmo grupo juntam as consultoras e dividem todas as listas
-      (inclusive a inadimplência) por igual. Para criar um grupo, escolha o mesmo número de grupo nas unidades que vão juntar e salve cada uma. Cada consultora recebe primeiro os alunos da própria unidade; o que sobrar de uma unidade
-      completa as da outra, numa lista separada que aparece depois. Vale para as listas que chegarem a partir de agora.</p>`;
+    <p class="dica" style="margin-top:10px"><b>Divide as listas:</b> unidades no mesmo grupo juntam as consultoras e dividem todas as listas por igual.
+      Para criar um grupo, escolha o mesmo número de grupo nas unidades que vão juntar e salve cada uma. Cada consultora recebe primeiro os alunos da própria unidade;
+      o que sobrar de uma unidade completa as da outra, numa lista separada que aparece depois. Vale para as listas que chegarem a partir de agora.</p>`;
   el.onclick = async (e) => {
     const b = e.target.closest('[data-acao="salvar"]');
     if (!b) return;
     const tr = b.closest('tr');
     const u = unidades.find((x) => x.id === tr.dataset.u);
-    const v = tr.querySelector('[data-campo="inicio"]').value;
-    const grupo = tr.querySelector('[data-campo="grupo"]')?.value;
-    const campos = {};
-    if (v !== (u.inadimplencia_inicio || '')) {
-      if (!v || diaDaSemana(v) !== 5) return toast('Escolha uma sexta-feira.', 'erro');
-      campos.inadimplencia_inicio = v;
-    }
-    if (grupo !== undefined && grupo !== (u.grupo || '')) campos.grupo = grupo || null;
-    if (!Object.keys(campos).length) return toast('Nada mudou.');
+    const grupo = tr.querySelector('[data-campo="grupo"]').value;
+    if (grupo === (u.grupo || '')) return toast('Nada mudou.');
     try {
-      await dados.salvarUnidade(u.id, campos);
-      const n = campos.inadimplencia_inicio ? await dados.garantirInadimplencia() : 0;
-      toast(`Salvo.${campos.inadimplencia_inicio ? ` ${n} tarefa(s) do rodízio criada(s).` : ''}${'grupo' in campos ? ' Recarregue a página para atualizar as listas.' : ''}`);
+      await dados.salvarUnidade(u.id, { grupo: grupo || null });
+      toast('Salvo. Recarregue a página para atualizar as listas.');
       rodizio(el, ctx);
     } catch (err) { erro(err); }
   };
