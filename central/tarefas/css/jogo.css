@@ -214,3 +214,4 @@ body[data-rota="meu-dia"] .hud{display:none}
 .fvc-acoes button{border:none;border-radius:8px;padding:7px 11px;font-weight:800;font-size:12px;cursor:pointer;background:rgba(255,255,255,.75);color:#3D2E00}
 .fvc-acoes button[data-a="sair"]{background:var(--dark);color:#fff}
 @media (max-width:760px){.faixa-ver-como{padding:8px 16px;font-size:13px}}
+.aviso-so-olhar{background:#FFF4E5;border:1px solid #FFD8A8;color:#8A4B00;border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.5}

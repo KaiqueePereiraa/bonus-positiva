@@ -1,11 +1,11 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118215358';
-import * as dados from './dados.js?v=20261118215358';
-import { hojeSP } from './regras.js?v=20261118215358';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118215358';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118215358';
-import { anel, sequencia } from './jogo.js?v=20261118215358';
-import { anelSvg, animar, maisUm, festaMinimoUmaVez, celebrar } from './jogo-visual.js?v=20261118215358';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118215749';
+import * as dados from './dados.js?v=20261118215749';
+import { hojeSP } from './regras.js?v=20261118215749';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118215749';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118215749';
+import { anel, sequencia } from './jogo.js?v=20261118215749';
+import { anelSvg, animar, maisUm, festaMinimoUmaVez, celebrar } from './jogo-visual.js?v=20261118215749';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -112,7 +112,7 @@ async function carregarBase() {
 
 function sairDoVerComo() {
   try { sessionStorage.removeItem(CHAVE_VER_COMO); } catch { /* segue */ }
-  location.hash = '#/painel';
+  history.replaceState(null, '', '#/painel');   // sem disparar a troca de tela antes de recarregar
   location.reload();
 }
 
@@ -121,13 +121,13 @@ async function escolherConsultora() {
     .map((c) => `<option value="${c.id}" ${c.id === verComoId ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</optgroup>`).join('');
   const r = await modal('Ver a Central como consultora', `<p>Escolha uma consultora: a Central mostra exatamente a tela dela, com os dados dela de hoje
       (Meu dia, listas, desempenho).</p>
-    <p class="faixa" style="display:block">É só para olhar: <b>nada é salvo</b> e o botão do <b>WhatsApp não abre</b> (para não mandar mensagem a aluno).</p>
+    <p class="aviso-so-olhar">👁 É só para olhar: <b>nada é salvo</b> e o botão do <b>WhatsApp não abre</b> (para não mandar mensagem a aluno).</p>
     <label class="campo">Consultora<select id="ver-como-sel">${porUnidade}</select></label>`,
   { acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: null }, { rotulo: 'Ver como ela →', classe: 'verde', valor: 'ok' }], ler: true });
   const id = r?.valor === 'ok' && r.campos['ver-como-sel'];
   if (!id) return;
   try { sessionStorage.setItem(CHAVE_VER_COMO, id); } catch { toast('Este navegador não deixou guardar a escolha.', 'erro'); return; }
-  location.hash = '#/meu-dia';
+  history.replaceState(null, '', '#/meu-dia');
   location.reload();
 }
 
@@ -208,7 +208,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261118215358`);
+    const tela = await import(`./telas/${modulo}.js?v=20261118215749`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

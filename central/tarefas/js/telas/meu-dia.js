@@ -1,13 +1,13 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 4 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118215358';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118215358';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118215358';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118215358';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118215358';
-import { anel, sequencia, trilhaSemana, conquistas, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118215358';
-import { anelSvg, animar, trilhaHtml, conquistasHtml, festaMinimoUmaVez, celebrar } from '../jogo-visual.js?v=20261118215358';
+import * as dados from '../dados.js?v=20261118215749';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118215749';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118215749';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118215749';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118215749';
+import { anel, sequencia, trilhaSemana, conquistas, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118215749';
+import { anelSvg, animar, trilhaHtml, conquistasHtml, festaMinimoUmaVez, celebrar } from '../jogo-visual.js?v=20261118215749';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -139,6 +139,11 @@ export async function render(el, ctx) {
 
 // "Deu resultado!": os contatos dela que viraram aluno de volta, pagamento, matrícula ou renovação (últimos 7 dias).
 // É o que dá sentido ao trabalho — por isso a festa maior é aqui, e não no toque do WhatsApp.
+// A EVO manda nomes em MAIÚSCULAS: "MARIA DA SILVA" vira "Maria da Silva"
+const MINUSCULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);
+const nomeBonito = (n) => (n && n === n.toUpperCase()
+  ? n.toLowerCase().split(/\s+/).map((p, k) => (k && MINUSCULAS.has(p) ? p : p.charAt(0).toUpperCase() + p.slice(1))).join(' ') : n || '');
+
 function quadroResultados(r) {
   if (!r) return '';
   const tipos = Object.entries(TIPOS_RESULTADO).filter(([k]) => r.porTipo[k]);
@@ -150,7 +155,7 @@ function quadroResultados(r) {
         <span>${r.semana === 1 ? 'contato seu deu certo' : 'contatos seus deram certo'} nesta semana</span></div>
       <div class="res-tipos">${tipos.map(([k, t], j) => `<span class="res-tipo" style="--k:${j}"><i>${t.icone}</i><b>${r.porTipo[k]}</b> ${r.porTipo[k] === 1 ? t.um : t.varios}</span>`).join('')}</div>
       <ul class="res-lista">${r.recentes.map((i, j) => `<li style="--k:${j}" class="${novo.has(i) ? 'novo' : ''}"><i>${TIPOS_RESULTADO[i.resultado].icone}</i>
-        <span><b>${esc(i.nome)}</b> ${TIPOS_RESULTADO[i.resultado].um}</span>${novo.has(i) ? '<em>novo</em>' : ''}<small>${quando(i.quando)}</small></li>`).join('')}</ul>`
+        <span><b>${esc(nomeBonito(i.nome))}</b> ${TIPOS_RESULTADO[i.resultado].um}</span>${novo.has(i) ? '<em>novo</em>' : ''}<small>${quando(i.quando)}</small></li>`).join('')}</ul>`
     : `<p class="dica">Quando um contato seu fizer o aluno voltar a treinar, pagar ou se matricular, ele aparece aqui. A EVO confere toda madrugada.</p>`}
   </div>`;
 }

@@ -1,12 +1,12 @@
 // Desempenho — ranking aberto (todas veem todas): mínimo cumprido, dias com a meta batida, contatos e resultados.
 // O gestor também vê as justificativas, o diagnóstico (sobrecarga x individual) e o quadro esforço × resultado
 // dos últimos 30 dias (cada consultora comparada com a mediana da equipe).
-import * as dados from '../dados.js?v=20261118215358';
-import { esc, dataCurta, vazio, NOMES_CONTROLE } from '../ui.js?v=20261118215358';
-import { somarDias, semanaDe } from '../regras.js?v=20261118215358';
-import { diagnostico, quadrante, mediana, resumoAtividade } from '../painel-regras.js?v=20261118215358';
-import { destaques, voceVsVoce } from '../jogo.js?v=20261118215358';
-import { animar } from '../jogo-visual.js?v=20261118215358';
+import * as dados from '../dados.js?v=20261118215749';
+import { esc, dataCurta, vazio, NOMES_CONTROLE } from '../ui.js?v=20261118215749';
+import { somarDias, semanaDe } from '../regras.js?v=20261118215749';
+import { diagnostico, quadrante, mediana, resumoAtividade } from '../painel-regras.js?v=20261118215749';
+import { destaques, voceVsVoce } from '../jogo.js?v=20261118215749';
+import { animar } from '../jogo-visual.js?v=20261118215749';
 
 let periodo = 'semana_passada';
 
@@ -69,7 +69,8 @@ function quadroDestaques(lista, antes, ctx) {
 // Você contra você mesma: o período escolhido comparado com o anterior
 function quadroVoce(eu, antes, deAnt, ateAnt) {
   const linhas = voceVsVoce(eu, antes);
-  if (!linhas) return '';
+  const temDados = (c) => c && (c.dias > 0 || c.resultados > 0);
+  if (!linhas || (!temDados(eu) && !temDados(antes))) return '';   // sem dias fechados nos dois períodos: nada a comparar
   const seta = (l) => (l.delta == null ? '<span class="dica">—</span>' : l.delta > 0 ? `<em class="sobe">▲ ${l.delta}${l.sufixo ? ' pontos' : ''}</em>` : l.delta < 0 ? `<em class="desce">▼ ${-l.delta}${l.sufixo ? ' pontos' : ''}</em>` : '<em class="igual">= igual</em>');
   return `<div class="cartao voce"><h2>🪞 Você contra você mesma <span class="selo cinza">antes: ${dataCurta(deAnt)} a ${dataCurta(ateAnt)}</span></h2>
     <div class="voce-grade">${linhas.map((l) => `<div><small>${esc(l.rotulo)}</small><b>${l.agora == null ? '—' : `${l.agora}${l.sufixo}`}</b>${seta(l)}</div>`).join('')}</div>
