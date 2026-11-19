@@ -1,14 +1,14 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import * as dados from '../dados.js?v=20261118235144';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118235144';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118235144';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118235144';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118235144';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261118235144';
-import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118235144';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118235144';
+import * as dados from '../dados.js?v=20261119000122';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261119000122';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261119000122';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261119000122';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261119000122';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261119000122';
+import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261119000122';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas } from '../jogo-visual.js?v=20261119000122';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -131,6 +131,7 @@ export async function render(el, ctx) {
   // festa do círculo fechado, uma vez por círculo por dia (se ela fechou numa lista, a festa já aconteceu lá)
   festaCirculo(d.hoje, c, ctx.perfil.id);
   festasDaSequencia(seq, d.hoje, ctx.perfil.id);   // escudo ganho ou usado (as festas entram em fila)
+  festaMedalhas(premios, d.hoje, ctx.perfil.id);   // medalha nova no mês
   const festa = res && fraseResultado(res.novos);
   if (res?.ultimo) { try { localStorage.setItem(chaveResultados(ctx.perfil.id), res.ultimo); } catch { /* sem armazenamento */ } }
   if (festa) celebrar(festa.titulo, festa.texto, { icone: '🌟' });

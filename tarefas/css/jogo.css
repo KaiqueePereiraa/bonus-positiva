@@ -371,3 +371,33 @@ body[data-rota="meu-dia"] .hud{display:none}
 .ver-quem[open] summary::before{content:"▾ "}
 .ver-quem span{display:block;font-size:12px;color:var(--mid);margin-top:4px;line-height:1.5}
 .aplaudiram{font-size:13px;color:#7A5600;background:#FFF4D6;border-radius:10px;padding:8px 12px;margin:-4px 0 12px}
+
+/* ── Medalhas com nome, em fileiras por tema (18/11/2026) ── */
+.familias{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.familia{padding:14px;border-radius:14px;background:var(--bg);animation:subir .4s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--k) * 60ms)}
+.familia.em-defesa{box-shadow:inset 0 0 0 1.5px #F39C12;background:#FFF8EC}
+.fam-cab{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:10px}
+.fam-cab>b{font-size:14px;font-weight:900}
+.fam-cab small{font-size:12px;color:var(--mid)}
+.fam-cab .vezes{margin-left:auto;font-size:11px;font-weight:800;color:#7A5600}
+.fam-medalhas{list-style:none;margin:0;padding:0;display:flex;align-items:flex-start;gap:6px;overflow-x:auto;padding-bottom:2px}
+.fam-medalhas>li:not(.seta){flex:1 0 88px;max-width:150px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.fam-medalhas>li.seta{flex:none;align-self:center;margin-top:-28px;color:var(--gray);font-weight:900}
+.fam-medalhas b{font-size:12px;font-weight:900;line-height:1.2}
+.fam-medalhas small{font-size:11px;color:var(--mid)}
+.fam-medalhas li:not(.ganha) b{color:var(--mid)}
+.fam-medalhas li.proxima-med .medalha{filter:grayscale(.6);opacity:.9;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--green-deep);animation:pulsar-med 2s ease-in-out infinite}
+.fam-medalhas .medalha{width:52px;height:52px;font-size:24px}
+.medalha.nivel-4{background:radial-gradient(circle at 35% 30%,#F3E6FF,#B57CFF 45%,#6A2BD9 100%);box-shadow:0 0 0 3px #fff,0 0 0 5px #D9C2FF,0 6px 18px rgba(106,43,217,.45)}
+.fam-falta{display:block;margin-top:8px;font-size:12px;font-weight:700;color:var(--navy)}
+@keyframes pulsar-med{50%{box-shadow:0 0 0 3px #fff,0 0 0 7px rgba(127,184,90,.45)}}
+@media (max-width:760px){.fam-medalhas>li:not(.seta){flex-basis:72px}.fam-medalhas .medalha{width:46px;height:46px;font-size:21px}.fam-medalhas>li.seta{display:none}}
+@media (prefers-reduced-motion:reduce){.familia,.fam-medalhas li.proxima-med .medalha{animation:none}}
+.fam-medalhas{padding-top:6px}
+@media (max-width:760px){
+  .fam-medalhas{overflow:visible;gap:4px}
+  .fam-medalhas>li:not(.seta){flex:1 1 0;min-width:0}
+  .fam-medalhas .medalha{width:42px;height:42px;font-size:19px}
+  .fam-medalhas b{font-size:11px}
+  .fam-medalhas small{font-size:10px}
+}

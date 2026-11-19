@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261118235144';
+import { hojeSP } from './regras.js?v=20261119000122';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -140,15 +140,23 @@ export function disponivelDe(d) {
 // ── Conquistas do mês (temporada) ──
 // Valem só no mês: no mês seguinte a medalha do mês anterior fica "em defesa" e só continua se for conquistada de novo.
 // Três níveis (Bronze, Prata, Ouro). Calibrado em 18/11/2026 com o histórico real (20 a 40 contatos nos dias com lista).
-export const NIVEIS = ['Bronze', 'Prata', 'Ouro'];
+// Cada degrau é uma medalha com nome (pedido de 18/11/2026: "Embalada, Semana em chamas, Imparável, Lenda" motiva
+// mais que Bronze/Prata/Ouro). A cor do degrau: 1 bronze, 2 prata, 3 ouro, 4 lendária.
 export const FAMILIAS = [
-  { id: 'seq', icone: '🔥', nome: 'Sequência', unid: 'dias úteis seguidos com o mínimo', niveis: [5, 10, 15] },
-  { id: 'contatos', icone: '💬', nome: 'Volume', unid: 'contatos no mês', niveis: [150, 300, 500] },
-  { id: 'resultados', icone: '🌟', nome: 'Fez a diferença', unid: 'contatos que deram certo no mês', niveis: [20, 50, 100] },
-  { id: 'semanas', icone: '🏅', nome: 'Semana perfeita', unid: 'semanas com o mínimo em todos os dias', niveis: [1, 2, 3] },
-  { id: 'dobro', icone: '🚀', nome: 'Dobradinha', unid: 'dias com o dobro do mínimo (mínimo de 5 ou mais)', niveis: [2, 5, 8] },
-  { id: 'impecavel', icone: '👑', nome: 'Mês impecável', unid: 'mínimo batido em todos os dias do mês (12 dias ou mais)', niveis: [1], soOuro: true },
+  { id: 'seq', icone: '🔥', nome: 'Sequência', unid: 'dias úteis seguidos com o mínimo no mês', niveis: [3, 5, 10, 15],
+    medalhas: [['🌀', 'Embalada'], ['🔥', 'Semana em chamas'], ['⚡', 'Imparável'], ['🏆', 'Lenda da Positiva']], medida: 'dias seguidos' },
+  { id: 'contatos', icone: '💬', nome: 'Volume', unid: 'contatos no mês', niveis: [150, 300, 500],
+    medalhas: [['💬', 'Aquecimento'], ['🥁', 'Ritmo forte'], ['🏃‍♀️', 'Maratonista']], medida: 'contatos' },
+  { id: 'resultados', icone: '🌟', nome: 'Resultados', unid: 'contatos que deram certo no mês', niveis: [20, 50, 100],
+    medalhas: [['🌟', 'Fez a diferença'], ['🛟', 'Resgatadora'], ['💎', 'Transformadora']], medida: 'resultados' },
+  { id: 'semanas', icone: '🏅', nome: 'Semanas perfeitas', unid: 'semanas com o mínimo em todos os dias', niveis: [1, 2, 3],
+    medalhas: [['🏅', 'Semana perfeita'], ['✌️', 'Dose dupla'], ['🎖️', 'Trinca perfeita']], medida: 'semanas' },
+  { id: 'dobro', icone: '🚀', nome: 'Dobradinha', unid: 'dias com o dobro do mínimo (mínimo de 5 ou mais)', niveis: [2, 5, 8],
+    medalhas: [['⏩', 'Dobradinha'], ['💨', 'Turbinada'], ['🚀', 'Foguete']], medida: 'dias' },
+  { id: 'impecavel', icone: '👑', nome: 'Mês impecável', unid: 'mínimo batido em todos os dias do mês (12 dias ou mais)', niveis: [1],
+    medalhas: [['👑', 'Mês impecável']], medida: '', soOuro: true },
 ];
+export const TOTAL_MEDALHAS = FAMILIAS.reduce((s, f) => s + f.niveis.length, 0);
 const MESES_NOME = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 export const nomeDoMes = (ym) => MESES_NOME[+ym.slice(5, 7) - 1];
 const mesAnterior = (ym) => { const [a, m] = ym.split('-').map(Number); return m === 1 ? `${a - 1}-12` : `${a}-${String(m - 1).padStart(2, '0')}`; };
@@ -178,7 +186,7 @@ function metricasDoMes(dias, res, fechado, hoje, estados = {}) {
   };
 }
 const nivelDe = (f, v) => f.niveis.filter((n) => v >= n).length;   // 0 = nenhum
-const rotuloNivel = (f, n) => (f.soOuro ? 'Ouro' : NIVEIS[n - 1]);
+const rotuloNivel = (f, n) => f.medalhas[n - 1][1];
 
 // dias: dias fechados; hojeInfo { feitos, minimo }; resultados: [{ quando }]. Devolve o mês atual, com defesa do anterior.
 export function conquistasDoMes(dias, hoje, hojeInfo = null, resultados = []) {
@@ -197,18 +205,17 @@ export function conquistasDoMes(dias, hoje, hojeInfo = null, resultados = []) {
   const lista = FAMILIAS.map((f) => {
     const valor = agora[f.id], nivel = nivelDe(f, valor), nivelAntes = nivelDe(f, passado[f.id]);
     const prox = f.niveis[nivel];
-    let falta = prox != null ? `Faltam ${prox - valor} para o ${rotuloNivel(f, nivel + 1)}` : 'Nível máximo do mês!';
+    let falta = prox != null ? `Faltam ${prox - valor} ${f.medida} para ${rotuloNivel(f, nivel + 1)}` : 'Todas as deste tema! 🎉';
     if (f.id === 'impecavel') falta = !agora.semFalhar ? 'Neste mês não dá mais: teve dia sem o mínimo' : `Em jogo: ${agora.diasValidos} dia(s) sem falhar — vale no fim do mês`;
-    if (f.id === 'seq' && prox != null) falta = `Faltam ${prox - valor} dia(s) seguidos para o ${rotuloNivel(f, nivel + 1)}`;
     return { ...f, valor, nivel, nivelAntes, rotulo: nivel ? rotuloNivel(f, nivel) : null, falta,
       progresso: prox != null ? Math.min(1, valor / prox) : 1,
       emDefesa: nivelAntes > nivel,   // ganhou mais no mês passado: precisa reconquistar até o fim do mês
-      defesa: nivelAntes > nivel ? `Defenda o ${rotuloNivel(f, nivelAntes)} de ${nomeDoMes(antes)}: ${f.soOuro ? 'repita o mês sem falhas' : `chegue a ${f.niveis[nivelAntes - 1]} até ${fimDoMes.slice(8, 10)}/${fimDoMes.slice(5, 7)}`}` : null,
+      defesa: nivelAntes > nivel ? `Defenda "${rotuloNivel(f, nivelAntes)}" de ${nomeDoMes(antes)}: ${f.soOuro ? 'repita o mês sem falhas' : `chegue a ${f.niveis[nivelAntes - 1]} ${f.medida} até ${fimDoMes.slice(8, 10)}/${fimDoMes.slice(5, 7)}`}` : null,
       vezes: hist[f.id].length };
   });
   const proxima = lista.filter((c) => c.nivel < c.niveis.length && !(c.id === 'impecavel'))
     .sort((a, b) => b.progresso - a.progresso)[0] || null;
-  return { mes: nomeDoMes(ym), mesAntes: nomeDoMes(antes), lista, ganhas: lista.filter((c) => c.nivel).length,
+  return { mes: nomeDoMes(ym), mesAntes: nomeDoMes(antes), lista, ganhas: lista.reduce((s, c) => s + c.nivel, 0), total: TOTAL_MEDALHAS,
     emDefesa: lista.filter((c) => c.emDefesa), proxima, fimDoMes };
 }
 
