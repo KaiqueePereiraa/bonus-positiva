@@ -202,3 +202,15 @@ body[data-rota="meu-dia"] .hud{display:none}
 .res-lista li.novo b{color:#8A6100}
 @media (max-width:600px){.voce-grade{grid-template-columns:1fr}.voce-grade>div{flex-direction:row;align-items:baseline;gap:10px}.voce-grade small{flex:1}.res-num{font-size:42px}}
 @media (prefers-reduced-motion:reduce){.destaque,.res-tipo,.res-lista li{animation:none}}
+
+/* ── Ver como consultora (coordenador) ── */
+.btn-ver-como{width:100%;margin-bottom:12px;padding:9px 10px;border-radius:9px;border:1.5px dashed rgba(190,245,117,.55);background:rgba(190,245,117,.08);
+  color:var(--neon);font-weight:800;font-size:12px;cursor:pointer}
+.btn-ver-como:hover{background:rgba(190,245,117,.16)}
+.faixa-ver-como{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:10px 32px;background:repeating-linear-gradient(135deg,#F5D76E 0 14px,#F2CF55 14px 28px);color:#3D2E00;font-size:14px}
+.faixa-ver-como small{display:block;font-size:12px;opacity:.85}
+.fvc-acoes{display:flex;gap:6px;flex-wrap:wrap}
+.fvc-acoes button{border:none;border-radius:8px;padding:7px 11px;font-weight:800;font-size:12px;cursor:pointer;background:rgba(255,255,255,.75);color:#3D2E00}
+.fvc-acoes button[data-a="sair"]{background:var(--dark);color:#fff}
+@media (max-width:760px){.faixa-ver-como{padding:8px 16px;font-size:13px}}

@@ -1,7 +1,7 @@
 // Peças visuais da gamificação: anel do dia, trilha da semana, estante de conquistas e os efeitos
 // (confete, "+1" flutuante, número contando). Sem biblioteca: SVG + CSS (css/jogo.css).
 // Quem prefere menos movimento (prefers-reduced-motion) não vê confete nem contagem animada.
-import { esc } from './ui.js?v=20261118214522';
+import { esc } from './ui.js?v=20261118215358';
 
 const calmo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -98,8 +98,9 @@ export function celebrar(titulo, texto, { icone = '🎉', confetes = true } = {}
 }
 
 // Mínimo batido: festa uma vez por dia (guardado no navegador; sem armazenamento, pode repetir — sem problema).
-export function festaMinimoUmaVez(hoje, feitos, minimo) {
-  const chave = 'central_festa_minimo';
+// quem: id da consultora — a chave é por pessoa (computador da recepção pode ser dividido; coordenador no "ver como")
+export function festaMinimoUmaVez(hoje, feitos, minimo, quem = '') {
+  const chave = `central_festa_minimo_${quem}`;
   try { if (localStorage.getItem(chave) === hoje) return false; localStorage.setItem(chave, hoje); } catch { /* segue */ }
   celebrar('Mínimo do dia batido!', `${feitos} de ${minimo}. Agora é volta extra — o mínimo é só o piso.`, { icone: '⚡' });
   return true;

@@ -1,16 +1,17 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 4 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118214522';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118214522';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118214522';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118214522';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118214522';
-import { anel, sequencia, trilhaSemana, conquistas, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118214522';
-import { anelSvg, animar, trilhaHtml, conquistasHtml, festaMinimoUmaVez, celebrar } from '../jogo-visual.js?v=20261118214522';
+import * as dados from '../dados.js?v=20261118215358';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118215358';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118215358';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118215358';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118215358';
+import { anel, sequencia, trilhaSemana, conquistas, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118215358';
+import { anelSvg, animar, trilhaHtml, conquistasHtml, festaMinimoUmaVez, celebrar } from '../jogo-visual.js?v=20261118215358';
 
-const CHAVE_RESULTADOS = 'central_resultados_visto';
-const lerVisto = () => { try { return localStorage.getItem(CHAVE_RESULTADOS); } catch { return null; } };
+// por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
+const chaveResultados = (id) => `central_resultados_visto_${id}`;
+const lerVisto = (id) => { try { return localStorage.getItem(chaveResultados(id)); } catch { return null; } };
 
 const CHAVE_GUIA = 'central_guia_meu_dia';
 const guiaVisto = () => { try { return localStorage.getItem(CHAVE_GUIA) === '1'; } catch { return true; } };
@@ -25,7 +26,7 @@ export async function render(el, ctx) {
   const [porLista, meusRes] = await Promise.all([dados.meusFeitosHojePorLista(ctx.perfil.id, d.hoje).catch(() => null),
     dados.meusResultados(ctx.perfil.id).catch(() => null)]);
   // contatos dela que deram certo: quadro dos últimos 7 dias + festa para os novos desde a última visita
-  const res = meusRes ? resumoResultados(meusRes, d.hoje, lerVisto()) : null;
+  const res = meusRes ? resumoResultados(meusRes, d.hoje, lerVisto(ctx.perfil.id)) : null;
   // tudo o que ela ainda tem para fazer, em todas as listas (inclusive a Lista a fazer), até cada prazo
   const pendentes = pendentesAtePrazo(tarefas, d.hoje);
   const faltamTotal = pendentes.reduce((s, t) => s + (t.total - t.feitos), 0);
@@ -125,9 +126,9 @@ export async function render(el, ctx) {
 
   animar(el);
   // comemoração do mínimo uma vez por dia (se ela bateu numa lista, a festa já aconteceu lá)
-  const festejouMinimo = minimo && a.bateu ? festaMinimoUmaVez(d.hoje, feitos, minimo) : false;
+  const festejouMinimo = minimo && a.bateu ? festaMinimoUmaVez(d.hoje, feitos, minimo, ctx.perfil.id) : false;
   const festa = res && fraseResultado(res.novos);
-  if (res?.ultimo) { try { localStorage.setItem(CHAVE_RESULTADOS, res.ultimo); } catch { /* sem armazenamento */ } }
+  if (res?.ultimo) { try { localStorage.setItem(chaveResultados(ctx.perfil.id), res.ultimo); } catch { /* sem armazenamento */ } }
   if (festa) setTimeout(() => celebrar(festa.titulo, festa.texto, { icone: '🌟' }), festejouMinimo ? 4600 : 400);
 
   el.querySelector('#guia-ok')?.addEventListener('click', () => {

@@ -1,9 +1,9 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261118214522';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118214522';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118214522';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118214522';
-import { maisUm, celebrar } from '../jogo-visual.js?v=20261118214522';
+import * as dados from '../dados.js?v=20261118215358';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118215358';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118215358';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118215358';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261118215358';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -167,6 +167,7 @@ export async function listaContatos(el, ctx, tarefa) {
     const id = tr.dataset.id;
     const campos = () => ({ obs: tr.querySelector('[data-campo="obs"]')?.value ?? '', classe: tr.querySelector('[data-campo="classe"]')?.value ?? '' });
     if (b.dataset.acao === 'wa') {
+      if (dados.vendoComo()) { toast(dados.MSG_SO_OLHAR, 'erro'); return; }   // ver como consultora: não abre WhatsApp
       if (ehRisco && campos().classe) { toast('Você escolheu um tipo de aluno (Gympass, benefício colaborador, contrato VIP ou que não quer mais contato): use "Registrar" em vez do WhatsApp.', 'erro'); return; }
       const i = itens.find((x) => x.id === id);
       const url = linkWhatsApp(normalizarTelefone(i.celular), montarMensagem(modelo, { nome: i.nome }), { celular: ehCelular() });

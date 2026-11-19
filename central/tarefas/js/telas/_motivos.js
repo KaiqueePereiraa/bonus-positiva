@@ -1,9 +1,9 @@
 // Formulário de motivos: "Por que não fechou?" (etapas "fez experimental" e "não fez experimental"), "Renovação: venceu
 // e não renovou" e "Cancelou". Usado pela tela do "Por que não fechou?" e pelas telas de grupo (_grupo.js).
-import * as dados from '../dados.js?v=20261118214522';
-import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261118214522';
-import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261118214522';
-import { atualizarCabecalho } from './_comum.js?v=20261118214522';
+import * as dados from '../dados.js?v=20261118215358';
+import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261118215358';
+import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261118215358';
+import { atualizarCabecalho } from './_comum.js?v=20261118215358';
 
 // Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
 async function confirmarExclusao(nome) {
@@ -69,6 +69,7 @@ export async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }
   el.onclick = async (e) => {
     const wa = e.target.closest('[data-acao="wa"]');
     if (wa) {
+      if (dados.vendoComo()) { toast(dados.MSG_SO_OLHAR, 'erro'); return; }   // ver como consultora: não abre WhatsApp
       const alvo = itens.find((i) => i.id === wa.closest('tr').dataset.id);
       const url = alvo && linkWhatsApp(normalizarTelefone(alvo.celular), montarMensagem(modeloDe(ctx, alvo), { nome: alvo.nome }), { celular: ehCelular() });
       if (url) window.open(url, 'whatsapp');

@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia, e o que passar dele aparece como "volta extra".
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261118214522';
+import { hojeSP } from './regras.js?v=20261118215358';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
