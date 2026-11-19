@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119173524';
-import * as dados from './dados.js?v=20261119173524';
-import { hojeSP } from './regras.js?v=20261119173524';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119173524';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119173524';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119173524';
-import { resumoSemana } from './bonus-meta.js?v=20261119173524';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119173524';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119175044';
+import * as dados from './dados.js?v=20261119175044';
+import { hojeSP } from './regras.js?v=20261119175044';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119175044';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119175044';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119175044';
+import { resumoSemana } from './bonus-meta.js?v=20261119175044';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119175044';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -47,20 +47,24 @@ const ROTAS = {
   retorno: { titulo: 'Retorno do mês', modulo: 'retorno', icone: 'rel', quem: 'admin', grupo: null, menu: 'relatorios', frase: 'Quanto a equipe trouxe de volta em R$ com a Central.' },
   // EM PREPARAÇÃO (pedido do usuário, 16/11/2026): só o admin vê a Escala até ele dizer que está 100% pronta.
   // Para abrir para as consultoras: trocar quem para 'todos' e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
-  escala: { titulo: 'Escala', modulo: 'escala', icone: 'escala', quem: 'admin', grupo: 'ajustes', frase: 'Quem trabalha em cada fim de semana.' },
+  escala: { titulo: 'Escala', modulo: 'escala', icone: 'escala', quem: 'super', grupo: 'ajustes', frase: 'Quem trabalha em cada fim de semana.' },
   configuracoes: { titulo: 'Configurações', modulo: 'configuracoes', icone: 'conf', quem: 'admin', grupo: 'ajustes', frase: 'Equipe, rodízio, mensagens, WhatsApp e a conexão com a EVO.' },
 };
 // grupos que são listas de contato (a consultora só vê as listas em que tem algo)
 const GRUPOS_LISTAS = ['vendas', 'retencao', 'cobranca', 'extras'];
 // telas antigas que foram juntadas a outras (links salvos continuam funcionando)
 const REDIRECIONA = { 'visao-geral': null, insights: 'indicadores' };
-const podeVer = (r) => r.quem === 'todos' || (r.quem === 'admin') === ehAdmin;
+// quem: 'super' = só o administrador geral (configurações que valem para todas as unidades)
+const podeVer = (r) => r.quem === 'todos' || (r.quem === 'super' ? ehAdmin && souSuper : (r.quem === 'admin') === ehAdmin);
 
 const $ = (id) => document.getElementById(id);
 const icone = (n) => `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONES[n]}</svg>`;
 
 const perfilReal = await exigirArea('tarefas');
 const souAdmin = perfilReal.papel_tarefas === 'admin';
+// Super admin vê e configura tudo; os demais coordenadores só as unidades marcadas no perfil (o banco também confere).
+const souSuper = souAdmin && !!perfilReal.super_admin;
+const minhasUnidades = perfilReal.unidades_coord || [];
 // "Ver como consultora": o coordenador escolhe uma consultora e a Central vira a tela dela (só para olhar; dados.js
 // recusa salvar e o WhatsApp não abre). Guardado só nesta aba (sessionStorage): fechou a aba, volta a ser coordenador.
 const CHAVE_VER_COMO = 'central_ver_como';
@@ -72,6 +76,7 @@ let perfil = perfilReal;
 const ctx = {
   perfil,
   ehAdmin,
+  ehSuper: souSuper,
   hoje: () => hojeSP(),
   equipe: [],
   consultoras: [],
@@ -95,7 +100,10 @@ function lerUnidadeSalva() {
 async function carregarBase() {
   const [equipe, motivos, controles, unidades] = await Promise.all([dados.equipe(), dados.motivos(), dados.controles(), dados.unidades()]);
   ctx.equipe = equipe;
-  ctx.unidades = unidades;
+  // coordenador de unidade: a Central inteira (seletor, painéis, listas) só conhece as unidades dele
+  ctx.unidades = souAdmin && !souSuper ? unidades.filter((u) => minhasUnidades.includes(u.id)) : unidades;
+  if (ehAdmin && !souSuper && ctx.unidade && !minhasUnidades.includes(ctx.unidade)) ctx.unidade = '';
+  if (ehAdmin && !souSuper && ctx.unidades.length === 1) ctx.unidade = ctx.unidades[0].id;
   // admin lê os perfis completos (nome no EVO para a divisão); consultora só a lista pública da equipe
   const base = souAdmin ? (await dados.perfis()).filter((p) => p.ativo && p.acesso_tarefas) : equipe;
   ctx.consultoras = base.filter((p) => p.papel_tarefas === 'consultora' && p.ordem_rodizio != null)
@@ -178,14 +186,17 @@ function montarMenu() {
     return `${titulo}<li data-li="${rota}"><a href="#/${rota}" data-rota="${rota}">${icone(r.icone)}<span>${esc(r.titulo)}</span><b class="cont" hidden></b></a></li>`;
   }).join('');
   $('nome-usuario').textContent = perfil.nome || perfil.email;
-  $('papel-usuario').textContent = ehAdmin ? 'Administrador' : 'Consultora';
+  $('papel-usuario').textContent = !ehAdmin ? 'Consultora' : souSuper ? 'Administrador geral'
+    : `Coordenador · ${ctx.unidades.map((u) => u.nome.replace('Positiva ', '')).join(', ') || 'sem unidade'}`;
   $('avatar').textContent = (perfil.nome || perfil.email || '?').trim()[0].toUpperCase();
   $('trocar-area').hidden = !areasDoPerfil(perfilReal).bonus;
   if (souAdmin) ligarVerComo();
   if (ehAdmin) {
     const sel = $('sel-unidade');
     sel.hidden = false;
-    sel.innerHTML = `<option value="">Todas as unidades</option>${ctx.unidades.map((u) => `<option value="${u.id}" ${u.id === ctx.unidade ? 'selected' : ''}>${esc(u.nome)}</option>`).join('')}`;
+    const todas = souSuper ? '<option value="">Todas as unidades</option>'
+      : ctx.unidades.length > 1 ? '<option value="">Todas as minhas unidades</option>' : '';
+    sel.innerHTML = `${todas}${ctx.unidades.map((u) => `<option value="${u.id}" ${u.id === ctx.unidade ? 'selected' : ''}>${esc(u.nome)}</option>`).join('')}`;
     sel.addEventListener('change', () => {
       ctx.unidade = sel.value;
       try { localStorage.setItem('central_unidade', sel.value); } catch { /* sem armazenamento: vale só nesta visita */ }
@@ -217,7 +228,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261119173524`);
+    const tela = await import(`./telas/${modulo}.js?v=20261119175044`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

@@ -1,12 +1,17 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261119173524';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119173524';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119173524';
+import * as dados from '../dados.js?v=20261119175044';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119175044';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119175044';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
+// coordenador de unidade: só a equipe e o rodízio das unidades dele (o resto vale para todas e fica com o administrador geral)
+const ABAS_COORD = ['usuarios', 'rodizio'];
+
 export async function render(el, ctx, [aba = 'usuarios']) {
-  el.innerHTML = `<div class="cartao"><div class="abas">${ABAS.map(([id, r]) => `<button data-aba="${id}" class="${id === aba ? 'ativo' : ''}">${r}</button>`).join('')}</div><div id="aba"></div></div>`;
+  const abas = ctx.ehSuper ? ABAS : ABAS.filter(([id]) => ABAS_COORD.includes(id));
+  if (!abas.some(([id]) => id === aba)) aba = 'usuarios';
+  el.innerHTML = `<div class="cartao"><div class="abas">${abas.map(([id, r]) => `<button data-aba="${id}" class="${id === aba ? 'ativo' : ''}">${r}</button>`).join('')}</div><div id="aba"></div></div>`;
   el.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/configuracoes/${b.dataset.aba}`; }));
   const alvo = el.querySelector('#aba');
   const fn = { usuarios, rodizio, feriados, motivos, mensagens, whatsapp, evo }[aba] || usuarios;
@@ -17,17 +22,19 @@ export async function render(el, ctx, [aba = 'usuarios']) {
 const formPerfil = (p = {}, ctx, { comEmail = false } = {}) => `
   ${comEmail ? '<label class="campo">E-mail da pessoa<input id="email" type="email" placeholder="nome@exemplo.com"></label>' : ''}
   <label class="campo">Nome<input id="nome" value="${esc(p.nome || '')}"></label>
-  <label class="campo">Unidade<select id="unidade"><option value="">—</option>${ctx.unidades.map((u) => `<option value="${u.id}" ${u.id === p.unidade ? 'selected' : ''}>${esc(u.nome)}</option>`).join('')}</select></label>
+  <label class="campo">Unidade<select id="unidade">${ctx.ehSuper ? '<option value="">—</option>' : ''}${ctx.unidades.map((u) => `<option value="${u.id}" ${u.id === p.unidade ? 'selected' : ''}>${esc(u.nome)}</option>`).join('')}</select></label>
   <label class="campo">Nome no EVO (igual ao relatório)<input id="nome_evo" value="${esc(p.nome_evo || '')}" placeholder="ADRIELLY SANTANA SABINO"></label>
   <label class="campo">WhatsApp (com DDD)<input id="whatsapp" value="${esc(p.whatsapp || '')}" placeholder="27 99999-9999"></label>
-  <label class="campo">Central de Tarefas<select id="papel_tarefas"><option value="">Sem acesso</option><option value="consultora" ${p.papel_tarefas === 'consultora' ? 'selected' : ''}>Consultora</option><option value="admin" ${p.papel_tarefas === 'admin' ? 'selected' : ''}>Administrador</option></select></label>
+  <label class="campo">Central de Tarefas<select id="papel_tarefas"><option value="">Sem acesso</option><option value="consultora" ${p.papel_tarefas === 'consultora' ? 'selected' : ''}>Consultora</option>${ctx.ehSuper ? `<option value="admin" ${p.papel_tarefas === 'admin' ? 'selected' : ''}>Coordenador (administrador)</option>` : ''}</select></label>
+  ${ctx.ehSuper && !p.super_admin ? `<fieldset class="campo unidades-coord"><legend>Unidades que coordena <span class="dica">(só vale para coordenador; sem nenhuma marcada ele não vê unidade nenhuma)</span></legend>
+    ${ctx.unidades.map((u) => `<label><input type="checkbox" id="coord_${u.id}" ${(p.unidades_coord || []).includes(u.id) ? 'checked' : ''}> ${esc(u.nome.replace('Positiva ', ''))}</label>`).join('')}</fieldset>` : ''}
   <label class="campo">Ordem no rodízio/divisão da unidade (vazio = fora)<input id="ordem_rodizio" type="number" min="1" value="${p.ordem_rodizio ?? ''}"></label>
-  <label class="campo">Controle de Bônus<select id="papel_bonus"><option value="">Sem acesso</option><option value="consultant" ${p.papel_bonus === 'consultant' ? 'selected' : ''}>Consultor</option><option value="coordinator" ${p.papel_bonus === 'coordinator' ? 'selected' : ''}>Coordenador</option></select></label>
+  <label class="campo">Controle de Bônus<select id="papel_bonus"><option value="">Sem acesso</option><option value="consultant" ${p.papel_bonus === 'consultant' ? 'selected' : ''}>Consultor</option>${ctx.ehSuper ? `<option value="coordinator" ${p.papel_bonus === 'coordinator' ? 'selected' : ''}>Coordenador</option>` : ''}</select></label>
   <label class="campo">Nome nas vendas do bônus (igual ao relatório)<input id="nome_bonus" value="${esc(p.nome_bonus || '')}"></label>
   <label class="campo" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="ativo" ${p.ativo !== false ? 'checked' : ''}> Ativo</label>`;
 
 // Campos do formulário → colunas de profiles (null quando vazio). Devolve null se o WhatsApp for inválido.
-function camposPerfil(c) {
+function camposPerfil(c, ctx) {
   const tel = c.whatsapp.trim() ? normalizarTelefone(c.whatsapp) : null;
   if (c.whatsapp.trim() && !tel) { toast('WhatsApp inválido. Use DDD + número.', 'erro'); return null; }
   if (c.papel_tarefas === 'consultora' && !c.unidade) { toast('Escolha a unidade da consultora.', 'erro'); return null; }
@@ -37,8 +44,22 @@ function camposPerfil(c) {
     ordem_rodizio: c.ordem_rodizio ? +c.ordem_rodizio : null,
     acesso_bonus: !!c.papel_bonus, papel_bonus: c.papel_bonus || null, nome_bonus: c.nome_bonus.trim().toUpperCase() || null,
     ativo: c.ativo,
+    // as caixas de unidade só aparecem para o administrador geral
+    // (quem deixa de ser coordenador perde as unidades, senão o coordenador da unidade não consegue mais editá-la)
+    ...(ctx.ehSuper && ctx.unidades.some((u) => `coord_${u.id}` in c)
+      ? { unidades_coord: c.papel_tarefas === 'admin' ? ctx.unidades.filter((u) => c[`coord_${u.id}`]).map((u) => u.id) : [] } : {}),
   };
 }
+
+// o coordenador de unidade não edita coordenadores (nem a si mesmo): o banco recusaria sem avisar
+const podeEditar = (p, ctx) => ctx.ehSuper || (p.papel_tarefas !== 'admin' && p.papel_bonus !== 'coordinator' && !p.super_admin);
+const rotuloCentral = (p, ctx) => {
+  if (!p.acesso_tarefas) return '—';
+  if (p.papel_tarefas !== 'admin') return `Consultora${p.unidade ? `<span class="sub">${esc(ctx.nomeUnidade(p.unidade).replace('Positiva ', ''))}</span>` : ''}`;
+  if (p.super_admin) return 'Admin geral';
+  const us = (p.unidades_coord || []).map((u) => ctx.nomeUnidade(u).replace('Positiva ', '')).join(', ');
+  return `Coordenador<span class="sub">${us ? esc(us) : 'sem unidade'}</span>`;
+};
 
 async function usuarios(el, ctx) {
   const perfis = await dados.perfis();
@@ -46,10 +67,10 @@ async function usuarios(el, ctx) {
     <span class="dica">A pessoa recebe um e-mail com o link para criar a própria senha.</span></div>
     ${perfis.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Pessoa</th><th>Central</th><th>Bônus</th><th>Rodízio</th><th>WhatsApp</th><th></th></tr></thead><tbody>
     ${perfis.map((p) => `<tr data-id="${p.id}"><td class="nome">${esc(p.nome || '(sem nome)')}${p.ativo ? '' : ' <span class="selo vermelho">inativo</span>'}<span class="sub">${esc(p.email || '')}${p.nome_evo ? ` · EVO: ${esc(p.nome_evo)}` : ''}${p.nome_bonus ? ` · Bônus: ${esc(p.nome_bonus)}` : ''}</span></td>
-      <td>${p.acesso_tarefas ? (p.papel_tarefas === 'admin' ? 'Admin' : `Consultora${p.unidade ? `<span class="sub">${esc(ctx.nomeUnidade(p.unidade).replace('Positiva ', ''))}</span>` : ''}`) : '—'}</td>
+      <td>${rotuloCentral(p, ctx)}</td>
       <td>${p.acesso_bonus ? (p.papel_bonus === 'coordinator' ? 'Coordenador' : 'Consultor') : '—'}</td>
       <td>${p.ordem_rodizio ?? '—'}</td><td>${p.whatsapp ? esc(p.whatsapp) : '—'}</td>
-      <td class="acoes"><button class="btn sec peq" data-acao="link" title="Envia um e-mail para a pessoa criar ou trocar a senha">Enviar link de acesso</button> <button class="btn sec peq" data-acao="editar">Editar</button></td></tr>`).join('')}</tbody></table></div>` : vazio('Nenhum usuário ainda.')}
+      <td class="acoes"><button class="btn sec peq" data-acao="link" title="Envia um e-mail para a pessoa criar ou trocar a senha">Enviar link de acesso</button> ${podeEditar(p, ctx) ? '<button class="btn sec peq" data-acao="editar">Editar</button>' : ''}</td></tr>`).join('')}</tbody></table></div>` : vazio('Nenhum usuário ainda.')}
     <p class="dica" style="margin-top:12px">O link vence rápido e cada novo envio cancela os anteriores. Se a pessoa não recebeu ou o link venceu, use "Enviar link de acesso" e peça para ela abrir o e-mail MAIS RECENTE (olhe também o spam/lixo eletrônico).</p>`;
   el.onclick = async (e) => {
     const b = e.target.closest('[data-acao]');
@@ -58,7 +79,7 @@ async function usuarios(el, ctx) {
       const r = await modal('Convidar pessoa', formPerfil({}, ctx, { comEmail: true }),
         { ler: true, acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: null }, { rotulo: 'Enviar convite', valor: 'ok' }] });
       if (r?.valor !== 'ok') return;
-      const perfil = camposPerfil(r.campos);
+      const perfil = camposPerfil(r.campos, ctx);
       if (!perfil) return;
       try {
         await dados.convidar(r.campos.email, perfil);
@@ -78,7 +99,7 @@ async function usuarios(el, ctx) {
     const r = await modal(`Editar ${p.nome || p.email}`, formPerfil(p, ctx),
       { ler: true, acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: null }, { rotulo: 'Salvar', valor: 'ok' }] });
     if (r?.valor !== 'ok') return;
-    const campos = camposPerfil(r.campos);
+    const campos = camposPerfil(r.campos, ctx);
     if (!campos) return;
     try {
       await dados.atualizarPerfil(p.id, campos);
@@ -90,7 +111,7 @@ async function usuarios(el, ctx) {
 
 // ── Rodízio (um por unidade) ──
 async function rodizio(el, ctx) {
-  const unidades = await dados.unidades();
+  const unidades = (await dados.unidades()).filter((u) => ctx.unidades.some((x) => x.id === u.id));
   el.innerHTML = `<p class="dica" style="margin-bottom:14px">Cada unidade tem o próprio rodízio da inadimplência, na ordem definida em Usuários. Mudar a data só afeta semanas ainda não criadas.</p>
     <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Ordem</th><th>Primeira sexta</th><th></th></tr></thead><tbody>
     ${unidades.map((u) => `<tr data-u="${u.id}"><td class="nome">${esc(u.nome)}</td>

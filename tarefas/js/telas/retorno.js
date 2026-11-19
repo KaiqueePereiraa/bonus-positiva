@@ -1,9 +1,9 @@
 // Retorno do mês — quanto a Central trouxe de volta: alunos que voltaram, cobranças recebidas, matrículas.
 // Conta só o que aconteceu DEPOIS do contato da equipe (quem resolveu sozinho fica à parte, como comparação).
-import * as dados from '../dados.js?v=20261119173524';
-import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261119173524';
-import { retornoTotais, reais } from '../painel-regras.js?v=20261119173524';
-import { abasRelatorios } from './_comum.js?v=20261119173524';
+import * as dados from '../dados.js?v=20261119175044';
+import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261119175044';
+import { retornoTotais, reais } from '../painel-regras.js?v=20261119175044';
+import { abasRelatorios } from './_comum.js?v=20261119175044';
 
 let escolhido = null;
 
@@ -50,15 +50,16 @@ export async function render(el, ctx) {
       }).join('')}
     </div>
 
-    <div class="cartao nao-imprimir"><h2>Valores para o cálculo</h2>
+    ${ctx.ehSuper ? `<div class="cartao nao-imprimir"><h2>Valores para o cálculo</h2>
       <div class="filtros"><label class="campo">Mensalidade média do aluno (R$)<input class="ctrl" id="mensalidade" type="number" min="0" step="0.01" value="${t.mensalidade || ''}" placeholder="ex.: 289,90"></label>
         <label class="campo">Quanto vocês pagam pela plataforma por mês (R$)<input class="ctrl" id="plataforma" type="number" min="0" step="0.01" value="${t.plataforma || ''}" placeholder="ex.: 300"></label></div>
       <div class="linha-acoes" style="margin-top:10px"><button class="btn sec peq" id="salvar-valores">Salvar valores</button></div>
-      <p class="dica" style="margin-top:6px">A mensalidade média transforma "alunos que voltaram" e "matrículas" em R$. O valor da plataforma mostra quanto voltou para cada R$ 1 investido.</p></div>`;
+      <p class="dica" style="margin-top:6px">A mensalidade média transforma "alunos que voltaram" e "matrículas" em R$. O valor da plataforma mostra quanto voltou para cada R$ 1 investido.</p></div>` : ''}`;
 
   el.querySelector('#mes').onchange = (e) => { const [a, m] = e.target.value.split('-').map(Number); escolhido = { ano: a, mes: m }; render(el, ctx); };
   el.querySelector('#imprimir').onclick = () => window.print();
-  el.querySelector('#salvar-valores').onclick = async () => {
+  // os valores valem para todas as unidades: só o administrador geral muda
+  if (ctx.ehSuper) el.querySelector('#salvar-valores').onclick = async () => {
     const num = (id) => { const v = parseFloat(String(el.querySelector(id).value).replace(',', '.')); return Number.isFinite(v) && v > 0 ? v : null; };
     try {
       await dados.salvarConfig('mensalidade_media', num('#mensalidade'));

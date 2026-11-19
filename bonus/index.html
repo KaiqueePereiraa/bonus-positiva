@@ -620,10 +620,10 @@ async function syncFromSupabase() {
       db.from('unassigned_sales').select('*').eq('month', MONTH),
       db.from('manual_sales').select('*').eq('month', MONTH),
     ]);
-    disputes = (dbD || []).map(dbRowToDispute);
+    disputes = (dbD || []).filter(r => unidadePermitida(r.unit)).map(dbRowToDispute);
     const overrides = {
-      unassigned: (dbU || []).map(r => ({ id: r.sale_id, unit: r.unit })),
-      added: (dbM || []).map(dbRowToManual),
+      unassigned: (dbU || []).filter(r => unidadePermitida(r.unit)).map(r => ({ id: r.sale_id, unit: r.unit })),
+      added: (dbM || []).filter(r => unidadePermitida(r.unit)).map(dbRowToManual),
     };
     localStorage.setItem(DISPUTES_KEY,  JSON.stringify(disputes));
     localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
@@ -633,7 +633,7 @@ async function syncFromSupabase() {
   // (migração não rodada), não deve derrubar a sincronização de disputas/vendas acima.
   try {
     const { data: dbDed } = await db.from('deductions').select('*').eq('month', MONTH);
-    deductions = (dbDed || []).map(dbRowToDeduction);
+    deductions = (dbDed || []).filter(r => unidadePermitida(r.unit)).map(dbRowToDeduction);
     localStorage.setItem(DEDUCTIONS_KEY, JSON.stringify(deductions));
   } catch(e) { console.warn('Deductions sync failed (rode a migração deductions?)', e); }
 
@@ -785,6 +785,9 @@ let UNIT_KEYS  = [];
 let UNIT_LABELS= {};
 let ALL_MONTHS = [];
 let DEFAULT_CONSULTANT = '';
+// Coordenador de unidade: só as unidades marcadas no perfil (null = todas — super admin e consultores).
+let UNIDADES_PERMITIDAS = null;
+const unidadePermitida = (u) => !UNIDADES_PERMITIDAS || UNIDADES_PERMITIDAS.includes(u);
 
 // Lê a publicação do mês pedido (?mes=Outubro/2026) ou a mais recente, e as vendas dela. Desde 17/11/2026 o mês atual
 // é publicado sozinho toda madrugada pela EVO (função evo-bonus); os meses anteriores continuam disponíveis no seletor.
@@ -802,9 +805,9 @@ async function carregarPublicacao() {
     vendas.push(...data.map(r => r.dados));
     if (data.length < 1000) break;
   }
-  RAW_SALES = vendas;
+  RAW_SALES = vendas.filter(v => unidadePermitida(v.unit));
   MONTH = pub.mes;
-  UNIT_KEYS = pub.unidades;
+  UNIT_KEYS = pub.unidades.filter(unidadePermitida);
   UNIT_LABELS = pub.rotulos;
   ALL_MONTHS = pub.meses;
   DEFAULT_CONSULTANT = pub.default_consultant;
@@ -844,19 +847,20 @@ function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
 
 function loadDisputes() {
   const saved = localStorage.getItem(DISPUTES_KEY);
-  return saved ? JSON.parse(saved) : [];
+  return saved ? JSON.parse(saved).filter(d => unidadePermitida(d.unit)) : [];
 }
 function saveDisputesLocal(d) { localStorage.setItem(DISPUTES_KEY, JSON.stringify(d)); }
 
 function loadDeductions() {
   const saved = localStorage.getItem(DEDUCTIONS_KEY);
-  return saved ? JSON.parse(saved) : [];
+  return saved ? JSON.parse(saved).filter(d => unidadePermitida(d.unit)) : [];
 }
 function saveDeductionsLocal(d) { localStorage.setItem(DEDUCTIONS_KEY, JSON.stringify(d)); }
 
 function loadOverrides() {
   const saved = localStorage.getItem(OVERRIDES_KEY);
-  return saved ? JSON.parse(saved) : { unassigned: [], added: [] };
+  const o = saved ? JSON.parse(saved) : { unassigned: [], added: [] };
+  return { ...o, unassigned: (o.unassigned || []).filter(x => unidadePermitida(x.unit)), added: (o.added || []).filter(x => unidadePermitida(x.unit)) };
 }
 function saveOverridesLocal(o) { localStorage.setItem(OVERRIDES_KEY, JSON.stringify(o)); }
 
@@ -950,7 +954,7 @@ function buildTabs() {
   if (session.role === 'coordinator') {
     const allBtn = document.createElement('button');
     allBtn.className = 'tab-btn active';
-    allBtn.textContent = '🏢 Todas as Unidades';
+    allBtn.textContent = UNIDADES_PERMITIDAS ? '🏢 Minhas unidades' : '🏢 Todas as Unidades';
     allBtn.onclick = () => switchUnit(null, allBtn);
     bar.appendChild(allBtn);
 
@@ -3079,6 +3083,7 @@ function destroyCharts() {
     name: p.nome_bonus || p.nome,          // precisa ser igual ao nome nas vendas
     role: p.papel_bonus === 'coordinator' ? 'coordinator' : 'consultant',
   };
+  if (session.role === 'coordinator' && !p.super_admin) UNIDADES_PERMITIDAS = p.unidades_coord || [];
   document.getElementById('btn-trocar').hidden = !(p.acesso_tarefas && p.papel_tarefas);
   if (!(await carregarPublicacao())) {
     document.getElementById('carregando-msg').textContent = 'Não foi possível carregar o bônus. Atualize a página.';

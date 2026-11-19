@@ -128,6 +128,11 @@ table.tabela{width:100%;border-collapse:collapse;font-size:14px}
 .campo{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.4px}
 .campo input,.campo select,.campo textarea,select.ctrl,input.ctrl,textarea.ctrl{padding:9px 12px;border:2px solid var(--line);border-radius:10px;font-size:14px;color:var(--dark);background:var(--white);text-transform:none;letter-spacing:0;font-weight:500;outline:none;min-width:0}
 .campo input:focus,.campo select:focus,.campo textarea:focus,.ctrl:focus{border-color:var(--navy)}
+.unidades-coord{border:2px solid var(--line);border-radius:10px;padding:8px 12px 10px;flex-direction:row;flex-wrap:wrap;gap:6px 18px}
+.unidades-coord legend{padding:0 4px}
+.unidades-coord legend .dica{text-transform:none;letter-spacing:0;font-weight:500}
+.unidades-coord label{display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-weight:600;font-size:14px;color:var(--dark)}
+.unidades-coord input{padding:0}
 textarea.ctrl{resize:vertical;min-height:38px;width:100%}
 .upload{border:2px dashed var(--gray);border-radius:var(--radius);padding:22px;text-align:center;color:var(--mid);font-size:14px;cursor:pointer;transition:border-color .15s,background .15s;display:block}
 .upload:hover,.upload.arrastando{border-color:var(--navy);background:#F7F9FB}
