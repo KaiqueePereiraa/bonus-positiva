@@ -1,9 +1,11 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118201435';
-import * as dados from './dados.js?v=20261118201435';
-import { hojeSP } from './regras.js?v=20261118201435';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118201435';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118201435';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118221710';
+import * as dados from './dados.js?v=20261118221710';
+import { hojeSP } from './regras.js?v=20261118221710';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118221710';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118221710';
+import { anel, sequencia } from './jogo.js?v=20261118221710';
+import { anelSvg, animar, maisUm, festaMinimoUmaVez, celebrar } from './jogo-visual.js?v=20261118221710';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -56,8 +58,15 @@ const podeVer = (r) => r.quem === 'todos' || (r.quem === 'admin') === ehAdmin;
 const $ = (id) => document.getElementById(id);
 const icone = (n) => `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONES[n]}</svg>`;
 
-const perfil = await exigirArea('tarefas');
-const ehAdmin = perfil.papel_tarefas === 'admin';
+const perfilReal = await exigirArea('tarefas');
+const souAdmin = perfilReal.papel_tarefas === 'admin';
+// "Ver como consultora": o coordenador escolhe uma consultora e a Central vira a tela dela (só para olhar; dados.js
+// recusa salvar e o WhatsApp não abre). Guardado só nesta aba (sessionStorage): fechou a aba, volta a ser coordenador.
+const CHAVE_VER_COMO = 'central_ver_como';
+const lerVerComo = () => { try { return sessionStorage.getItem(CHAVE_VER_COMO); } catch { return null; } };
+const verComoId = souAdmin ? lerVerComo() : null;
+const ehAdmin = souAdmin && !verComoId;
+let perfil = perfilReal;
 
 const ctx = {
   perfil,
@@ -87,12 +96,76 @@ async function carregarBase() {
   ctx.equipe = equipe;
   ctx.unidades = unidades;
   // admin lê os perfis completos (nome no EVO para a divisão); consultora só a lista pública da equipe
-  const base = ehAdmin ? (await dados.perfis()).filter((p) => p.ativo && p.acesso_tarefas) : equipe;
+  const base = souAdmin ? (await dados.perfis()).filter((p) => p.ativo && p.acesso_tarefas) : equipe;
   ctx.consultoras = base.filter((p) => p.papel_tarefas === 'consultora' && p.ordem_rodizio != null)
     .sort((a, b) => a.ordem_rodizio - b.ordem_rodizio);
   ctx.motivos = motivos;
+  if (verComoId) {   // troca o perfil pelo da consultora escolhida
+    const alvo = base.find((p) => p.id === verComoId && p.papel_tarefas === 'consultora');
+    if (!alvo) { sairDoVerComo(); return; }
+    perfil = alvo; ctx.perfil = alvo; ctx.unidade = alvo.unidade;
+    dados.verComo(alvo.id);
+  }
   ctx.controles = Object.fromEntries(controles.map((c) => [c.id, c]));
   if (ehAdmin) await dados.garantirInadimplencia().catch(() => {}); // o agendador também faz isso de madrugada
+}
+
+function sairDoVerComo() {
+  try { sessionStorage.removeItem(CHAVE_VER_COMO); } catch { /* segue */ }
+  history.replaceState(null, '', '#/painel');   // sem disparar a troca de tela antes de recarregar
+  location.reload();
+}
+
+async function escolherConsultora() {
+  const porUnidade = ctx.unidadesAtivas().map((u) => `<optgroup label="${esc(u.nome)}">${ctx.consultorasDa(u.id)
+    .map((c) => `<option value="${c.id}" ${c.id === verComoId ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</optgroup>`).join('');
+  const r = await modal('Ver a Central como consultora', `<p>Escolha uma consultora: a Central mostra exatamente a tela dela, com os dados dela de hoje
+      (Meu dia, listas, desempenho).</p>
+    <p class="aviso-so-olhar">👁 É só para olhar: <b>nada é salvo</b> e o botão do <b>WhatsApp não abre</b> (para não mandar mensagem a aluno).</p>
+    <label class="campo">Consultora<select id="ver-como-sel">${porUnidade}</select></label>`,
+  { acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: null }, { rotulo: 'Ver como ela →', classe: 'verde', valor: 'ok' }], ler: true });
+  const id = r?.valor === 'ok' && r.campos['ver-como-sel'];
+  if (!id) return;
+  try { sessionStorage.setItem(CHAVE_VER_COMO, id); } catch { toast('Este navegador não deixou guardar a escolha.', 'erro'); return; }
+  history.replaceState(null, '', '#/meu-dia');
+  location.reload();
+}
+
+// Botão no menu do coordenador e, no modo "ver como", a faixa no topo com Trocar / Voltar
+function ligarVerComo() {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'btn-ver-como';
+  b.innerHTML = verComoId ? '↩ Voltar a ser coordenador' : '👁 Ver como consultora';
+  b.addEventListener('click', () => (verComoId ? sairDoVerComo() : escolherConsultora()));
+  $('lateral').querySelector('.pe').prepend(b);
+  if (!verComoId) {   // também no topo, ao lado do sino: no notebook o pé do menu fica escondido (pedido de 18/11/2026)
+    const t = document.createElement('button');
+    t.type = 'button'; t.className = 'btn-topo-ver-como'; t.title = 'Ver a Central como uma consultora vê (só para olhar)';
+    t.innerHTML = '👁 <span>Ver como consultora</span>';
+    t.addEventListener('click', escolherConsultora);
+    $('sino').before(t);
+    return;
+  }
+  document.body.classList.add('modo-ver-como');
+  const f = document.createElement('div');
+  f.className = 'faixa-ver-como';
+  f.innerHTML = `<span>👁 Vendo como <b>${esc(perfil.nome)}</b> · consultora ${esc(ctx.nomeUnidade(perfil.unidade).replace('Positiva ', ''))}.
+      <small>Só para olhar: nada é salvo e o WhatsApp não abre.</small></span>
+    <span class="fvc-acoes"><button type="button" data-a="efeitos">✨ Ver comemorações</button><button type="button" data-a="trocar">Trocar</button><button type="button" data-a="sair">Voltar a ser coordenador</button></span>`;
+  f.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-a]')?.dataset.a;
+    if (a === 'trocar') escolherConsultora();
+    else if (a === 'sair') sairDoVerComo();
+    else if (a === 'efeitos') mostrarComemoracoes();
+  });
+  document.querySelector('.principal').prepend(f);
+}
+
+// Mostra, sem salvar nada, as comemorações que a consultora vê (contato marcado, mínimo batido, resultado)
+function mostrarComemoracoes() {
+  maisUm($('hud').hidden ? $('titulo') : $('hud'));
+  celebrar('Mínimo do dia batido!', 'Exemplo: assim aparece quando ela bate o mínimo. Agora é volta extra.', { icone: '⚡' });
+  setTimeout(() => celebrar('Seu contato deu resultado!', 'Exemplo: Maria voltou a treinar depois da sua mensagem.', { icone: '🌟' }), 4700);
 }
 
 function montarMenu() {
@@ -105,7 +178,8 @@ function montarMenu() {
   $('nome-usuario').textContent = perfil.nome || perfil.email;
   $('papel-usuario').textContent = ehAdmin ? 'Administrador' : 'Consultora';
   $('avatar').textContent = (perfil.nome || perfil.email || '?').trim()[0].toUpperCase();
-  $('trocar-area').hidden = !areasDoPerfil(perfil).bonus;
+  $('trocar-area').hidden = !areasDoPerfil(perfilReal).bonus;
+  if (souAdmin) ligarVerComo();
   if (ehAdmin) {
     const sel = $('sel-unidade');
     sel.hidden = false;
@@ -133,6 +207,7 @@ async function navegar() {
   if (!def || !podeVer(def)) { location.replace(`#/${padrao}`); return; }
   const { titulo, modulo } = def;
   document.querySelectorAll('#menu a').forEach((a) => a.classList.toggle('ativo', a.dataset.rota === rota || a.dataset.rota === def.menu || (rota === 'minhas-tarefas' && a.dataset.rota === 'meu-dia')));
+  document.body.dataset.rota = rota;   // o placar do topo some no Meu dia (lá o placar é grande)
   $('titulo').textContent = titulo;
   $('subtitulo').textContent = def.frase || '';
   document.title = `${titulo} — Central de Tarefas`;
@@ -140,7 +215,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261118201435`);
+    const tela = await import(`./telas/${modulo}.js?v=20261118221710`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -255,7 +330,33 @@ async function pedirJustificativas() {
     } catch (e) { aviso = e?.message || 'Não foi possível enviar. Tente de novo.'; }
   }
 }
-if (!ehAdmin) await pedirJustificativas();
+// ── Placar do topo (consultora): anel do mínimo de hoje + sequência 🔥, em todas as telas ──
+// Atualiza a cada contato marcado (evento central:contato, disparado por atualizarCabecalho) e comemora o mínimo.
+let diasFechados = null, ultimoFeitos = null;
+async function atualizarHud(animarMudanca = false) {
+  const el = $('hud');
+  try {
+    if (!diasFechados) diasFechados = await dados.meusDias(perfil.id).catch(() => []);
+    const d = await dados.meuDia();
+    const minimo = d.listas.reduce((s, l) => s + l.minimo, 0), feitos = d.feitos_hoje;
+    if (!minimo && !feitos) { el.hidden = true; return; }
+    const a = anel(feitos, minimo);
+    const seq = sequencia(diasFechados, minimo ? { feitos, minimo } : null);
+    el.hidden = false;
+    el.className = `hud${a.bateu ? ' bateu' : ''}`;
+    el.title = minimo ? `Hoje: ${feitos} de ${minimo} do mínimo${a.extra ? ` (+${a.extra} extra)` : ''} · ${seq.atual} dia(s) seguidos` : '';
+    el.innerHTML = `${anelSvg(a, { tam: 38, traco: 5 })}<span class="hud-num"><b>${feitos}</b>/${minimo || '–'}</span>${seq.atual ? `<span class="hud-fogo">🔥${seq.atual}</span>` : ''}`;
+    animar(el);
+    if (animarMudanca && ultimoFeitos != null && feitos > ultimoFeitos) maisUm(el, `+${feitos - ultimoFeitos}`);
+    if (minimo && ultimoFeitos != null && ultimoFeitos < minimo && feitos >= minimo) festaMinimoUmaVez(d.hoje, feitos, minimo, perfil.id);
+    ultimoFeitos = feitos;
+  } catch (e) { console.error(e); }
+}
+let hudTimer;
+if (!ehAdmin) window.addEventListener('central:contato', () => { clearTimeout(hudTimer); hudTimer = setTimeout(() => atualizarHud(true), 500); });
+
+if (!souAdmin) await pedirJustificativas();
+if (!ehAdmin) atualizarHud();
 montarMenu();
 ligarSino();
 window.addEventListener('hashchange', navegar);

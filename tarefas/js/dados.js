@@ -1,9 +1,19 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261118201435';
+import { sb } from '../../shared/sessao.js?v=20261118221710';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
-const rpc = async (nome, args) => ok(await sb.rpc(nome, args));
+// "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
+let comoId = null;
+export const verComo = (id) => { comoId = id || null; };
+export const vendoComo = () => comoId;
+export const MSG_SO_OLHAR = 'Você está vendo como consultora: neste modo nada é salvo e o WhatsApp não abre.';
+const SO_LEITURA = new Set(['listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como']);
+const travar = () => { if (comoId) throw new Error(MSG_SO_OLHAR); };
+const rpc = async (nome, args) => {
+  if (comoId && !SO_LEITURA.has(nome)) travar();
+  return ok(await sb.rpc(nome, args));
+};
 
 // ── Leituras ──
 export const equipe = () => rpc('listar_equipe');
@@ -94,7 +104,7 @@ export async function listasFazer({ unidade } = {}) {
   if (unidade) q = q.eq('unidade', unidade);
   return ok(await q);
 }
-export const editarListaFazer = async (id, campos) => ok(await sb.from('listas_fazer').update(campos).eq('id', id));
+export const editarListaFazer = async (id, campos) => travar() ?? ok(await sb.from('listas_fazer').update(campos).eq('id', id));
 
 // ── Ações da consultora ──
 export const marcar = (id) => rpc('marcar_enviada', { p_item: id });
@@ -117,6 +127,7 @@ export const salvarMotivo = (id, motivo, texto, observacao) =>
 export async function enviarArquivo(controle, userId, arquivo) {
   const nome = arquivo.name.replace(/[^\w.\-]+/g, '_');
   const caminho = `${controle}/${userId}/${Date.now()}-${nome}`;
+  travar();
   ok(await sb.storage.from('importacoes').upload(caminho, arquivo, { upsert: false }));
   return caminho;
 }
@@ -178,8 +189,24 @@ export const painelGestor = () => rpc('painel_gestor', {});
 // Plano do dia
 export const justificativaPendente = () => rpc('justificativa_pendente', {});
 export const justificarDia = (data, texto, naoTrabalhei) => rpc('justificar_dia', { p_data: data, p_texto: texto, p_nao_trabalhei: !!naoTrabalhei });
-export const meuDia = () => rpc('meu_dia', {});
-export const minhaMetaSemana = () => rpc('minha_meta_semana', {});
+export const meuDia = () => (comoId ? rpc('meu_dia_como', { p_user: comoId }) : rpc('meu_dia', {}));
+// contatos que ELA fez hoje, por lista (missões do Meu dia). Resolvidos sozinhos pela EVO têm feito_por vazio: não contam.
+export async function meusFeitosHojePorLista(userId, hoje) {
+  const linhas = ok(await sb.from('itens').select('tarefa_id').eq('feito_por', userId).gte('feito_em', `${hoje}T00:00:00-03:00`).limit(5000));
+  const por = {};
+  for (const l of linhas) por[l.tarefa_id] = (por[l.tarefa_id] || 0) + 1;
+  return por;
+}
+// contatos DELA que deram certo (conferidos pela EVO de madrugada): nome, tipo e quando
+export async function meusResultados(userId) {
+  const linhas = ok(await sb.from('itens').select('nome,controle_id,resultado,resultado_registrado_em').eq('feito_por', userId)
+    .in('resultado', ['voltou', 'pagou', 'matriculou', 'renovou']).order('resultado_registrado_em', { ascending: false }).limit(3000));
+  return linhas.map((l) => ({ ...l, quando: l.resultado_registrado_em }));
+}
+// dias úteis já fechados da consultora (sequência e conquistas do Meu dia); RLS só deixa ler os próprios
+export const meusDias = async (userId) => ok(await sb.from('dias_consultora').select('data,minimo,feitos,bateu,trabalhou')
+  .eq('consultora_id', userId).order('data', { ascending: false }).limit(800));
+export const minhaMetaSemana = () => (comoId ? rpc('minha_meta_semana_como', { p_user: comoId }) : rpc('minha_meta_semana', {}));
 export const desempenho = (de, ate) => rpc('desempenho', { p_de: de, p_ate: ate });
 export const retornoMes = (ano, mes) => rpc('retorno_mes', { p_ano: ano, p_mes: mes });
 export const descobrirFiliaisEvo = () => evoAcao('filiais');
@@ -234,5 +261,7 @@ export async function vistoAte(userId) {
   const d = ok(await sb.from('avisos_vistos').select('visto_ate').eq('user_id', userId).maybeSingle());
   return d?.visto_ate || null;
 }
-export const marcarAvisosVistos = async (userId) =>
-  ok(await sb.from('avisos_vistos').upsert({ user_id: userId, visto_ate: new Date().toISOString() }));
+export const marcarAvisosVistos = async (userId) => {
+  travar();
+  return ok(await sb.from('avisos_vistos').upsert({ user_id: userId, visto_ate: new Date().toISOString() }));
+};

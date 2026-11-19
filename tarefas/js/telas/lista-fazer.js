@@ -1,10 +1,10 @@
 // Lista a fazer — o coordenador sobe uma lista de contatos com a explicação do que fazer; ela é dividida
 // igualmente entre as consultoras da unidade e cada uma marca o que já fez (com observação opcional).
 // A consultora também pode subir uma lista PRÓPRIA (só dela, sem divisão) para se organizar.
-import * as dados from '../dados.js?v=20261118201435';
-import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261118201435';
-import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261118201435';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261118201435';
+import * as dados from '../dados.js?v=20261118221710';
+import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261118221710';
+import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261118221710';
+import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261118221710';
 
 const texto = (s) => esc(s).replaceAll('\n', '<br>');
 const FAIXA_VERDE = 'background:#F4FAEC;border-color:#D5EDB8;color:var(--dark)';
@@ -93,6 +93,7 @@ async function listaContatos(el, ctx, tarefa, lista) {
     const tr = b.closest('tr');
     const id = tr.dataset.id;
     if (b.dataset.acao === 'wa') {
+      if (dados.vendoComo()) { toast(dados.MSG_SO_OLHAR, 'erro'); return; }   // ver como consultora: não abre WhatsApp
       const i = itens.find((x) => x.id === id);
       // abrir o WhatsApp não marca nada: o contato pode ser por ligação, e quem decide é a consultora
       const url = linkWhatsApp(normalizarTelefone(i.celular), montarMensagem(lista?.mensagem || '', { nome: i.nome }), { celular: ehCelular() });

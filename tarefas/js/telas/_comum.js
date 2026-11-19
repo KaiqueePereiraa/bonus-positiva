@@ -1,8 +1,9 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261118201435';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118201435';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118201435';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118201435';
+import * as dados from '../dados.js?v=20261118221710';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118221710';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118221710';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118221710';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261118221710';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -57,12 +58,19 @@ export function atualizarCabecalho(tarefa, itens) {
   const concluidaEm = total && feitos === total ? itens.map((i) => i.feito_em).sort().at(-1) : null;
   const { status, prazoProximo } = statusTarefa({ total, feitos, prazo: tarefa.prazo, concluidaEm });
   const c = (n) => cab.querySelector(`[data-c="${n}"]`);
+  const antes = +c('feitos').textContent;
   c('selo').innerHTML = seloStatus(status, prazoProximo);
   c('total').textContent = total;
   c('feitos').textContent = feitos;
   c('pendentes').textContent = total - feitos;
   c('barra').innerHTML = barra(feitos, total);
   c('concluida').textContent = concluidaEm ? ` · concluída ${dataHora(concluidaEm)}` : '';
+  // gamificação: "+1" no número, festa quando a lista acaba e aviso para o placar do topo (app.js)
+  if (feitos > antes) {
+    maisUm(c('feitos'), `+${feitos - antes}`);
+    if (total && feitos === total) celebrar('Lista concluída!', 'Todos os contatos desta lista feitos. 💪', { icone: '🏁' });
+  }
+  if (feitos !== antes) window.dispatchEvent(new CustomEvent('central:contato', { detail: { feitos, antes } }));
 }
 
 // Recarrega a tela inteira mantendo a rolagem (para ações que mudam a estrutura da página).
@@ -159,6 +167,7 @@ export async function listaContatos(el, ctx, tarefa) {
     const id = tr.dataset.id;
     const campos = () => ({ obs: tr.querySelector('[data-campo="obs"]')?.value ?? '', classe: tr.querySelector('[data-campo="classe"]')?.value ?? '' });
     if (b.dataset.acao === 'wa') {
+      if (dados.vendoComo()) { toast(dados.MSG_SO_OLHAR, 'erro'); return; }   // ver como consultora: não abre WhatsApp
       if (ehRisco && campos().classe) { toast('Você escolheu um tipo de aluno (Gympass, benefício colaborador, contrato VIP ou que não quer mais contato): use "Registrar" em vez do WhatsApp.', 'erro'); return; }
       const i = itens.find((x) => x.id === id);
       const url = linkWhatsApp(normalizarTelefone(i.celular), montarMensagem(modelo, { nome: i.nome }), { celular: ehCelular() });
