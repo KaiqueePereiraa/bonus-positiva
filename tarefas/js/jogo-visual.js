@@ -1,7 +1,7 @@
 // Peças visuais da gamificação: anel do dia, trilha da semana, estante de conquistas e os efeitos
 // (confete, "+1" flutuante, número contando). Sem biblioteca: SVG + CSS (css/jogo.css).
 // Quem prefere menos movimento (prefers-reduced-motion) não vê confete nem contagem animada.
-import { esc } from './ui.js?v=20261118223121';
+import { esc } from './ui.js?v=20261118223633';
 
 const calmo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -60,8 +60,8 @@ export function contar(el, ate, ms = 900) {
   requestAnimationFrame(passo);
 }
 
-const ICONE_DIA = { bateu: '✓', 'hoje-ok': '✓', nao: '×', folga: '–', livre: '·', hoje: '', futuro: '' };
-const TITULO_DIA = { bateu: 'mínimo batido', 'hoje-ok': 'mínimo batido hoje', nao: 'mínimo não batido', folga: 'folga/falta/atestado', livre: 'sem lista', hoje: 'hoje', futuro: '' };
+const ICONE_DIA = { bateu: '✓', 'hoje-ok': '✓', protegido: '🛡', nao: '×', folga: '–', livre: '·', hoje: '', futuro: '' };
+const TITULO_DIA = { bateu: 'mínimo batido', 'hoje-ok': 'mínimo batido hoje', protegido: 'escudo usado: a sequência continuou', nao: 'mínimo não batido', folga: 'folga/falta/atestado', livre: 'sem lista', hoje: 'hoje', futuro: '' };
 export const trilhaHtml = (trilha) => `<ol class="trilha" aria-label="Sua semana">${trilha.map((d) =>
   `<li class="${d.estado}" title="${d.nome}: ${TITULO_DIA[d.estado]}"><i>${ICONE_DIA[d.estado]}</i><span>${d.nome}</span></li>`).join('')}</ol>`;
 
@@ -116,7 +116,18 @@ export function maisUm(alvo, texto = '+1') {
 }
 
 // Faixa de comemoração que desce do topo (mínimo batido, lista concluída).
-export function celebrar(titulo, texto, { icone = '🎉', confetes = true } = {}) {
+// Em fila: se já tem uma comemoração na tela, a próxima espera ela sair (círculo → escudo → resultado, uma de cada vez).
+const filaFestas = [];
+let festaNaTela = false;
+export function celebrar(titulo, texto, opcoes = {}) {
+  filaFestas.push([titulo, texto, opcoes]);
+  if (!festaNaTela) proximaFesta();
+}
+function proximaFesta() {
+  const item = filaFestas.shift();
+  if (!item) { festaNaTela = false; return; }
+  festaNaTela = true;
+  const [titulo, texto, { icone = '🎉', confetes = true } = {}] = item;
   document.querySelector('.festa')?.remove();
   const f = document.createElement('div');
   f.className = 'festa';
@@ -125,7 +136,7 @@ export function celebrar(titulo, texto, { icone = '🎉', confetes = true } = {}
   document.body.append(f);
   requestAnimationFrame(() => f.classList.add('visivel'));
   if (confetes) confete();
-  setTimeout(() => { f.classList.remove('visivel'); setTimeout(() => f.remove(), 400); }, 4200);
+  setTimeout(() => { f.classList.remove('visivel'); setTimeout(() => { f.remove(); proximaFesta(); }, 450); }, 4200);
 }
 
 // Festa quando um círculo fecha: uma vez por círculo por dia (guardado no navegador, por pessoa).
@@ -141,4 +152,35 @@ export function festaCirculo(hoje, c, quem = '') {
   else if (c.completos === 1) celebrar('Mínimo do dia batido!', `Círculo 1 fechado. Agora o círculo 2: mais ${c.passo} contatos.`, { icone: '⚡' });
   else celebrar(`Círculo ${c.completos} fechado!`, c.ultimo ? `Último círculo: faltam ${c.falta} para zerar as listas.` : `Agora o círculo ${c.completos + 1}: mais ${c.passo} contatos.`, { icone: '⭕' });
   return true;
+}
+
+// ── Sequência: chama, escudos e o caminho dos próximos prêmios ──
+export function chipsSequencia(cam) {
+  const escudos = Array.from({ length: 2 }, (_, i) => `<i class="${i < cam.escudos ? 'tem' : ''}">🛡️</i>`).join('');
+  return `<span class="chip-fogo chama-${cam.chama.id} ${cam.emJogo ? 'em-jogo' : ''}" title="${esc(cam.chama.nome)}: dias úteis seguidos com o mínimo (folga não quebra)">
+      <i>🔥</i><b>${cam.atual}</b> ${cam.atual === 1 ? 'dia seguido' : 'dias seguidos'}<em>${esc(cam.chama.nome)}</em></span>
+    <span class="chip-escudos" title="Escudos: a cada 12 dias seguidos você ganha 1 (guarda até 2). Num dia sem o mínimo, ele salva a sequência sozinho. A justificativa do dia continua valendo.">${escudos}<b>${cam.escudos}</b></span>`;
+}
+export function caminhoHtml(cam) {
+  if (!cam.proximos.length) return '';
+  return `<div class="caminho"><small>Próximos prêmios da sequência</small><ol>${cam.proximos.map((p) =>
+    `<li class="${p.chama ? `chama-${p.chama}` : 'escudo'}"><i>${p.icone}</i><span><b>${p.falta === 1 ? 'amanhã' : `em ${p.falta} dias`}</b> ${esc(p.premio)}</span></li>`).join('')}</ol></div>`;
+}
+
+// Festas dos escudos: ganhou (a cada 12 dias) e usou (salvou a sequência). Uma vez cada, por pessoa.
+// Na primeira vez que a pessoa abre (sem registro), só festeja os eventos dos últimos 3 dias.
+export function festasDaSequencia(cam, hoje, quem = '') {
+  const chave = `central_festa_seq_${quem}`;
+  let visto = null;
+  try { visto = localStorage.getItem(chave); } catch { /* segue */ }
+  // sem registro: só os últimos 3 dias (não reprisa o histórico); depois, só o que for mais novo que o último festejado
+  const desde = visto || new Date(Date.parse(`${hoje}T12:00:00Z`) - 4 * 864e5).toISOString().slice(0, 10);
+  const novos = cam.eventos.map((e) => ({ ...e, data: e.hoje ? hoje : e.data })).filter((e) => e.data > desde && e.tipo !== 'quebrou');
+  for (const e of novos) {
+    if (e.tipo === 'ganhou') celebrar('Escudo conquistado! 🛡️', `${e.seq} dias seguidos com o mínimo. Se um dia não der, ele salva sua sequência sozinho.`, { icone: '🛡️' });
+    else if (e.tipo === 'usou') celebrar('Seu escudo salvou a sequência!', `Num dia sem o mínimo, o escudo segurou seus ${e.seq} dias seguidos. Bora proteger de novo!`, { icone: '🛡️', confetes: false });
+  }
+  const ultimo = novos.reduce((m, e) => (e.data > m ? e.data : m), visto || '');
+  if (ultimo) { try { localStorage.setItem(chave, ultimo); } catch { /* segue */ } }
+  return novos.length > 0;
 }

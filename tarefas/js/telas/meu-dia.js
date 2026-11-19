@@ -1,13 +1,13 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 4 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118223121';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118223121';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118223121';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118223121';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118223121';
-import { circulos, disponivelDe, sequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118223121';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar } from '../jogo-visual.js?v=20261118223121';
+import * as dados from '../dados.js?v=20261118223633';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118223633';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118223633';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118223633';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118223633';
+import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118223633';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118223633';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -49,8 +49,8 @@ export async function render(el, ctx) {
   // placar do dia: círculos (1º = mínimo; fechou, abre o próximo por dentro), sequência de dias e trilha da semana
   const hojeInfo = minimo ? { feitos, minimo } : null;
   const c = circulos(feitos, minimo, disponivelDe(d));
-  const seq = sequencia(dias, hojeInfo);
-  const trilha = trilhaSemana(dias, d.hoje, hojeInfo);
+  const seq = caminhoSequencia(dias, hojeInfo);   // sequência 🔥 com escudos 🛡️ e chama que muda de cor
+  const trilha = trilhaSemana(dias, d.hoje, hojeInfo, seq.estados);
   const premios = conquistasDoMes(dias, d.hoje, hojeInfo, meusRes || []);
   const subCirculo = !c ? '' : c.zerou ? 'listas zeradas' : c.nivel === 1 ? 'mínimo do dia' : `círculo ${c.nivel}${c.ultimo ? ' · o último' : ''}`;
   const tituloPlacar = !c ? '' : c.zerou ? 'Listas zeradas! 🏆' : !c.bateuMinimo ? `Faltam <em>${c.falta}</em> para o mínimo`
@@ -67,7 +67,7 @@ export async function render(el, ctx) {
         <li>Toque no botão verde <b>Começar</b>: ele abre a lista mais urgente.</li>
         <li>Em cada pessoa, toque em <b>WhatsApp</b>: a mensagem já vai pronta e o contato fica marcado sozinho.</li>
         <li>Feche pelo menos o <b>1º círculo</b> (o mínimo do dia). Fechou? Abre o próximo círculo para ir além. Se não der, no dia seguinte a Central pergunta o que aconteceu.</li>
-        <li>Mantenha a <b>sequência 🔥</b>: cada dia útil com o mínimo batido soma um dia. Folga não quebra.</li>
+        <li>Mantenha a <b>sequência 🔥</b>: cada dia útil com o mínimo soma um dia (folga não quebra) e a chama muda de cor. A cada 12 dias seguidos você ganha um <b>escudo 🛡️</b>, que salva a sequência num dia que não der.</li>
       </ol>
       <div class="linha-acoes" style="margin-top:12px"><button class="btn sec peq" id="guia-ok">Entendi</button></div></div>`}
 
@@ -82,13 +82,13 @@ export async function render(el, ctx) {
           <p class="placar-recado">${esc(recado.frase)}</p>`
         : '<h2 class="placar-titulo">Nada pendente hoje</h2><p class="placar-frase">Bom trabalho! 🎉 Aproveite para adiantar o que tiver prazo mais à frente.</p>'}
         <div class="placar-chips">
-          <span class="chip-fogo ${seq.atual ? 'aceso' : ''} ${seq.emJogo ? 'em-jogo' : ''}" title="Dias úteis seguidos com o mínimo batido (folga não quebra)">
-            <i>🔥</i><b>${seq.atual}</b> ${seq.atual === 1 ? 'dia seguido' : 'dias seguidos'}</span>
+          ${chipsSequencia(seq)}
           ${seq.recorde > 1 ? `<span class="chip-recorde">recorde: <b>${seq.recorde}</b></span>` : ''}
           ${c?.completos ? `<span class="chip-circulos">⭕ <b>${c.completos}</b> ${c.completos === 1 ? 'círculo fechado' : 'círculos fechados'} hoje</span>` : ''}
           ${sem.dias ? `<span class="chip-recorde">semana: <b>${sem.bateu} de ${sem.dias}</b> dias batidos</span>` : ''}
         </div>
         ${trilhaHtml(trilha)}
+        ${caminhoHtml(seq)}
         ${primeira ? `<a class="btn verde grande btn-comecar" href="#/${ROTA_CONTROLE[primeira.controle_id]}/${primeira.tarefa_id}"><span>${c?.bateuMinimo ? `Círculo ${c.nivel}` : feitos ? 'Continuar' : 'Começar'}: ${esc(nomeLista(primeira))}</span><i>→</i></a>` : ''}
       </div>
     </section>
@@ -130,10 +130,11 @@ export async function render(el, ctx) {
 
   animar(el);
   // festa do círculo fechado, uma vez por círculo por dia (se ela fechou numa lista, a festa já aconteceu lá)
-  const festejouMinimo = festaCirculo(d.hoje, c, ctx.perfil.id);
+  festaCirculo(d.hoje, c, ctx.perfil.id);
+  festasDaSequencia(seq, d.hoje, ctx.perfil.id);   // escudo ganho ou usado (as festas entram em fila)
   const festa = res && fraseResultado(res.novos);
   if (res?.ultimo) { try { localStorage.setItem(chaveResultados(ctx.perfil.id), res.ultimo); } catch { /* sem armazenamento */ } }
-  if (festa) setTimeout(() => celebrar(festa.titulo, festa.texto, { icone: '🌟' }), festejouMinimo ? 4600 : 400);
+  if (festa) celebrar(festa.titulo, festa.texto, { icone: '🌟' });
 
   el.querySelector('#guia-ok')?.addEventListener('click', () => {
     try { localStorage.setItem(CHAVE_GUIA, '1'); } catch { /* sem armazenamento */ }

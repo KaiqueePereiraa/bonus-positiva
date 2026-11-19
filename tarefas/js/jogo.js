@@ -1,9 +1,9 @@
 // Gamificação da Central (visual): sequência de dias com o mínimo batido, trilha da semana, anel do dia e conquistas.
 // Usa só números que já existem — dias fechados (dias_consultora) + o dia de hoje (meu_dia). Não cria pontos nem regra
-// nova: o mínimo continua sendo o piso do dia, e o que passar dele aparece como "volta extra".
+// nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261118223121';
+import { hojeSP } from './regras.js?v=20261118223633';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -11,21 +11,57 @@ const iso = (ms) => new Date(ms).toISOString().slice(0, 10);
 const somar = (s, n) => iso(t(s) + n * DIA);
 const segundaDe = (s) => { const d = new Date(t(s)).getUTCDay(); return somar(s, d === 0 ? -6 : 1 - d); };
 
-// dias: [{ data, minimo, feitos, bateu, trabalhou }] (qualquer ordem; hoje nunca está aqui — fecha às 23h55)
-// hojeInfo: { feitos, minimo } de meu_dia. Dia de folga/falta/atestado (trabalhou=false) não quebra a sequência;
-// dia sem mínimo (minimo=0) também não. Hoje só soma quando o mínimo já foi batido; enquanto não, não quebra.
-export function sequencia(dias, hojeInfo = null) {
-  const ord = [...dias].sort((a, b) => b.data.localeCompare(a.data));
-  let atual = 0;
-  for (const d of ord) {
-    if (!d.trabalhou || d.minimo === 0) continue;
-    if (!d.bateu) break;
-    atual++;
-  }
+// ── Sequência 🔥, escudos 🛡️ e chama que evolui (pedido de 18/11/2026) ──
+// Dia útil com o mínimo batido soma 1. Folga/falta/atestado (trabalhou=false) e dia sem mínimo não contam nem quebram.
+// A cada 12 dias seguidos ela ganha um ESCUDO (guarda no máximo 2). Num dia sem o mínimo, um escudo é gasto sozinho e a
+// sequência continua (o dia não soma). Sem escudo, a sequência volta a zero. O escudo protege SÓ a sequência do jogo:
+// o dia sem mínimo continua pedindo justificativa normalmente.
+export const ESCUDO_A_CADA = 12;
+export const ESCUDOS_MAX = 2;
+export const CHAMAS = [
+  { min: 0, id: 'apagada', nome: 'Chama apagada' }, { min: 1, id: 'acesa', nome: 'Chama acesa' },
+  { min: 5, id: 'forte', nome: 'Chama forte' }, { min: 12, id: 'azul', nome: 'Chama azul' },
+  { min: 25, id: 'roxa', nome: 'Chama roxa' }, { min: 40, id: 'lendaria', nome: 'Chama lendária' },
+];
+export const chamaDe = (n) => [...CHAMAS].reverse().find((c) => n >= c.min);
+
+// dias: [{ data, minimo, feitos, bateu, trabalhou }] fechados (hoje nunca está aqui — fecha às 23h55); hojeInfo { feitos, minimo }.
+// Devolve o estado de cada dia (bateu | protegido | quebrou), os eventos (ganhou/usou escudo) e os próximos prêmios.
+export function caminhoSequencia(dias, hojeInfo = null) {
+  const validos = [...dias].filter((d) => d.trabalhou && d.minimo > 0).sort((a, b) => a.data.localeCompare(b.data));
   const bateuHoje = !!hojeInfo && hojeInfo.minimo > 0 && hojeInfo.feitos >= hojeInfo.minimo;
-  if (bateuHoje) atual++;
-  return { atual, bateuHoje, emJogo: !!hojeInfo && hojeInfo.minimo > 0 && !bateuHoje && atual > 0, recorde: Math.max(recorde(dias), atual) };
+  if (bateuHoje) validos.push({ data: '9999-12-31', hoje: true, bateu: true });
+  let atual = 0, escudos = 0, recorde = 0;
+  const estados = {}, eventos = [];
+  for (const d of validos) {
+    if (d.bateu) {
+      atual++;
+      if (atual % ESCUDO_A_CADA === 0 && escudos < ESCUDOS_MAX) { escudos++; eventos.push({ data: d.data, tipo: 'ganhou', seq: atual, hoje: !!d.hoje }); }
+      estados[d.data] = 'bateu';
+    } else if (escudos > 0) {
+      escudos--; estados[d.data] = 'protegido'; eventos.push({ data: d.data, tipo: 'usou', seq: atual });
+    } else {
+      if (atual >= 3) eventos.push({ data: d.data, tipo: 'quebrou', seq: atual });
+      atual = 0; estados[d.data] = 'quebrou';
+    }
+    recorde = Math.max(recorde, atual);
+  }
+  // próximos prêmios do caminho: escudo (a cada 12) e cada cor nova de chama
+  const proximos = [];
+  const proxEscudo = (Math.floor(atual / ESCUDO_A_CADA) + 1) * ESCUDO_A_CADA;
+  proximos.push({ dias: proxEscudo, falta: proxEscudo - atual, icone: '🛡️',
+    premio: escudos >= ESCUDOS_MAX ? 'escudo (você já guarda o máximo de 2)' : 'um escudo para a sequência' });
+  for (const c of CHAMAS) if (c.min > atual) proximos.push({ dias: c.min, falta: c.min - atual, icone: '🔥', premio: c.nome.toLowerCase(), chama: c.id });
+  proximos.sort((a, b) => a.falta - b.falta);
+  return {
+    atual, recorde, escudos, estados, eventos, bateuHoje,
+    emJogo: !!hojeInfo && hojeInfo.minimo > 0 && !bateuHoje && atual > 0,
+    chama: chamaDe(atual), proximos: proximos.slice(0, 3),
+  };
 }
+
+// Compatível com as telas antigas: { atual, bateuHoje, emJogo, recorde } (+ escudos e chama)
+export const sequencia = (dias, hojeInfo = null) => caminhoSequencia(dias, hojeInfo);
 
 export function recorde(dias) {
   let melhor = 0, corrida = 0;
@@ -39,7 +75,7 @@ export function recorde(dias) {
 
 // Segunda a sexta da semana de hoje: estado de cada dia para a trilha (bolinhas).
 // 'bateu' | 'nao' | 'folga' | 'hoje' | 'hoje-ok' | 'futuro' | 'livre' (passado sem fechamento: feriado ou sem lista)
-export function trilhaSemana(dias, hoje, hojeInfo = null) {
+export function trilhaSemana(dias, hoje, hojeInfo = null, estados = {}) {
   const seg = segundaDe(hoje);
   const porData = Object.fromEntries(dias.map((d) => [d.data, d]));
   const NOMES = ['seg', 'ter', 'qua', 'qui', 'sex'];
@@ -50,7 +86,7 @@ export function trilhaSemana(dias, hoje, hojeInfo = null) {
     else if (data === hoje) estado = hojeInfo && hojeInfo.minimo > 0 && hojeInfo.feitos >= hojeInfo.minimo ? 'hoje-ok' : 'hoje';
     else {
       const d = porData[data];
-      estado = !d || d.minimo === 0 ? 'livre' : !d.trabalhou ? 'folga' : d.bateu ? 'bateu' : 'nao';
+      estado = !d || d.minimo === 0 ? 'livre' : !d.trabalhou ? 'folga' : d.bateu ? 'bateu' : estados[data] === 'protegido' ? 'protegido' : 'nao';
     }
     return { nome, data, estado };
   });
@@ -119,11 +155,12 @@ const mesAnterior = (ym) => { const [a, m] = ym.split('-').map(Number); return m
 const ultimoDiaDoMes = (ym) => iso(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0) + 12 * 3600e3);
 
 // Números de um mês. dias: fechados (+ hoje, se for o mês atual); res: datas (AAAA-MM-DD) dos resultados; fechado: o mês acabou
-function metricasDoMes(dias, res, fechado, hoje) {
+function metricasDoMes(dias, res, fechado, hoje, estados = {}) {
   const validos = dias.filter((d) => d.trabalhou && d.minimo > 0).sort((a, b) => a.data.localeCompare(b.data));
   let seq = 0, corrida = 0;
   for (const d of validos) {
     if (d.data === hoje && !d.bateu) continue;   // hoje ainda em andamento não quebra
+    if (!d.bateu && estados[d.data] === 'protegido') continue;   // o escudo segurou a sequência nesse dia
     corrida = d.bateu ? corrida + 1 : 0; seq = Math.max(seq, corrida);
   }
   const semanaAtual = hoje ? segundaDe(hoje) : null;
@@ -150,7 +187,8 @@ export function conquistasDoMes(dias, hoje, hojeInfo = null, resultados = []) {
     ? [...dias.filter((d) => d.data !== hoje), { data: hoje, minimo: hojeInfo.minimo, feitos: hojeInfo.feitos, bateu: hojeInfo.feitos >= hojeInfo.minimo, trabalhou: true }]
     : dias;
   const resDatas = resultados.filter((r) => r.quando).map((r) => hojeSP(new Date(r.quando)));
-  const doMes = (m) => metricasDoMes(comHoje.filter((d) => d.data.startsWith(m)), resDatas.filter((x) => x.startsWith(m)), m < ym, hoje);
+  const { estados } = caminhoSequencia(dias.filter((d) => d.data !== hoje), null);
+  const doMes = (m) => metricasDoMes(comHoje.filter((d) => d.data.startsWith(m)), resDatas.filter((x) => x.startsWith(m)), m < ym, hoje, estados);
   const agora = doMes(ym), passado = doMes(antes);
   // histórico: em quantos meses fechados ganhou cada uma (melhor nível)
   const meses = [...new Set([...comHoje.map((d) => d.data.slice(0, 7)), ...resDatas.map((x) => x.slice(0, 7))])].filter((m) => m < ym);
@@ -182,6 +220,7 @@ export function fraseDoDia(c, seq, hoje) {
   if (c.bateuMinimo && c.ultimo) return `Último círculo: faltam ${c.falta} para zerar todas as suas listas!`;
   if (c.bateuMinimo) return pick([`${c.completos} ${c.completos === 1 ? 'círculo fechado' : 'círculos fechados'}. Faltam ${c.falta} para fechar o círculo ${c.nivel}.`,
     `Círculo ${c.nivel}: mais ${c.falta} e ele fecha. Cada contato extra é aluno a mais na academia.`]);
+  if (seq.emJogo && seq.escudos) return `Sua sequência de ${seq.atual} dias 🔥 está em jogo (você tem ${seq.escudos === 1 ? '1 escudo' : '2 escudos'} 🛡️ de reserva). Faltam ${c.falta}.`;
   if (seq.emJogo) return `Sua sequência de ${seq.atual} ${seq.atual === 1 ? 'dia' : 'dias'} 🔥 está em jogo: faltam ${c.falta} para mantê-la.`;
   if (c.pct === 0) return pick(['Primeiro contato do dia é o mais difícil. Depois embala!', 'Bora começar? Um toque no WhatsApp e o dia anda.']);
   if (c.pct >= 70) return `Reta final: só ${c.falta} para o mínimo!`;
