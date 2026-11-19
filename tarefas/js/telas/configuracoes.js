@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261119191757';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119191757';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119191757';
+import * as dados from '../dados.js?v=20261119192232';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119192232';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119192232';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -112,10 +112,14 @@ async function usuarios(el, ctx) {
 // ── Rodízio (um por unidade) e grupos de unidades ──
 // Grupo: unidades no mesmo grupo dividem TODAS as listas entre as consultoras do grupo (cada uma fica primeiro com os
 // alunos da própria unidade; a sobra completa as da outra). Só o administrador geral muda.
-const GRUPOS = [['', 'Sozinha'], ['A', 'Grupo 1'], ['B', 'Grupo 2']];
+// Grupos disponíveis: um para cada unidade cadastrada (Grupo 1 = 'A', Grupo 2 = 'B'…); unidade nova = grupo novo disponível.
+// Para criar um grupo, basta escolher o mesmo número de grupo em duas ou mais unidades.
+const gruposPara = (n) => [['', 'Sozinha'], ...Array.from({ length: Math.max(n, 2) }, (_, i) => [String.fromCharCode(65 + i), `Grupo ${i + 1}`])];
 
 async function rodizio(el, ctx) {
-  const unidades = (await dados.unidades()).filter((u) => ctx.unidades.some((x) => x.id === u.id));
+  const todasUnidades = await dados.unidades();
+  const unidades = todasUnidades.filter((u) => ctx.unidades.some((x) => x.id === u.id));
+  const GRUPOS = gruposPara(todasUnidades.length);
   const nomeGrupo = (g) => GRUPOS.find(([id]) => id === (g || ''))?.[1] || g;
   el.innerHTML = `<p class="dica" style="margin-bottom:14px">A inadimplência chega toda sexta a partir da primeira sexta abaixo e é dividida por igual entre as consultoras da unidade (ou do grupo). A ordem (em Usuários) só define quem recebe a sobra quando a conta não fecha.</p>
     <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Consultoras</th><th>Primeira sexta</th><th>Divide as listas</th><th></th></tr></thead><tbody>
@@ -127,7 +131,7 @@ async function rodizio(el, ctx) {
       <td class="acoes"><button class="btn peq" data-acao="salvar">Salvar</button></td></tr>`).join('')}
     </tbody></table></div>
     <p class="dica" style="margin-top:10px"><b>Divide as listas:</b> unidades no mesmo grupo juntam as consultoras e dividem todas as listas
-      (inclusive a inadimplência) por igual. Cada consultora recebe primeiro os alunos da própria unidade; o que sobrar de uma unidade
+      (inclusive a inadimplência) por igual. Para criar um grupo, escolha o mesmo número de grupo nas unidades que vão juntar e salve cada uma. Cada consultora recebe primeiro os alunos da própria unidade; o que sobrar de uma unidade
       completa as da outra, numa lista separada que aparece depois. Vale para as listas que chegarem a partir de agora.</p>`;
   el.onclick = async (e) => {
     const b = e.target.closest('[data-acao="salvar"]');
