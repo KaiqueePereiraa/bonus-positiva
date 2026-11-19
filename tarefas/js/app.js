@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119181518';
-import * as dados from './dados.js?v=20261119181518';
-import { hojeSP } from './regras.js?v=20261119181518';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119181518';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119181518';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119181518';
-import { resumoSemana } from './bonus-meta.js?v=20261119181518';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119181518';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119185311';
+import * as dados from './dados.js?v=20261119185311';
+import { hojeSP } from './regras.js?v=20261119185311';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119185311';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119185311';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119185311';
+import { resumoSemana } from './bonus-meta.js?v=20261119185311';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119185311';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -90,6 +90,11 @@ const ctx = {
   unidade: ehAdmin ? lerUnidadeSalva() : perfil.unidade,
   nomeUnidade: (id) => ctx.unidades.find((u) => u.id === id)?.nome || '—',
   consultorasDa: (unidade) => ctx.consultoras.filter((c) => c.unidade === unidade),
+  // unidades no mesmo grupo dividem as listas: para passar aluno / trocar plantão vale qualquer consultora do grupo
+  consultorasDoGrupo: (unidade) => {
+    const g = ctx.unidades.find((u) => u.id === unidade)?.grupo;
+    return ctx.consultoras.filter((c) => c.unidade === unidade || (g && ctx.unidades.find((u) => u.id === c.unidade)?.grupo === g));
+  },
   // unidades que têm consultoras cadastradas (as que de fato rodam a Central)
   unidadesAtivas: () => ctx.unidades.filter((u) => ctx.consultoras.some((c) => c.unidade === u.id)),
   atualizarSino: () => atualizarSino(),
@@ -230,7 +235,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261119181518`);
+    const tela = await import(`./telas/${modulo}.js?v=20261119185311`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

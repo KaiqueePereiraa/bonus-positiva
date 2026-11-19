@@ -1,12 +1,13 @@
 // Inadimplência — rodízio semanal; a lista chega sozinha da EVO e a responsável marca quem recebeu mensagem.
-import * as dados from '../dados.js?v=20261119181518';
-import { esc, dataCurta, diaSemana, seloStatus, toast, erro, vazio, modal } from '../ui.js?v=20261119181518';
-import { cabecalhoTarefa, listaContatos, baixarArquivo } from './_comum.js?v=20261119181518';
+import * as dados from '../dados.js?v=20261119185311';
+import { esc, dataCurta, diaSemana, seloStatus, toast, erro, vazio, modal } from '../ui.js?v=20261119185311';
+import { cabecalhoTarefa, listaContatos, baixarArquivo } from './_comum.js?v=20261119185311';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
   const tarefas = await dados.tarefas({ controle: 'inadimplencia', ...(ctx.ehAdmin ? { unidade: ctx.unidade || undefined } : { responsavel: ctx.perfil.id }) });
-  const varias = ctx.ehAdmin && !ctx.unidade;   // admin vendo todas as unidades: mostra a coluna Unidade
+  // admin vendo todas as unidades, ou consultora de unidade em grupo com lista de outra unidade: mostra a coluna Unidade
+  const varias = ctx.ehAdmin ? !ctx.unidade : tarefas.some((t) => t.unidade !== ctx.perfil.unidade);
   const uni = (t) => (varias ? `<td>${esc(ctx.nomeUnidade(t.unidade).replace('Positiva ', ''))}</td>` : '');
   const thUni = varias ? '<th>Unidade</th>' : '';
   const hoje = ctx.hoje();
@@ -26,7 +27,7 @@ export async function render(el, ctx, [tarefaId]) {
       ${proximas.map((t) => `<tr data-id="${t.id}"><td><b>${dataCurta(t.prazo)}</b> <span class="dica">${diaSemana(t.prazo)}</span></td>${uni(t)}
         ${ctx.ehAdmin ? `<td>${esc(ctx.nomeDe(t.responsavel_id))}${t.trocada_em ? ' <span class="etiqueta">troca</span>' : ''}</td>` : ''}
         <td>${t.total ? `${t.feitos}/${t.total}` : '—'}</td><td>${seloStatus(t.status, t.prazo_proximo)}</td>
-        <td class="acoes">${ctx.ehAdmin && !t.concluida_em ? '<button class="btn sec peq" data-acao="trocar">Trocar plantão</button> ' : ''}<a class="btn peq" href="#/inadimplencia/${t.id}">Abrir</a></td></tr>`).join('')}
+        <td class="acoes">${ctx.ehAdmin && !t.concluida_em && t.sequencia_rodizio != null ? '<button class="btn sec peq" data-acao="trocar">Trocar plantão</button> ' : ''}<a class="btn peq" href="#/inadimplencia/${t.id}">Abrir</a></td></tr>`).join('')}
       </tbody></table></div>` : vazio('Nenhuma data futura.')}
       <p class="dica" style="margin-top:10px">${(ctx.ehAdmin ? (ctx.unidade ? ctx.unidades.filter((u) => u.id === ctx.unidade) : ctx.unidadesAtivas()) : ctx.unidades.filter((u) => u.id === ctx.perfil.unidade))
         .map((u) => `Rodízio ${esc(u.nome.replace('Positiva ', ''))}: ${ctx.consultorasDa(u.id).map((c) => esc(c.nome)).join(' → ') || '—'}`).join(' · ')}. Sexta-feira com feriado passa para o dia útil anterior.</p>
@@ -41,7 +42,7 @@ export async function render(el, ctx, [tarefaId]) {
     const b = e.target.closest('[data-acao="trocar"]');
     if (!b) return;
     const t = tarefas.find((x) => x.id === b.closest('tr').dataset.id);
-    const opcoes = ctx.consultorasDa(t.unidade).filter((c) => c.id !== t.responsavel_id);
+    const opcoes = ctx.consultorasDoGrupo(t.unidade).filter((c) => c.id !== t.responsavel_id);
     if (!opcoes.length) { toast('Não há outra consultora nesta unidade para assumir o plantão.', 'erro'); return; }
     const r = await modal(`Trocar plantão de ${dataCurta(t.prazo)}`,
       `<p>Hoje está com <b>${esc(ctx.nomeDe(t.responsavel_id))}</b>. A troca vale só para esta data; o rodízio das próximas não muda.</p>

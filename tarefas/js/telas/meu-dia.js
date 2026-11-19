@@ -1,14 +1,14 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import * as dados from '../dados.js?v=20261119181518';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261119181518';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261119181518';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261119181518';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261119181518';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261119181518';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261119181518';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261119181518';
+import * as dados from '../dados.js?v=20261119185311';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261119185311';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261119185311';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261119185311';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261119185311';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261119185311';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261119185311';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261119185311';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -32,15 +32,18 @@ export async function render(el, ctx) {
   const pendentes = pendentesAtePrazo(tarefas, d.hoje);
   const recado = recadoMinimo(d.hoje);   // A e D se revezam, um por dia
   // nome da lista: a Lista a fazer aparece pelo título que o coordenador deu (ex.: "Oportunidades Experimentais")
+  // unidades em grupo: a parte que veio da outra unidade é uma lista à parte, com o nome dela
+  const deOutraUnidade = (l) => (l.unidade && l.unidade !== ctx.perfil.unidade ? ` · ${ctx.nomeUnidade(l.unidade).replace('Positiva ', '')}` : '');
   const nomeLista = (l) => (l.controle_id === 'lista_fazer'
     ? tituloTarefa(tarefas.find((t) => t.id === l.tarefa_id) || { controle_id: 'lista_fazer' }, listasFazer)
-    : NOMES_CONTROLE[l.controle_id] || l.controle_id);
+    : NOMES_CONTROLE[l.controle_id] || l.controle_id) + deOutraUnidade(l);
   const minimo = d.listas.reduce((s, l) => s + l.minimo, 0);
   const feitos = d.feitos_hoje;
   const ok = minimo === 0 || feitos >= minimo;
   // ordem: atrasadas, depois as que vencem hoje, depois as novas, depois pelo prazo
   const peso = (l) => (l.prazo < d.hoje ? 0 : l.prazo === d.hoje ? 1 : l.nova ? 2 : 3);
-  const listas = [...d.listas].sort((a, b) => peso(a) - peso(b) || a.prazo.localeCompare(b.prazo));
+  const daOutra = (l) => Number(!!l.unidade && l.unidade !== ctx.perfil.unidade);   // a da própria unidade vem primeiro
+  const listas = [...d.listas].sort((a, b) => peso(a) - peso(b) || daOutra(a) - daOutra(b) || a.prazo.localeCompare(b.prazo));
   const primeira = listas.find((l) => l.faltam_agora > 0);
   // avisos que não são das listas (estas já aparecem abaixo): pedido de troca de escala e interessados sem responsável
   const urgentes = ctx.avisos().filter((a) => a.nivel !== 'info' && (a.id.startsWith('escala-') || a.id === 'nf-pool'));

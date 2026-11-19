@@ -2,10 +2,10 @@
 // Consultora: as listas mais recentes de cada tipo + as anteriores que ainda têm pendência.
 // Admin: o progresso de cada consultora na lista mais recente de cada tipo, com link para o detalhe.
 // Lista com motivos cadastrados (ex.: "venceu e não renovou", "cancelou") pede o motivo; as demais, "Marcar enviada".
-import * as dados from '../dados.js?v=20261119181518';
-import { esc, dataCurta, vazio, NOMES_CONTROLE, LISTAS_DIARIAS } from '../ui.js?v=20261119181518';
-import { cabecalhoTarefa, listaContatos, linhaProgresso } from './_comum.js?v=20261119181518';
-import { formMotivos } from './_motivos.js?v=20261119181518';
+import * as dados from '../dados.js?v=20261119185311';
+import { esc, dataCurta, vazio, NOMES_CONTROLE, LISTAS_DIARIAS } from '../ui.js?v=20261119185311';
+import { cabecalhoTarefa, listaContatos, linhaProgresso } from './_comum.js?v=20261119185311';
+import { formMotivos } from './_motivos.js?v=20261119185311';
 
 const CONCLUIDA = (t) => t.status === 'concluida' || t.status === 'concluida_atraso';
 const quando = (t) => (LISTAS_DIARIAS.includes(t.controle_id) ? dataCurta(t.periodo_inicio) : `semana ${dataCurta(t.periodo_inicio)}`);
@@ -39,17 +39,20 @@ export function criarTela({ rota, titulo, controles, ajuda, vazioTexto, extraAdm
     const ultimaDe = (c) => todas.filter((t) => t.controle_id === c).map((t) => t.periodo_inicio).sort().at(-1);
 
     if (!ctx.ehAdmin) {
+      // unidades em grupo: alunos de outra unidade chegam numa lista à parte, mostrada depois da lista da própria unidade
+      const daOutra = (t) => Number(t.unidade !== ctx.perfil.unidade);
+      const outraUnidade = (t) => (daOutra(t) ? ` · ${ctx.nomeUnidade(t.unidade).replace('Positiva ', '')}` : '');
       const minhas = controles.flatMap((c) => {
         const ultima = ultimaDe(c);
         return todas.filter((t) => t.controle_id === c && (t.periodo_inicio === ultima || !CONCLUIDA(t)))
-          .sort((a, b) => b.periodo_inicio.localeCompare(a.periodo_inicio));
+          .sort((a, b) => b.periodo_inicio.localeCompare(a.periodo_inicio) || daOutra(a) - daOutra(b));
       });
       el.innerHTML = controles.map((c) => `<div id="bloco-${c}"></div>`).join('');
       for (const c of controles) {
         const alvo = el.querySelector(`#bloco-${c}`);
         const ts = minhas.filter((t) => t.controle_id === c);
         if (!ts.length) { alvo.innerHTML = `<div class="cartao"><h2>${esc(NOMES_CONTROLE[c])}</h2>${vazio('Nada para você agora.')}</div>`; continue; }
-        alvo.innerHTML = ts.map((t) => `<div data-t="${t.id}">${cabecalhoTarefa(t, ctx, { titulo: `${NOMES_CONTROLE[c]} (${quando(t)})` })}
+        alvo.innerHTML = ts.map((t) => `<div data-t="${t.id}">${cabecalhoTarefa(t, ctx, { titulo: `${NOMES_CONTROLE[c]}${outraUnidade(t)} (${quando(t)})` })}
           <div class="cartao"><p class="dica" style="margin-bottom:12px">${esc(ajuda[c])}</p><div class="lista"></div></div></div>`).join('');
         for (const t of ts) await montarLista(alvo.querySelector(`[data-t="${t.id}"] .lista`), ctx, t, true);
       }

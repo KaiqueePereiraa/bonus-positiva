@@ -1,8 +1,8 @@
 // Risco de abandono — a lista chega sozinha da EVO toda segunda; o admin acompanha e a consultora marca as mensagens.
-import * as dados from '../dados.js?v=20261119181518';
-import { semanaDe, prazoSemanal, CLASSES_RISCO } from '../regras.js?v=20261119181518';
-import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261119181518';
-import { cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, escolherUnidade } from './_comum.js?v=20261119181518';
+import * as dados from '../dados.js?v=20261119185311';
+import { semanaDe, prazoSemanal, CLASSES_RISCO } from '../regras.js?v=20261119185311';
+import { esc, dataCurta, dataLonga, seloStatus, toast, erro, vazio, confirmar } from '../ui.js?v=20261119185311';
+import { cabecalhoTarefa, listaContatos, linhaProgresso, baixarArquivo, escolherUnidade } from './_comum.js?v=20261119185311';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);
@@ -21,11 +21,15 @@ async function detalhe(el, ctx, id) {
 async function painelConsultora(el, ctx) {
   const tarefas = await dados.tarefas({ controle: 'risco', responsavel: ctx.perfil.id });
   if (!tarefas.length) { el.innerHTML = `<div class="cartao">${vazio('Você ainda não tem lista de risco de abandono. Quando o administrador importar a lista da semana, ela aparece aqui.')}</div>`; return; }
-  const [atual, ...anteriores] = tarefas;
-  el.innerHTML = `${cabecalhoTarefa(atual, ctx, { titulo: `Semana ${dataCurta(atual.periodo_inicio)} a ${dataCurta(atual.periodo_fim)}` })}
-    <div class="cartao"><h2>Seus alunos</h2><div id="lista"></div></div>
+  // unidades em grupo: a semana pode ter uma lista da própria unidade e outra com alunos da outra unidade (vem depois)
+  const semanaAtual = tarefas[0].periodo_inicio;
+  const daOutra = (t) => Number(t.unidade !== ctx.perfil.unidade);
+  const atuais = tarefas.filter((t) => t.periodo_inicio === semanaAtual).sort((a, b) => daOutra(a) - daOutra(b));
+  const anteriores = tarefas.filter((t) => t.periodo_inicio !== semanaAtual);
+  el.innerHTML = `${atuais.map((t) => `<div data-t="${t.id}">${cabecalhoTarefa(t, ctx, { titulo: `Semana ${dataCurta(t.periodo_inicio)} a ${dataCurta(t.periodo_fim)}${daOutra(t) ? ` · alunos da ${ctx.nomeUnidade(t.unidade).replace('Positiva ', '')}` : ''}` })}
+    <div class="cartao"><h2>${daOutra(t) ? `Alunos da ${esc(ctx.nomeUnidade(t.unidade).replace('Positiva ', ''))}` : 'Seus alunos'}</h2><div class="lista"></div></div></div>`).join('')}
     ${anteriores.length ? `<div class="cartao"><h2>Semanas anteriores</h2>${tabelaHistorico(anteriores, ctx)}</div>` : ''}`;
-  await listaContatos(el.querySelector('#lista'), ctx, atual);
+  for (const t of atuais) await listaContatos(el.querySelector(`[data-t="${t.id}"] .lista`), ctx, t);
 }
 
 const tabelaHistorico = (tarefas, ctx) => `<div class="tabela-wrap"><table class="tabela">

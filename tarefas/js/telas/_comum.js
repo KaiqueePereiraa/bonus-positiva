@@ -1,9 +1,9 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261119181518';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261119181518';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261119181518';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261119181518';
-import { maisUm, celebrar } from '../jogo-visual.js?v=20261119181518';
+import * as dados from '../dados.js?v=20261119185311';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261119185311';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261119185311';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261119185311';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261119185311';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -122,7 +122,7 @@ export async function listaContatos(el, ctx, tarefa) {
   const modelo = ctx.controles[tarefa.controle_id]?.config?.mensagem_whatsapp || '';
   const ehRisco = tarefa.controle_id === 'risco';
   const ehInad = tarefa.controle_id === 'inadimplencia';   // inadimplência: campo de observação (o que o aluno respondeu)
-  const outras = ctx.consultorasDa(tarefa.unidade).filter((c) => c.id !== tarefa.responsavel_id);
+  const outras = ctx.consultorasDoGrupo(tarefa.unidade).filter((c) => c.id !== tarefa.responsavel_id);
 
   // Risco de abandono: observação + tipo do aluno. Gympass/convênios e benefício colaborador ficam registrados
   // e o aluno não entra mais nas próximas listas.

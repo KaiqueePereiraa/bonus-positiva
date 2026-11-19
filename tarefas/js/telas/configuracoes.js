@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261119181518';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119181518';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119181518';
+import * as dados from '../dados.js?v=20261119185311';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119185311';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119185311';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -109,26 +109,44 @@ async function usuarios(el, ctx) {
   };
 }
 
-// ── Rodízio (um por unidade) ──
+// ── Rodízio (um por unidade) e grupos de unidades ──
+// Grupo: unidades no mesmo grupo dividem TODAS as listas entre as consultoras do grupo (cada uma fica primeiro com os
+// alunos da própria unidade; a sobra completa as da outra). Só o administrador geral muda.
+const GRUPOS = [['', 'Sozinha'], ['A', 'Grupo 1'], ['B', 'Grupo 2']];
+
 async function rodizio(el, ctx) {
   const unidades = (await dados.unidades()).filter((u) => ctx.unidades.some((x) => x.id === u.id));
+  const nomeGrupo = (g) => GRUPOS.find(([id]) => id === (g || ''))?.[1] || g;
   el.innerHTML = `<p class="dica" style="margin-bottom:14px">Cada unidade tem o próprio rodízio da inadimplência, na ordem definida em Usuários. Mudar a data só afeta semanas ainda não criadas.</p>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Ordem</th><th>Primeira sexta</th><th></th></tr></thead><tbody>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Ordem</th><th>Primeira sexta</th><th>Divide as listas</th><th></th></tr></thead><tbody>
     ${unidades.map((u) => `<tr data-u="${u.id}"><td class="nome">${esc(u.nome)}</td>
       <td>${ctx.consultorasDa(u.id).map((c) => esc(c.nome)).join(' → ') || '<span class="dica">sem consultoras</span>'}</td>
-      <td><input class="ctrl" type="date" value="${u.inadimplencia_inicio || ''}"></td>
+      <td><input class="ctrl" type="date" data-campo="inicio" value="${u.inadimplencia_inicio || ''}"></td>
+      <td>${ctx.ehSuper ? `<select class="ctrl" data-campo="grupo">${GRUPOS.map(([id, r]) => `<option value="${id}" ${id === (u.grupo || '') ? 'selected' : ''}>${r}</option>`).join('')}</select>`
+        : esc(nomeGrupo(u.grupo))}</td>
       <td class="acoes"><button class="btn peq" data-acao="salvar">Salvar</button></td></tr>`).join('')}
-    </tbody></table></div>`;
+    </tbody></table></div>
+    <p class="dica" style="margin-top:10px"><b>Divide as listas:</b> unidades no mesmo grupo juntam as consultoras e dividem todas as listas
+      (inclusive a inadimplência) por igual. Cada consultora recebe primeiro os alunos da própria unidade; o que sobrar de uma unidade
+      completa as da outra, numa lista separada que aparece depois. Vale para as listas que chegarem a partir de agora.</p>`;
   el.onclick = async (e) => {
     const b = e.target.closest('[data-acao="salvar"]');
     if (!b) return;
     const tr = b.closest('tr');
-    const v = tr.querySelector('input').value;
-    if (!v || diaDaSemana(v) !== 5) return toast('Escolha uma sexta-feira.', 'erro');
+    const u = unidades.find((x) => x.id === tr.dataset.u);
+    const v = tr.querySelector('[data-campo="inicio"]').value;
+    const grupo = tr.querySelector('[data-campo="grupo"]')?.value;
+    const campos = {};
+    if (v !== (u.inadimplencia_inicio || '')) {
+      if (!v || diaDaSemana(v) !== 5) return toast('Escolha uma sexta-feira.', 'erro');
+      campos.inadimplencia_inicio = v;
+    }
+    if (grupo !== undefined && grupo !== (u.grupo || '')) campos.grupo = grupo || null;
+    if (!Object.keys(campos).length) return toast('Nada mudou.');
     try {
-      await dados.salvarUnidade(tr.dataset.u, { inadimplencia_inicio: v });
-      const n = await dados.garantirInadimplencia();
-      toast(`Rodízio salvo. ${n} tarefa(s) criada(s).`);
+      await dados.salvarUnidade(u.id, campos);
+      const n = campos.inadimplencia_inicio ? await dados.garantirInadimplencia() : 0;
+      toast(`Salvo.${campos.inadimplencia_inicio ? ` ${n} tarefa(s) do rodízio criada(s).` : ''}${'grupo' in campos ? ' Recarregue a página para atualizar as listas.' : ''}`);
       rodizio(el, ctx);
     } catch (err) { erro(err); }
   };

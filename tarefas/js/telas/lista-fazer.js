@@ -1,10 +1,10 @@
 // Lista a fazer — o coordenador sobe uma lista de contatos com a explicação do que fazer; ela é dividida
 // igualmente entre as consultoras da unidade e cada uma marca o que já fez (com observação opcional).
 // A consultora também pode subir uma lista PRÓPRIA (só dela, sem divisão) para se organizar.
-import * as dados from '../dados.js?v=20261119181518';
-import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261119181518';
-import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261119181518';
-import { organizarLista, pendentesPrimeiro, lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261119181518';
+import * as dados from '../dados.js?v=20261119185311';
+import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261119185311';
+import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261119185311';
+import { organizarLista, pendentesPrimeiro, lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261119185311';
 
 const texto = (s) => esc(s).replaceAll('\n', '<br>');
 const FAIXA_VERDE = 'background:#F4FAEC;border-color:#D5EDB8;color:var(--dark)';
@@ -46,7 +46,7 @@ async function listaContatos(el, ctx, tarefa, lista) {
   if (!itens.length) { el.innerHTML = vazio('Nenhum contato nesta lista.'); return; }
   itens.sort(pendentesPrimeiro);
   const podeMexer = ctx.ehAdmin || tarefa.responsavel_id === ctx.perfil.id;
-  const outras = ctx.consultorasDa(tarefa.unidade).filter((c) => c.id !== tarefa.responsavel_id);
+  const outras = ctx.consultorasDoGrupo(tarefa.unidade).filter((c) => c.id !== tarefa.responsavel_id);
 
   const linha = (i) => {
     const tel = normalizarTelefone(i.celular);
