@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261119000222';
+import { hojeSP } from './regras.js?v=20261119000717';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -143,7 +143,7 @@ export function disponivelDe(d) {
 // Cada degrau é uma medalha com nome (pedido de 18/11/2026: "Embalada, Semana em chamas, Imparável, Lenda" motiva
 // mais que Bronze/Prata/Ouro). A cor do degrau: 1 bronze, 2 prata, 3 ouro, 4 lendária.
 export const FAMILIAS = [
-  { id: 'seq', icone: '🔥', nome: 'Sequência', unid: 'dias úteis seguidos com o mínimo no mês', niveis: [3, 5, 10, 15],
+  { id: 'seq', icone: '🔥', nome: 'Sequência', unid: 'dias úteis seguidos com o mínimo no mês', niveis: [3, 5, 12, 18],   // 18/11: ele definiu 3/5/12/18
     medalhas: [['🌀', 'Embalada'], ['🔥', 'Semana em chamas'], ['⚡', 'Imparável'], ['🏆', 'Lenda da Positiva']], medida: 'dias seguidos', medidaUm: 'dia seguido' },
   { id: 'contatos', icone: '💬', nome: 'Volume', unid: 'contatos no mês', niveis: [150, 300, 500],
     medalhas: [['💬', 'Aquecimento'], ['🥁', 'Ritmo forte'], ['🏃‍♀️', 'Maratonista']], medida: 'contatos', medidaUm: 'contato' },
