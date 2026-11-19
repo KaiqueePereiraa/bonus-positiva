@@ -2,10 +2,10 @@
 // 7 dias (função vitorias_equipe), agrupados em UMA linha por colega por dia, com um 👏 só (aplaudir_dia). A dona vê quem
 // aplaudiu e ganha uma festa quando recebe palmas novas. Do aluno aparece só o primeiro nome (em "ver quem").
 // Usado no Meu dia (aba "Da equipe") e no Painel do gestor.
-import * as dados from '../dados.js?v=20261119093900';
-import { esc, toast, erro } from '../ui.js?v=20261119093900';
-import { TIPOS_RESULTADO } from '../jogo.js?v=20261119093900';
-import { maisUm, celebrar } from '../jogo-visual.js?v=20261119093900';
+import * as dados from '../dados.js?v=20261119094038';
+import { esc, toast, erro } from '../ui.js?v=20261119094038';
+import { TIPOS_RESULTADO } from '../jogo.js?v=20261119094038';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261119094038';
 
 const capitalizar = (s) => { const t = String(s || '').toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };
 const primeiroNome = (s) => String(s || '').trim().split(/\s+/)[0];
@@ -51,17 +51,6 @@ function linhaGrupo(g, euId, { podeAplaudir = true } = {}) {
       <details class="ver-quem"><summary>ver quem</summary><span>${esc(nomes.join(', '))}</span></details></span>
     ${botaoGrupo(g, euId, podeAplaudir)}</li>`;
 }
-// Versão em cartão (Painel do gestor, pedido de 19/11/2026): cartões lado a lado em vez de uma linha embaixo da outra
-function cartaoGrupo(g, euId, { podeAplaudir = true } = {}) {
-  const total = g.itens.length;
-  const nomes = g.itens.map((v) => capitalizar(v.aluno));
-  return `<li class="vit-cartao">
-    <div class="vc-topo"><b>${esc(g.consultora_id === euId ? 'Você' : primeiroNome(g.consultora))}</b><small>${quandoDia(g.dia)}</small></div>
-    <div class="vc-num"><b>${total}</b><span>${total === 1 ? 'contato deu certo' : 'contatos deram certo'}</span></div>
-    <small class="vc-tipos">${resumoTipos(g.porTipo)}</small>
-    <div class="vc-pe"><details class="ver-quem"><summary>ver quem</summary><span>${esc(nomes.join(', '))}</span></details>
-      ${botaoGrupo(g, euId, podeAplaudir)}</div></li>`;
-}
 // Quantos dias de colegas ela ainda não aplaudiu (contador da aba)
 export const faltaAplaudir = (vits, euId) => agruparVitorias(vits).filter((g) => g.consultora_id !== euId && !g.palmas.some((p) => p.de === euId)).length;
 
@@ -69,11 +58,6 @@ export const faltaAplaudir = (vits, euId) => agruparVitorias(vits).filter((g) =>
 export function listaVitorias(vits, euId, opcoes = {}) {
   if (!vits.length) return '<p class="dica">Nenhuma vitória da equipe nos últimos 7 dias ainda. Quando um contato der certo, aparece aqui.</p>';
   const gs = agruparVitorias(vits);
-  if (opcoes.cartoes) {   // Painel do gestor: cartões lado a lado, 6 à vista (2 fileiras de 3)
-    const [prim, mais] = [gs.slice(0, 6), gs.slice(6)];
-    return `<ul class="vit-cartoes">${prim.map((g) => cartaoGrupo(g, euId, opcoes)).join('')}</ul>
-      ${mais.length ? `<details class="res-mais"><summary>Ver mais ${mais.length}</summary><ul class="vit-cartoes">${mais.map((g) => cartaoGrupo(g, euId, opcoes)).join('')}</ul></details>` : ''}`;
-  }
   const [primeiras, resto] = [gs.slice(0, 4), gs.slice(4)];
   return `<ul class="vitorias">${primeiras.map((g) => linhaGrupo(g, euId, opcoes)).join('')}</ul>
     ${resto.length ? `<details class="res-mais"><summary>Ver mais ${resto.length}</summary><ul class="vitorias">${resto.map((g) => linhaGrupo(g, euId, opcoes)).join('')}</ul></details>` : ''}`;
