@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261119175044';
+import { sb } from '../../shared/sessao.js?v=20261119181518';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -17,6 +17,8 @@ const rpc = async (nome, args) => {
 
 // ── Leituras ──
 export const equipe = () => rpc('listar_equipe');
+// histórico de ações (quem fez o quê); o banco só devolve as unidades que o coordenador pode ver
+export const historico = (de, ate, unidade) => rpc('historico', { p_de: de, p_ate: ate, p_unidade: unidade || null });
 export const controles = async () => ok(await sb.from('controles').select('*'));
 export const unidades = async () => ok(await sb.from('unidades').select('*').order('ordem'));
 export const salvarUnidade = async (id, campos) => ok(await sb.from('unidades').update(campos).eq('id', id));

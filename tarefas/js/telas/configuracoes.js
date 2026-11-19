@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261119175044';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119175044';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119175044';
+import * as dados from '../dados.js?v=20261119181518';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119181518';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119181518';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 

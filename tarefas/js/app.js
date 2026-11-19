@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119175044';
-import * as dados from './dados.js?v=20261119175044';
-import { hojeSP } from './regras.js?v=20261119175044';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119175044';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119175044';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119175044';
-import { resumoSemana } from './bonus-meta.js?v=20261119175044';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119175044';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119181518';
+import * as dados from './dados.js?v=20261119181518';
+import { hojeSP } from './regras.js?v=20261119181518';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119181518';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119181518';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119181518';
+import { resumoSemana } from './bonus-meta.js?v=20261119181518';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119181518';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -22,6 +22,7 @@ const ICONES = {
   alvo: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
   equipe: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
   rel: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/>',
+  hist: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   conf: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
 };
 
@@ -47,7 +48,8 @@ const ROTAS = {
   retorno: { titulo: 'Retorno do mês', modulo: 'retorno', icone: 'rel', quem: 'admin', grupo: null, menu: 'relatorios', frase: 'Quanto a equipe trouxe de volta em R$ com a Central.' },
   // EM PREPARAÇÃO (pedido do usuário, 16/11/2026): só o admin vê a Escala até ele dizer que está 100% pronta.
   // Para abrir para as consultoras: trocar quem para 'todos' e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
-  escala: { titulo: 'Escala', modulo: 'escala', icone: 'escala', quem: 'super', grupo: 'ajustes', frase: 'Quem trabalha em cada fim de semana.' },
+  escala: { titulo: 'Escala', modulo: 'escala', icone: 'escala', quem: 'admin', grupo: 'ajustes', frase: 'Quem trabalha em cada fim de semana.' },
+  historico: { titulo: 'Histórico', modulo: 'historico', icone: 'hist', quem: 'admin', grupo: 'ajustes', frase: 'Tudo o que foi feito na plataforma: quem fez, quando e o quê.' },
   configuracoes: { titulo: 'Configurações', modulo: 'configuracoes', icone: 'conf', quem: 'admin', grupo: 'ajustes', frase: 'Equipe, rodízio, mensagens, WhatsApp e a conexão com a EVO.' },
 };
 // grupos que são listas de contato (a consultora só vê as listas em que tem algo)
@@ -228,7 +230,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261119175044`);
+    const tela = await import(`./telas/${modulo}.js?v=20261119181518`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
