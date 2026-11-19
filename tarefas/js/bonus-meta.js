@@ -49,7 +49,10 @@ export function painelMeta(r, hoje, unidade) {
   if (!r.proxima) frase = 'Super meta batida! 🏆 Semana de referência — tudo o que vier agora é extra.';
   else {
     const alvo = r.proxima.nome === 'Básico' ? 'o Básico' : `a ${r.proxima.nome}`;
-    const quando = dias === 1 ? 'hoje é o último dia da semana' : `você tem ${plural(dias, 'dia', 'dias')} até domingo`;
+    // dias DEPOIS de hoje, com a data: "5 dias contando hoje" confundia à noite (pedido de 18/11/2026)
+    const depois = dias - 1;
+    const quando = depois === 0 ? 'hoje é o último dia da semana'
+      : `a semana fecha domingo (${r.fim.slice(8, 10)}/${r.fim.slice(5, 7)}), ${depois === 1 ? 'amanhã' : `daqui a ${depois} dias`}`;
     frase = `${r.feitos === 0 ? 'Bora começar!' : r.faixa === 'Abaixo do básico' ? 'Você está no caminho!' : `${r.faixa} garantida!`} `
       + `${r.proxima.faltam === 1 ? 'Falta' : 'Faltam'} ${plural(r.proxima.faltam, 'contrato', 'contratos')} para ${alvo} — ${quando}.`;
   }

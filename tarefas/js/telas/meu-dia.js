@@ -1,13 +1,13 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
 // mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
 // um guia de 4 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118221710';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118221710';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118221710';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118221710';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118221710';
-import { anel, sequencia, trilhaSemana, conquistas, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118221710';
-import { anelSvg, animar, trilhaHtml, conquistasHtml, festaMinimoUmaVez, celebrar } from '../jogo-visual.js?v=20261118221710';
+import * as dados from '../dados.js?v=20261118222102';
+import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118222102';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118222102';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118222102';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118222102';
+import { anel, sequencia, trilhaSemana, conquistas, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118222102';
+import { anelSvg, animar, trilhaHtml, conquistasHtml, festaMinimoUmaVez, celebrar } from '../jogo-visual.js?v=20261118222102';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
