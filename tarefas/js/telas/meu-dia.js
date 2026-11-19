@@ -1,14 +1,14 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import * as dados from '../dados.js?v=20261119001955';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261119001955';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261119001955';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261119001955';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261119001955';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261119001955';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261119001955';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261119001955';
+import * as dados from '../dados.js?v=20261119002117';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261119002117';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261119002117';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261119002117';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261119002117';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261119002117';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261119002117';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261119002117';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -24,8 +24,8 @@ export async function render(el, ctx) {
     dados.tarefas({ responsavel: ctx.perfil.id }).catch(() => []), dados.listasFazer().catch(() => []),
     dados.meusDias(ctx.perfil.id).catch(() => [])]);
   // contatos dela hoje em cada lista (sem conexão/permissão: as missões mostram só o que falta)
-  const [porLista, meusRes, vits] = await Promise.all([dados.meusFeitosHojePorLista(ctx.perfil.id, d.hoje).catch(() => null),
-    dados.meusResultados(ctx.perfil.id).catch(() => null), dados.vitoriasEquipe(7).catch(() => [])]);
+  const [porLista, meusRes, vits, recordeItens] = await Promise.all([dados.meusFeitosHojePorLista(ctx.perfil.id, d.hoje).catch(() => null),
+    dados.meusResultados(ctx.perfil.id).catch(() => null), dados.vitoriasEquipe(7).catch(() => []), dados.meuRecordeDia(ctx.perfil.id, d.hoje).catch(() => 0)]);
   // contatos dela que deram certo: quadro dos últimos 7 dias + festa para os novos desde a última visita
   const res = meusRes ? resumoResultados(meusRes, d.hoje, lerVisto(ctx.perfil.id)) : null;
   // tudo o que ela ainda tem para fazer, em todas as listas (inclusive a Lista a fazer), até cada prazo
@@ -51,7 +51,7 @@ export async function render(el, ctx) {
   const seq = caminhoSequencia(dias, hojeInfo);   // sequência 🔥 com escudos 🛡️ e chama que muda de cor
   const trilha = trilhaSemana(dias, d.hoje, hojeInfo, seq.estados);
   const premios = conquistasDoMes(dias, d.hoje, hojeInfo, meusRes || []);
-  const recorde = recordeDoDia(dias);   // maior número de contatos num dia fechado
+  const recorde = Math.max(recordeDoDia(dias), recordeItens || 0);   // maior número de contatos num dia antes de hoje
   const tituloPlacar = !c ? '' : c.zerou ? 'Lista zerada! 🏁' : !c.bateuMinimo ? `Faltam <em>${c.falta}</em> ${c.falta === 1 ? 'contato' : 'contatos'} para o mínimo`
     : `${c.atingido.nome} ${c.atingido.icone}`;
   const nome = esc((ctx.perfil.nome || '').split(' ')[0]);

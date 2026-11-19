@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119001955';
-import * as dados from './dados.js?v=20261119001955';
-import { hojeSP } from './regras.js?v=20261119001955';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119001955';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119001955';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119001955';
-import { resumoSemana } from './bonus-meta.js?v=20261119001955';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119001955';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119002117';
+import * as dados from './dados.js?v=20261119002117';
+import { hojeSP } from './regras.js?v=20261119002117';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119002117';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119002117';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119002117';
+import { resumoSemana } from './bonus-meta.js?v=20261119002117';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119002117';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -217,7 +217,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261119001955`);
+    const tela = await import(`./telas/${modulo}.js?v=20261119002117`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -334,13 +334,14 @@ async function pedirJustificativas() {
 }
 // ── Placar do topo (consultora): anel do mínimo de hoje + sequência 🔥, em todas as telas ──
 // Atualiza a cada contato marcado (evento central:contato, disparado por atualizarCabecalho) e comemora o mínimo.
-let diasFechados = null, ultimoFeitos = null, metaSemana;   // meta: lida 1x (a EVO atualiza de madrugada)
+let diasFechados = null, ultimoFeitos = null, metaSemana, recordeHist;   // meta: lida 1x (a EVO atualiza de madrugada)
 async function atualizarHud(animarMudanca = false) {
   const el = $('hud');
   try {
     if (!diasFechados) diasFechados = await dados.meusDias(perfil.id).catch(() => []);
     if (metaSemana === undefined) metaSemana = perfil.acesso_bonus && perfil.unidade ? await dados.minhaMetaSemana().catch(() => null) : null;
     const d = await dados.meuDia();
+    if (recordeHist === undefined) recordeHist = await dados.meuRecordeDia(perfil.id, d.hoje).catch(() => 0);
     const minimo = d.listas.reduce((s, l) => s + l.minimo, 0), feitos = d.feitos_hoje;
     if (!minimo && !feitos) { el.hidden = true; return; }
     const c = circulos(feitos, minimo, disponivelDe(d), d.listas);   // níveis = frações do pendente (1/3, metade, 3/4, tudo)
@@ -351,7 +352,7 @@ async function atualizarHud(animarMudanca = false) {
     el.innerHTML = `${c ? aneisSvg(c, { tam: 38, traco: 4 }) : ''}<span class="hud-num"><b>${feitos}</b>/${c ? c.alvo : '–'}</span>${c?.atingido && c.completos > 1 ? `<span class="hud-circ" title="${c.atingido.nome}">${c.atingido.icone}</span>` : ''}${seq.atual ? `<span class="hud-fogo chama-${seq.chama.id}">🔥${seq.atual}</span>` : ''}${seq.escudos ? `<span class="hud-escudo">🛡️${seq.escudos > 1 ? seq.escudos : ''}</span>` : ''}${hudMeta(d.hoje)}`;
     animar(el);
     if (animarMudanca && ultimoFeitos != null && feitos > ultimoFeitos) maisUm(el, `+${feitos - ultimoFeitos}`);
-    if (ultimoFeitos != null && feitos > ultimoFeitos) { festaCirculo(d.hoje, c, perfil.id); festaRecorde(d.hoje, feitos, recordeDoDia(diasFechados), perfil.id); festasDaSequencia(seq, d.hoje, perfil.id); }   // subiu de nível / recorde / escudo
+    if (ultimoFeitos != null && feitos > ultimoFeitos) { festaCirculo(d.hoje, c, perfil.id); festaRecorde(d.hoje, feitos, Math.max(recordeDoDia(diasFechados), recordeHist || 0), perfil.id); festasDaSequencia(seq, d.hoje, perfil.id); }   // subiu de nível / recorde / escudo
     ultimoFeitos = feitos;
   } catch (e) { console.error(e); }
 }

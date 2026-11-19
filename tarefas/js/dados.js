@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261119001955';
+import { sb } from '../../shared/sessao.js?v=20261119002117';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -207,6 +207,15 @@ export async function meusResultados(userId) {
 export const vitoriasEquipe = (dias = 7) => rpc('vitorias_equipe', { p_dias: dias });
 export const aplaudir = (item) => rpc('aplaudir', { p_item: item });
 export const aplaudirDia = (consultora, dia) => rpc('aplaudir_dia', { p_consultora: consultora, p_dia: dia });   // migração 050
+// recorde pessoal: maior número de contatos DELA num dia antes de hoje, por todo o histórico de itens (o fechamento
+// diário só existe desde 17/11/2026, então ele sozinho daria um recorde baixo demais)
+export async function meuRecordeDia(userId, hoje) {
+  const linhas = ok(await sb.from('itens').select('feito_em').eq('feito_por', userId).not('feito_em', 'is', null)
+    .lt('feito_em', `${hoje}T00:00:00-03:00`).limit(20000));
+  const porDia = {};
+  for (const l of linhas) { const d = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date(l.feito_em)); porDia[d] = (porDia[d] || 0) + 1; }
+  return Object.values(porDia).reduce((m, n) => Math.max(m, n), 0);
+}
 // dias úteis já fechados da consultora (sequência e conquistas do Meu dia); RLS só deixa ler os próprios
 export const meusDias = async (userId) => ok(await sb.from('dias_consultora').select('data,minimo,feitos,bateu,trabalhou')
   .eq('consultora_id', userId).order('data', { ascending: false }).limit(800));

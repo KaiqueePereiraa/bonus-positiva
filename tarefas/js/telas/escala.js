@@ -3,11 +3,11 @@
 //  • A consultora escalada pode pedir troca a uma colega, que aceita ou recusa (sem aprovação do coordenador).
 //  • O coordenador monta o ciclo (que se repete para sempre), define quem trabalha em cada feriado,
 //    edita um dia específico e acompanha o histórico de trocas.
-import * as dados from '../dados.js?v=20261119001955';
-import { somarDias } from '../regras.js?v=20261119001955';
-import { esc, dataCurta, dataHora, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119001955';
-import { agendaEscala, opcoesTroca, lerOpcaoTroca, rotuloData } from '../escala.js?v=20261119001955';
-import { calendarioHtml, chipsDoDia, legendaHtml } from '../escala-visual.js?v=20261119001955';
+import * as dados from '../dados.js?v=20261119002117';
+import { somarDias } from '../regras.js?v=20261119002117';
+import { esc, dataCurta, dataHora, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119002117';
+import { agendaEscala, opcoesTroca, lerOpcaoTroca, rotuloData } from '../escala.js?v=20261119002117';
+import { calendarioHtml, chipsDoDia, legendaHtml } from '../escala-visual.js?v=20261119002117';
 
 const SEMANAS_A_FRENTE = 10;
 const ehSabado = (d) => new Date(`${d}T12:00:00Z`).getUTCDay() === 6;
