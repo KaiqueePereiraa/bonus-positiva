@@ -1,6 +1,6 @@
 // Vendas — ex-alunos (campanha de volta), que chegam toda segunda com prazo na sexta.
 // Os interessados (cadastro sem experimental e experimental sem matrícula) ficam no "Por que não fechou?" (lista diária).
-import { criarTela } from './_grupo.js?v=20261119185311';
+import { criarTela } from './_grupo.js?v=20261119191757';
 
 export const render = criarTela({
   rota: 'vendas', titulo: 'Vendas',

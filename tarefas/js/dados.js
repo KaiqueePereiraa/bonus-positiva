@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261119185311';
+import { sb } from '../../shared/sessao.js?v=20261119191757';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -8,7 +8,7 @@ let comoId = null;
 export const verComo = (id) => { comoId = id || null; };
 export const vendoComo = () => comoId;
 export const MSG_SO_OLHAR = 'Você está vendo como consultora: neste modo nada é salvo e o WhatsApp não abre.';
-const SO_LEITURA = new Set(['vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como']);
+const SO_LEITURA = new Set(['minhas_unidades_coord', 'vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como']);
 const travar = () => { if (comoId) throw new Error(MSG_SO_OLHAR); };
 const rpc = async (nome, args) => {
   if (comoId && !SO_LEITURA.has(nome)) travar();
@@ -17,6 +17,8 @@ const rpc = async (nome, args) => {
 
 // ── Leituras ──
 export const equipe = () => rpc('listar_equipe');
+// coordenador: unidades marcadas + as do mesmo grupo de unidades
+export const minhasUnidadesCoord = () => rpc('minhas_unidades_coord');
 // histórico de ações (quem fez o quê); o banco só devolve as unidades que o coordenador pode ver
 export const historico = (de, ate, unidade) => rpc('historico', { p_de: de, p_ate: ate, p_unidade: unidade || null });
 export const controles = async () => ok(await sb.from('controles').select('*'));

@@ -1,7 +1,7 @@
 // Avisos do sino, calculados na hora a partir do estado das tarefas (nada fica "velho").
 // As mesmas regras alimentam o resumo diário do WhatsApp (supabase/migrations/008_whatsapp.sql).
-import { diaDaSemana, semanaDe } from './regras.js?v=20261119185311';
-import { dataCurta, ROTA_CONTROLE, NOMES_CONTROLE } from './ui.js?v=20261119185311';
+import { diaDaSemana, semanaDe } from './regras.js?v=20261119191757';
+import { dataCurta, ROTA_CONTROLE, NOMES_CONTROLE } from './ui.js?v=20261119191757';
 
 const ABERTA = (t) => t.status !== 'concluida' && t.status !== 'concluida_atraso';
 const faltam = (t) => t.total - t.feitos;
@@ -19,8 +19,8 @@ export function avisosConsultora({ tarefas, semResponsavel = 0, hoje, titulos = 
     const rota = `#/${ROTA_CONTROLE[t.controle_id]}/${t.id}`;
     if (t.controle_id === 'inadimplencia') {
       if (t.status === 'atrasada') lista.push(aviso(`ina-atr-${t.id}`, 'urgente', `Inadimplência de ${dataCurta(t.prazo)} está atrasada: faltam ${faltam(t)} contatos.`, rota, t.prazo));
-      else if (t.prazo === hoje) lista.push(aviso(`ina-hoje-${t.id}`, 'urgente', `Hoje é sua vez na inadimplência: ${t.total ? `${faltam(t)} contatos para fazer` : 'a lista chega sozinha da EVO'}.`, rota, hoje));
-      else if (t.prazo <= semanaDe(hoje).fim) lista.push(aviso(`ina-sem-${t.id}`, 'info', `Sua vez na inadimplência: ${dataCurta(t.prazo)}.`, rota, semanaDe(hoje).inicio));
+      // a lista é dividida entre todas: só avisa quando a parte dela já chegou
+      else if (t.prazo === hoje && t.total) lista.push(aviso(`ina-hoje-${t.id}`, 'urgente', `Inadimplência de hoje: ${faltam(t)} contatos para fazer.`, rota, hoje));
     } else if (t.controle_id === 'risco') {
       if (t.status === 'atrasada') lista.push(aviso(`ris-atr-${t.id}`, 'urgente', `Risco de abandono (semana de ${dataCurta(t.periodo_inicio)}) atrasado: faltam ${faltam(t)} mensagens.`, rota, t.prazo));
       else if (t.prazo === hoje) lista.push(aviso(`ris-hoje-${t.id}`, 'urgente', `Último dia do risco de abandono: faltam ${faltam(t)} de ${t.total} mensagens.`, rota, hoje));

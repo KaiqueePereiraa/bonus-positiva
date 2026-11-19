@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261119185311';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119185311';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119185311';
+import * as dados from '../dados.js?v=20261119191757';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119191757';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119191757';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -117,8 +117,8 @@ const GRUPOS = [['', 'Sozinha'], ['A', 'Grupo 1'], ['B', 'Grupo 2']];
 async function rodizio(el, ctx) {
   const unidades = (await dados.unidades()).filter((u) => ctx.unidades.some((x) => x.id === u.id));
   const nomeGrupo = (g) => GRUPOS.find(([id]) => id === (g || ''))?.[1] || g;
-  el.innerHTML = `<p class="dica" style="margin-bottom:14px">Cada unidade tem o próprio rodízio da inadimplência, na ordem definida em Usuários. Mudar a data só afeta semanas ainda não criadas.</p>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Ordem</th><th>Primeira sexta</th><th>Divide as listas</th><th></th></tr></thead><tbody>
+  el.innerHTML = `<p class="dica" style="margin-bottom:14px">A inadimplência chega toda sexta a partir da primeira sexta abaixo e é dividida por igual entre as consultoras da unidade (ou do grupo). A ordem (em Usuários) só define quem recebe a sobra quando a conta não fecha.</p>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Consultoras</th><th>Primeira sexta</th><th>Divide as listas</th><th></th></tr></thead><tbody>
     ${unidades.map((u) => `<tr data-u="${u.id}"><td class="nome">${esc(u.nome)}</td>
       <td>${ctx.consultorasDa(u.id).map((c) => esc(c.nome)).join(' → ') || '<span class="dica">sem consultoras</span>'}</td>
       <td><input class="ctrl" type="date" data-campo="inicio" value="${u.inadimplencia_inicio || ''}"></td>

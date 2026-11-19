@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119185311';
-import * as dados from './dados.js?v=20261119185311';
-import { hojeSP } from './regras.js?v=20261119185311';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119185311';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119185311';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119185311';
-import { resumoSemana } from './bonus-meta.js?v=20261119185311';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119185311';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261119191757';
+import * as dados from './dados.js?v=20261119191757';
+import { hojeSP } from './regras.js?v=20261119191757';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261119191757';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261119191757';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261119191757';
+import { resumoSemana } from './bonus-meta.js?v=20261119191757';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261119191757';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -66,7 +66,7 @@ const perfilReal = await exigirArea('tarefas');
 const souAdmin = perfilReal.papel_tarefas === 'admin';
 // Super admin vê e configura tudo; os demais coordenadores só as unidades marcadas no perfil (o banco também confere).
 const souSuper = souAdmin && !!perfilReal.super_admin;
-const minhasUnidades = perfilReal.unidades_coord || [];
+let minhasUnidades = perfilReal.unidades_coord || [];   // + as do mesmo grupo (lidas do banco em carregarBase)
 // "Ver como consultora": o coordenador escolhe uma consultora e a Central vira a tela dela (só para olhar; dados.js
 // recusa salvar e o WhatsApp não abre). Guardado só nesta aba (sessionStorage): fechou a aba, volta a ser coordenador.
 const CHAVE_VER_COMO = 'central_ver_como';
@@ -108,6 +108,7 @@ async function carregarBase() {
   const [equipe, motivos, controles, unidades] = await Promise.all([dados.equipe(), dados.motivos(), dados.controles(), dados.unidades()]);
   ctx.equipe = equipe;
   // coordenador de unidade: a Central inteira (seletor, painéis, listas) só conhece as unidades dele
+  if (souAdmin && !souSuper) minhasUnidades = (await dados.minhasUnidadesCoord().catch(() => null)) || minhasUnidades;
   ctx.unidades = souAdmin && !souSuper ? unidades.filter((u) => minhasUnidades.includes(u.id)) : unidades;
   if (ehAdmin && !souSuper && ctx.unidade && !minhasUnidades.includes(ctx.unidade)) ctx.unidade = '';
   if (ehAdmin && !souSuper && ctx.unidades.length === 1) ctx.unidade = ctx.unidades[0].id;
@@ -235,7 +236,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261119185311`);
+    const tela = await import(`./telas/${modulo}.js?v=20261119191757`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
