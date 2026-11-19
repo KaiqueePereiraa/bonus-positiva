@@ -1,7 +1,7 @@
 // Peças visuais da gamificação: anel do dia, trilha da semana, estante de conquistas e os efeitos
 // (confete, "+1" flutuante, número contando). Sem biblioteca: SVG + CSS (css/jogo.css).
 // Quem prefere menos movimento (prefers-reduced-motion) não vê confete nem contagem animada.
-import { esc } from './ui.js?v=20261118223633';
+import { esc } from './ui.js?v=20261118225122';
 
 const calmo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -159,7 +159,7 @@ export function chipsSequencia(cam) {
   const escudos = Array.from({ length: 2 }, (_, i) => `<i class="${i < cam.escudos ? 'tem' : ''}">🛡️</i>`).join('');
   return `<span class="chip-fogo chama-${cam.chama.id} ${cam.emJogo ? 'em-jogo' : ''}" title="${esc(cam.chama.nome)}: dias úteis seguidos com o mínimo (folga não quebra)">
       <i>🔥</i><b>${cam.atual}</b> ${cam.atual === 1 ? 'dia seguido' : 'dias seguidos'}<em>${esc(cam.chama.nome)}</em></span>
-    <span class="chip-escudos" title="Escudos: a cada 12 dias seguidos você ganha 1 (guarda até 2). Num dia sem o mínimo, ele salva a sequência sozinho. A justificativa do dia continua valendo.">${escudos}<b>${cam.escudos}</b></span>`;
+    ${cam.escudos ? '' : '<!-- sem escudo: o caminho já diz quando vem o próximo -->'}<span class="chip-escudos${cam.escudos ? '' : ' vazio'}" title="Escudos: a cada 12 dias seguidos você ganha 1 (guarda até 2). Num dia sem o mínimo, ele salva a sequência sozinho. A justificativa do dia continua valendo.">${escudos}<b>${cam.escudos}</b></span>`;
 }
 export function caminhoHtml(cam) {
   if (!cam.proximos.length) return '';

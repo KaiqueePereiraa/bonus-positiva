@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261118223633';
+import { hojeSP } from './regras.js?v=20261118225122';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -224,7 +224,7 @@ export function fraseDoDia(c, seq, hoje) {
   if (seq.emJogo) return `Sua sequência de ${seq.atual} ${seq.atual === 1 ? 'dia' : 'dias'} 🔥 está em jogo: faltam ${c.falta} para mantê-la.`;
   if (c.pct === 0) return pick(['Primeiro contato do dia é o mais difícil. Depois embala!', 'Bora começar? Um toque no WhatsApp e o dia anda.']);
   if (c.pct >= 70) return `Reta final: só ${c.falta} para o mínimo!`;
-  return pick([`Faltam ${c.falta} para o mínimo. Um de cada vez!`, `Você já fez ${c.pct}% do mínimo. Segue o ritmo!`]);
+  return pick(['Um de cada vez: cada contato conta.', `Você já fez ${c.pct}% do mínimo. Segue o ritmo!`]);   // o título já diz quanto falta
 }
 
 // ── Resultados: o que dá sentido ao trabalho é o contato que deu certo (não o toque no WhatsApp) ──

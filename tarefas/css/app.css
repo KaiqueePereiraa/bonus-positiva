@@ -275,3 +275,29 @@ details.mais-filtros .filtros{margin-top:12px}
 @media (max-width:600px){.meta-semana{padding:20px}.ms-numero b{font-size:44px}.ms-faixa{margin-left:0}
   .ms-marcos{display:flex;justify-content:flex-end;gap:16px;height:auto;margin-top:8px}
   .ms-marcos span{position:static;transform:none!important;text-align:center!important}}
+
+/* ── Listas: pendentes primeiro, feitos escondidos, "Próximo" (revisão de 18/11/2026) ── */
+.lista-barra{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.como-marcar{font-size:13px;color:var(--navy);background:#F4FAEC;border:1px solid #D5EDB8;border-radius:10px;padding:8px 12px;line-height:1.4;flex:1;min-width:220px}
+.lista-completa{font-size:14px;font-weight:800;color:#3F7A1F}
+table:not(.mostra-feitos) tr.ja-feito{display:none !important}
+.tabela tr.proximo td{background:#F7FCEF}
+.tabela tr.proximo td:first-child{box-shadow:inset 4px 0 0 var(--green-deep)}
+.tabela tr.proximo td.nome::before{content:"Próximo";display:inline-block;margin:0 8px 4px 0;padding:2px 8px;border-radius:999px;background:var(--green);color:var(--dark);
+  font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;vertical-align:middle}
+@media (max-width:760px){.tabela.responsiva tr.proximo{box-shadow:inset 4px 0 0 var(--green-deep);padding-left:10px;background:#F7FCEF}}
+/* cabeçalho das listas no celular: os 4 números lado a lado (antes ocupavam a tela inteira, um embaixo do outro) */
+@media (max-width:760px){
+  .numeros{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .numero{padding:8px 6px;border-top-width:3px;text-align:center}
+  .numero small{font-size:9px;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .numero b{font-size:20px!important;margin-top:2px}
+  .numero span{display:none}
+}
+/* listas no celular: botões numa linha própria embaixo do contato (antes ficavam cortados na direita) */
+@media (max-width:760px){
+  .tabela.responsiva tr{grid-template-columns:1fr}
+  .tabela.responsiva td.acoes{grid-column:1 / -1;grid-row:auto;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;align-self:start;white-space:normal;gap:6px;text-align:left}
+  .tabela.responsiva td.acoes .btn{flex:1 1 auto;min-height:40px}
+  .tabela.responsiva td.acoes .btn.wa{flex-basis:100%;font-size:14px}
+}

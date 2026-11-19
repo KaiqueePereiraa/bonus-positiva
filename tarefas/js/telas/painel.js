@@ -1,13 +1,13 @@
 // Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que acontece HOJE e pede ação (gestão por
 // exceção), em frases simples, cada uma com "o que fazer". Comparações de 30 dias ficam em Desempenho; o que cada
 // lista trouxe fica em Resultados; o retorno em R$, em Relatórios → Retorno do mês.
-import * as dados from '../dados.js?v=20261118223633';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118223633';
-import { somarDias, semanaDe } from '../regras.js?v=20261118223633';
+import * as dados from '../dados.js?v=20261118225122';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118225122';
+import { somarDias, semanaDe } from '../regras.js?v=20261118225122';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261118223633';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261118225122';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -39,7 +39,7 @@ export async function render(el, ctx) {
         : '<p class="dica">Nada fora do normal agora. 🎉</p>'}</div>
 
     <div class="cartao"><h2>Equipe hoje</h2>
-      ${todas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Hoje</th><th>Pendentes</th><th>Atrasados</th><th>Último contato</th><th>Semana</th></tr></thead><tbody>
+      ${todas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Hoje</th><th>Pendentes</th><th>Atrasados</th><th>Último contato</th><th>Semana</th><th></th></tr></thead><tbody>
         ${todas.map((c) => {
           const cor = !c.minimo ? 'cinza' : c.feitos_hoje >= c.minimo ? 'verde' : c.feitos_hoje * 2 >= c.minimo ? 'laranja' : 'vermelho';
           const pend = pendentes[c.id] || 0;
@@ -50,7 +50,8 @@ export async function render(el, ctx) {
             <td>${pend ? pend : '<span class="selo azul" title="Não tem nada pendente: tem tempo para uma lista extra">livre</span>'}</td>
             <td>${c.atrasados ? `<b style="color:var(--danger)">${c.atrasados}</b>` : '—'}</td>
             <td>${ult ? dataHora(ult).slice(-5) : '<span class="dica">nenhum hoje</span>'}</td>
-            <td>${sem?.pct != null ? `${sem.pct}% <span class="sub">meta em ${sem.dias_bateu} de ${sem.dias} dia(s)</span>` : '<span class="dica">—</span>'}</td></tr>`;
+            <td>${sem?.pct != null ? `${sem.pct}% <span class="sub">mínimo em ${sem.dias_bateu} de ${sem.dias} dia(s)</span>` : '<span class="dica">—</span>'}</td>
+            <td class="acoes"><button class="btn sec peq" data-ver-como="${c.id}" title="Ver a Central como ${esc(c.nome)} vê (só para olhar)">👁 Ver tela</button></td></tr>`;
         }).join('')}</tbody></table></div>
         <p class="dica" style="margin-top:8px">Pendentes = contatos em aberto em todas as listas dela. "Livre" = zerou as listas: dá para passar uma Lista a fazer. Semana = mínimo cumprido nos dias já fechados desta semana. Comparação de 30 dias: <a href="#/desempenho">Desempenho →</a></p>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
     </div>
@@ -59,6 +60,12 @@ export async function render(el, ctx) {
 
     ${(() => { const t = somar(ativas, 'semana'); return `<p class="dica" style="text-align:center">Nesta semana: ${t.pagou} pagaram${t.valor ? ` (${reais(t.valor)})` : ''} · ${t.voltou} voltaram a treinar · ${t.matriculou} matrículas · ${t.renovou} renovações.
       <a href="#/indicadores">Resultados →</a> · <a href="#/retorno">Retorno do mês →</a></p>`; })()}`;
+  // "👁 Ver tela": entra no modo ver como consultora (mesma chave do app.js; só nesta aba)
+  el.querySelectorAll('[data-ver-como]').forEach((b) => b.addEventListener('click', () => {
+    try { sessionStorage.setItem('central_ver_como', b.dataset.verComo); } catch { return; }
+    history.replaceState(null, '', '#/meu-dia');
+    location.reload();
+  }));
 }
 
 function somar(unidades, per) {

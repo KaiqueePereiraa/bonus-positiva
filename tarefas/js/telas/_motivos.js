@@ -1,9 +1,9 @@
 // Formulário de motivos: "Por que não fechou?" (etapas "fez experimental" e "não fez experimental"), "Renovação: venceu
 // e não renovou" e "Cancelou". Usado pela tela do "Por que não fechou?" e pelas telas de grupo (_grupo.js).
-import * as dados from '../dados.js?v=20261118223633';
-import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261118223633';
-import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261118223633';
-import { atualizarCabecalho } from './_comum.js?v=20261118223633';
+import * as dados from '../dados.js?v=20261118225122';
+import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261118225122';
+import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261118225122';
+import { atualizarCabecalho, organizarLista, pendentesPrimeiro } from './_comum.js?v=20261118225122';
 
 // Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
 async function confirmarExclusao(nome) {
@@ -50,6 +50,7 @@ function linhaMotivo(i, ctx, editavel) {
 // Salvar atualiza só a linha e o cabeçalho (a página não pula para o topo).
 export async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }) {
   if (!itens.length) { el.innerHTML = vazio('Nenhum interessado aqui.'); return; }
+  itens.sort(pendentesPrimeiro);
   const comEtapa = itens.some((i) => i.dados?.etapa);
   const corpo = !comEtapa ? itens.map((i) => linhaMotivo(i, ctx, editavel)).join('')
     : Object.entries(ETAPAS).map(([k, e]) => {
@@ -58,6 +59,7 @@ export async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }
     }).join('');
   el.innerHTML = `<div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Interessado</th><th>Motivo</th><th>Observação</th><th></th></tr></thead>
     <tbody>${corpo}</tbody></table></div>`;
+  if (editavel) organizarLista(el, { comoMarcar: 'Toque em <b>WhatsApp</b> para conversar. Depois escolha o <b>motivo</b> e toque em <b>Salvar</b> — é o Salvar que marca o contato.' });
   el.onchange = (e) => {
     const s = e.target.closest('[data-campo="motivo"]');
     if (!s) return;

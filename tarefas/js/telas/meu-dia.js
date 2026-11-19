@@ -1,13 +1,13 @@
-// Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. Um botão grande "Começar" abre a lista
-// mais urgente; o mínimo de cada lista é o que falta ÷ dias úteis até o prazo. Para quem entra pela primeira vez,
-// um guia de 4 passos (some depois de "Entendi").
-import * as dados from '../dados.js?v=20261118223633';
-import { esc, dataCurta, diaSemana, barra, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118223633';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118223633';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118223633';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118223633';
-import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118223633';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118223633';
+// Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
+// faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
+// listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
+import * as dados from '../dados.js?v=20261118225122';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118225122';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118225122';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118225122';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118225122';
+import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118225122';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118225122';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -29,7 +29,6 @@ export async function render(el, ctx) {
   const res = meusRes ? resumoResultados(meusRes, d.hoje, lerVisto(ctx.perfil.id)) : null;
   // tudo o que ela ainda tem para fazer, em todas as listas (inclusive a Lista a fazer), até cada prazo
   const pendentes = pendentesAtePrazo(tarefas, d.hoje);
-  const faltamTotal = pendentes.reduce((s, t) => s + (t.total - t.feitos), 0);
   const recado = recadoMinimo(d.hoje);   // A e D se revezam, um por dia
   // nome da lista: a Lista a fazer aparece pelo título que o coordenador deu (ex.: "Oportunidades Experimentais")
   const nomeLista = (l) => (l.controle_id === 'lista_fazer'
@@ -38,7 +37,6 @@ export async function render(el, ctx) {
   const minimo = d.listas.reduce((s, l) => s + l.minimo, 0);
   const feitos = d.feitos_hoje;
   const ok = minimo === 0 || feitos >= minimo;
-  const sem = d.semana || {};
   // ordem: atrasadas, depois as que vencem hoje, depois as novas, depois pelo prazo
   const peso = (l) => (l.prazo < d.hoje ? 0 : l.prazo === d.hoje ? 1 : l.nova ? 2 : 3);
   const listas = [...d.listas].sort((a, b) => peso(a) - peso(b) || a.prazo.localeCompare(b.prazo));
@@ -57,76 +55,75 @@ export async function render(el, ctx) {
     : `Círculo ${c.nivel}: faltam <em>${c.falta}</em>`;
   const nome = esc((ctx.perfil.nome || '').split(' ')[0]);
 
+  // ação principal: a lista mais urgente de hoje; se as de hoje acabaram, a próxima com prazo mais perto (adiantar)
+  const idsHoje = new Set(d.listas.map((l) => l.tarefa_id));
+  const adiante = pendentes.filter((t) => !idsHoje.has(t.id) && t.total - t.feitos > 0).sort((a, b) => a.prazo.localeCompare(b.prazo));
+  const acao = primeira
+    ? { href: `#/${ROTA_CONTROLE[primeira.controle_id]}/${primeira.tarefa_id}`, nome: nomeLista(primeira),
+      verbo: c?.bateuMinimo ? `Círculo ${c.nivel}` : feitos ? 'Continuar' : 'Começar' }
+    : adiante[0] ? { href: `#/${ROTA_CONTROLE[adiante[0].controle_id]}/${adiante[0].id}`, nome: tituloTarefa(adiante[0], listasFazer), verbo: 'Adiantar' } : null;
+  const prazoTxt = (p) => (p < d.hoje ? `<span class="selo vermelho">atrasada desde ${dataCurta(p)}</span>` : p === d.hoje ? '<span class="selo laranja">último dia hoje</span>' : `<span class="selo cinza">até ${diaSemana(p)} ${dataCurta(p)}</span>`);
+
+  // Ordem da tela (revisão de 18/11/2026): 1) avisos urgentes · 2) meta da semana (compacta, continua no topo)
+  // 3) HOJE: número, frase e o botão de ação · 4) as listas de hoje + o que vem depois · 5) resultados · 6) sequência e medalhas
   el.innerHTML = `
     ${urgentes.map((a) => `<div class="faixa ${a.nivel === 'urgente' ? 'urgente' : ''}"><div>${esc(a.texto)} <a href="${a.rota}">Abrir →</a></div></div>`).join('')}
 
     ${cartaoMeta(meta, d.hoje, ctx.perfil.unidade)}
 
-    ${guiaVisto() ? '' : `<div class="cartao guia"><h2>Primeira vez aqui? É simples</h2>
+    ${guiaVisto() ? '' : `<div class="cartao guia"><h2>Como funciona (30 segundos)</h2>
       <ol>
-        <li>Toque no botão verde <b>Começar</b>: ele abre a lista mais urgente.</li>
-        <li>Em cada pessoa, toque em <b>WhatsApp</b>: a mensagem já vai pronta e o contato fica marcado sozinho.</li>
-        <li>Feche pelo menos o <b>1º círculo</b> (o mínimo do dia). Fechou? Abre o próximo círculo para ir além. Se não der, no dia seguinte a Central pergunta o que aconteceu.</li>
-        <li>Mantenha a <b>sequência 🔥</b>: cada dia útil com o mínimo soma um dia (folga não quebra) e a chama muda de cor. A cada 12 dias seguidos você ganha um <b>escudo 🛡️</b>, que salva a sequência num dia que não der.</li>
+        <li>Toque no botão verde: ele abre a lista certa. Na lista, o contato da vez vem marcado como <b>Próximo</b>.</li>
+        <li>Feche pelo menos o <b>1º círculo</b> (o mínimo do dia). Depois abrem círculos extras para ir além.</li>
+        <li>Cada dia útil com o mínimo soma na <b>sequência 🔥</b>; a cada 12 dias seguidos você ganha um <b>escudo 🛡️</b> que salva a sequência num dia que não der.</li>
       </ol>
       <div class="linha-acoes" style="margin-top:12px"><button class="btn sec peq" id="guia-ok">Entendi</button></div></div>`}
 
     <section class="cartao placar ${c?.bateuMinimo ? 'bateu' : ''}">
-      <div class="placar-anel">${c
-        ? aneisSvg(c, { tam: 196, traco: 11, gap: 4, centro: `<b data-contar="${feitos}">0</b><span>/${c.alvo}</span>`, sub: subCirculo })
-        : aneisSvg({ nivel: 1, completos: 1, pct: 100, bateuMinimo: true }, { centro: '<b>✓</b>', sub: 'nada pendente' })}</div>
-      <div class="placar-info">
-        <small class="placar-ola">Olá, ${nome}! ${ok ? '🎉' : '💪'}</small>
-        ${minimo ? `<h2 class="placar-titulo">${tituloPlacar}</h2>
-          <p class="placar-frase">Hoje: <b>${feitos}</b> contatos (mínimo ${minimo}). ${esc(fraseDoDia(c, seq, d.hoje))}</p>
-          <p class="placar-recado">${esc(recado.frase)}</p>`
-        : '<h2 class="placar-titulo">Nada pendente hoje</h2><p class="placar-frase">Bom trabalho! 🎉 Aproveite para adiantar o que tiver prazo mais à frente.</p>'}
-        <div class="placar-chips">
-          ${chipsSequencia(seq)}
-          ${seq.recorde > 1 ? `<span class="chip-recorde">recorde: <b>${seq.recorde}</b></span>` : ''}
-          ${c?.completos ? `<span class="chip-circulos">⭕ <b>${c.completos}</b> ${c.completos === 1 ? 'círculo fechado' : 'círculos fechados'} hoje</span>` : ''}
-          ${sem.dias ? `<span class="chip-recorde">semana: <b>${sem.bateu} de ${sem.dias}</b> dias batidos</span>` : ''}
+      <div class="placar-principal">
+        <div class="placar-anel">${c
+          ? aneisSvg(c, { tam: 196, traco: 11, gap: 4, centro: `<b data-contar="${feitos}">0</b><span>/${c.alvo}</span>`, sub: subCirculo })
+          : aneisSvg({ nivel: 1, completos: 1, pct: 100, bateuMinimo: true }, { tam: 196, traco: 11, centro: '<b>✓</b>', sub: 'sem mínimo hoje' })}</div>
+        <div class="placar-info">
+          <small class="placar-ola">Olá, ${nome}! ${ok ? '🎉' : '💪'}</small>
+          ${c ? `<h2 class="placar-titulo">${tituloPlacar}</h2>
+            <p class="placar-frase">${esc(fraseDoDia(c, seq, d.hoje))}</p>`
+          : `<h2 class="placar-titulo">Sem mínimo hoje</h2><p class="placar-frase">${acao ? 'Dá para adiantar o que tem prazo mais à frente.' : 'Nada pendente. Bom trabalho! 🎉'}</p>`}
+          ${acao ? `<a class="btn verde grande btn-comecar" href="${acao.href}"><span>${acao.verbo}: ${esc(acao.nome)}</span><i>→</i></a>` : ''}
+          ${c ? `<p class="placar-recado">${esc(recado.frase)}</p>` : ''}
         </div>
+      </div>
+      <div class="placar-seq">
+        <div class="placar-chips">${chipsSequencia(seq)}</div>
         ${trilhaHtml(trilha)}
         ${caminhoHtml(seq)}
-        ${primeira ? `<a class="btn verde grande btn-comecar" href="#/${ROTA_CONTROLE[primeira.controle_id]}/${primeira.tarefa_id}"><span>${c?.bateuMinimo ? `Círculo ${c.nivel}` : feitos ? 'Continuar' : 'Começar'}: ${esc(nomeLista(primeira))}</span><i>→</i></a>` : ''}
       </div>
     </section>
 
-    ${quadroResultados(res)}
-
-    ${listas.length ? `<div class="cartao"><h2>🎯 Missões de hoje <span class="selo verde">${esc(recado.selo)}</span></h2>
-      <div class="missoes">${listas.map((l, k) => {
+    ${listas.length || adiante.length ? `<div class="cartao"><h2>🎯 ${listas.length ? 'Listas de hoje' : 'Para adiantar'} ${listas.length ? `<span class="selo verde">${esc(recado.selo)}</span>` : ''}</h2>
+      ${listas.length ? `<div class="missoes">${listas.map((l, k) => {
         const atrasada = l.prazo < d.hoje;
         const hojeNela = porLista ? porLista[l.tarefa_id] || 0 : null;
         const cumpriu = l.faltam_agora === 0 || (hojeNela != null && l.minimo > 0 && hojeNela >= l.minimo);
         const pctM = cumpriu ? 100 : hojeNela != null && l.minimo ? Math.min(100, Math.round((100 * hojeNela) / l.minimo)) : 0;
-        const prazo = atrasada ? `<span class="selo vermelho">atrasada desde ${dataCurta(l.prazo)}</span>` : l.prazo === d.hoje ? '<span class="selo laranja">último dia hoje</span>' : `<span class="selo cinza">até ${diaSemana(l.prazo)} ${dataCurta(l.prazo)}</span>`;
         return `<a class="missao ${cumpriu ? 'cumprida' : ''} ${atrasada ? 'atrasada' : ''}" style="--k:${k}" href="#/${ROTA_CONTROLE[l.controle_id]}/${l.tarefa_id}">
-          <div class="missao-topo">${l.nova ? '<span class="selo azul">nova</span>' : ''}${prazo}</div>
+          <div class="missao-topo">${l.nova ? '<span class="selo azul">nova</span>' : ''}${prazoTxt(l.prazo)}</div>
           <b class="missao-nome">${esc(nomeLista(l))}</b>
           <div class="missao-num"><span>${hojeNela == null ? `mínimo hoje: <b>${l.minimo}</b>` : `<b>${Math.min(hojeNela, l.minimo)}</b>/${l.minimo} hoje${hojeNela > l.minimo ? ` <em>+${hojeNela - l.minimo}</em>` : ''}`}</span><span>faltam ${l.faltam_agora} na lista</span></div>
           <div class="mini-barra"><i data-largura="${pctM}%"></i></div>
-          <span class="missao-ir">${cumpriu ? '✓ Missão cumprida' : 'Abrir →'}</span></a>`;
+          <span class="missao-ir">${cumpriu ? '✓ Mínimo desta lista feito' : 'Abrir →'}</span></a>`;
       }).join('')}</div>
-      <p class="dica" style="margin-top:12px">O mínimo de hoje é o que falta dividido pelos dias úteis até o prazo. Um pouco por dia rende mais que tudo no último dia.</p></div>` : ''}
+      <p class="dica" style="margin-top:10px">O mínimo de hoje é o que falta dividido pelos dias úteis até o prazo. Um pouco por dia rende mais que tudo no último dia.</p>` : ''}
+      ${adiante.length ? `<div class="adiante"><h3>Depois de hoje <small>não é tudo para hoje: é o que falta em cada lista até o prazo dela</small></h3>
+        <ul>${adiante.map((t) => `<li><a href="#/${ROTA_CONTROLE[t.controle_id]}/${t.id}"><span><b>${esc(tituloTarefa(t, listasFazer))}</b>${prazoTxt(t.prazo)}</span>
+          <span class="adiante-num"><b>${t.total - t.feitos}</b> faltam <i>→</i></span></a></li>`).join('')}</ul></div>` : ''}
+    </div>` : ''}
+
+    ${quadroResultados(res)}
 
     ${conquistasHtml(premios)}
 
-    ${pendentes.length ? `<div class="cartao"><h2>🗂️ Todas as minhas tarefas <span class="selo cinza">${faltamTotal} ${faltamTotal === 1 ? 'contato' : 'contatos'} no total</span></h2>
-      <p class="dica" style="margin:-6px 0 10px">Não é tudo para hoje: é o que falta em cada lista até o prazo dela. Para hoje, siga o <b>mínimo do dia</b> acima.</p>
-      <div class="tabela-wrap"><table class="tabela responsiva"><thead><tr><th>Lista</th><th>Faltam</th><th>Prazo</th><th></th></tr></thead><tbody>
-      ${pendentes.map((t) => {
-        const atrasada = t.prazo < d.hoje;
-        const prazo = atrasada ? `<span class="selo vermelho">atrasada desde ${dataCurta(t.prazo)}</span>` : t.prazo === d.hoje ? '<span class="selo laranja">último dia hoje</span>' : `até ${diaSemana(t.prazo)} ${dataCurta(t.prazo)}`;
-        return `<tr><td class="nome">${esc(tituloTarefa(t, listasFazer))}
-            <span class="sub">${prazo} · ${t.feitos} de ${t.total} feitos</span><div style="margin-top:6px;max-width:260px">${barra(t.feitos, t.total, { rotulo: false })}</div></td>
-          <td><b>${t.total - t.feitos}</b> <span class="dica">faltam</span></td>
-          <td class="oculta-cel">${atrasada ? 'atrasada' : `${diaSemana(t.prazo)} ${dataCurta(t.prazo)}`}</td>
-          <td class="acoes"><a class="btn sec peq" href="#/${ROTA_CONTROLE[t.controle_id]}/${t.id}">Abrir</a></td></tr>`;
-      }).join('')}</tbody></table></div>
-</div>` : ''}
-    <p class="dica" style="text-align:center"><a href="#/minhas-tarefas">Ver todas as minhas tarefas →</a></p>`;
+    <p class="dica" style="text-align:center"><a href="#/minhas-tarefas">Ver todas as minhas tarefas (quadro) →</a></p>`;
 
   animar(el);
   // festa do círculo fechado, uma vez por círculo por dia (se ela fechou numa lista, a festa já aconteceu lá)
@@ -159,8 +156,12 @@ function quadroResultados(r) {
     ${r.semana ? `<div class="res-topo"><b class="res-num" data-contar="${r.semana}">${r.semana}</b>
         <span>${r.semana === 1 ? 'contato seu deu certo' : 'contatos seus deram certo'} nesta semana</span></div>
       <div class="res-tipos">${tipos.map(([k, t], j) => `<span class="res-tipo" style="--k:${j}"><i>${t.icone}</i><b>${r.porTipo[k]}</b> ${r.porTipo[k] === 1 ? t.um : t.varios}</span>`).join('')}</div>
-      <ul class="res-lista">${r.recentes.map((i, j) => `<li style="--k:${j}" class="${novo.has(i) ? 'novo' : ''}"><i>${TIPOS_RESULTADO[i.resultado].icone}</i>
-        <span><b>${esc(nomeBonito(i.nome))}</b> ${TIPOS_RESULTADO[i.resultado].um}</span>${novo.has(i) ? '<em>novo</em>' : ''}<small>${quando(i.quando)}</small></li>`).join('')}</ul>`
+      ${(() => {
+        const li = (i, j) => `<li style="--k:${j}" class="${novo.has(i) ? 'novo' : ''}"><i>${TIPOS_RESULTADO[i.resultado].icone}</i>
+          <span><b>${esc(nomeBonito(i.nome))}</b> ${TIPOS_RESULTADO[i.resultado].um}</span>${novo.has(i) ? '<em>novo</em>' : ''}<small>${quando(i.quando)}</small></li>`;
+        const [primeiros, resto] = [r.recentes.slice(0, 3), r.recentes.slice(3)];
+        return `<ul class="res-lista">${primeiros.map(li).join('')}</ul>${resto.length ? `<details class="res-mais"><summary>Ver mais ${resto.length}</summary><ul class="res-lista">${resto.map(li).join('')}</ul></details>` : ''}`;
+      })()}`
     : `<p class="dica">Quando um contato seu fizer o aluno voltar a treinar, pagar ou se matricular, ele aparece aqui. A EVO confere toda madrugada.</p>`}
   </div>`;
 }
@@ -172,7 +173,7 @@ export function cartaoMeta(meta, hoje, unidade) {
   const r = resumoSemana(meta.vendas || [], hoje, unidade);
   const p = painelMeta(r, hoje, unidade);
   const ultimo = p.marcos.length - 1;
-  return `<div class="cartao meta-semana ${r.proxima ? '' : 'super'}">
+  return `<div class="cartao meta-semana compacta ${r.proxima ? '' : 'super'}">
     <div class="ms-topo"><span>🎯&nbsp; Meta da semana ${r.semana}</span><span>${dataCurta(r.ini)} a ${dataCurta(r.fim)}</span></div>
     <div class="ms-numero"><b data-contar="${r.feitos}">${r.feitos}</b><span>${r.feitos === 1 ? 'contrato' : 'contratos'}</span>
       <span class="ms-faixa ${r.faixa === 'Abaixo do básico' ? '' : 'ok'}">${esc(r.faixa)}</span></div>

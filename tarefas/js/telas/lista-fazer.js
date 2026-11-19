@@ -1,10 +1,10 @@
 // Lista a fazer — o coordenador sobe uma lista de contatos com a explicação do que fazer; ela é dividida
 // igualmente entre as consultoras da unidade e cada uma marca o que já fez (com observação opcional).
 // A consultora também pode subir uma lista PRÓPRIA (só dela, sem divisão) para se organizar.
-import * as dados from '../dados.js?v=20261118223633';
-import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261118223633';
-import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261118223633';
-import { lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261118223633';
+import * as dados from '../dados.js?v=20261118225122';
+import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261118225122';
+import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261118225122';
+import { organizarLista, pendentesPrimeiro, lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261118225122';
 
 const texto = (s) => esc(s).replaceAll('\n', '<br>');
 const FAIXA_VERDE = 'background:#F4FAEC;border-color:#D5EDB8;color:var(--dark)';
@@ -44,6 +44,7 @@ export async function render(el, ctx, [tarefaId]) {
 async function listaContatos(el, ctx, tarefa, lista) {
   const itens = await dados.itensDaTarefa(tarefa.id);
   if (!itens.length) { el.innerHTML = vazio('Nenhum contato nesta lista.'); return; }
+  itens.sort(pendentesPrimeiro);
   const podeMexer = ctx.ehAdmin || tarefa.responsavel_id === ctx.perfil.id;
   const outras = ctx.consultorasDa(tarefa.unidade).filter((c) => c.id !== tarefa.responsavel_id);
 
@@ -69,6 +70,7 @@ async function listaContatos(el, ctx, tarefa, lista) {
   el.innerHTML = `<div class="tabela-wrap"><table class="tabela responsiva">
     <thead><tr><th>Contato</th><th>Celular</th><th>Observação</th><th></th></tr></thead>
     <tbody>${itens.map(linha).join('')}</tbody></table></div>`;
+  if (podeMexer) organizarLista(el, { comoMarcar: '<b>WhatsApp</b> só abre a conversa. Depois de falar, toque em <b>Marcar feito</b>.' });
 
   // troca só a linha e atualiza o cabeçalho — a página não pula para o topo
   const atualizarLinha = (id, novo) => {

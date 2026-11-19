@@ -1,9 +1,9 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261118223633';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118223633';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118223633';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118223633';
-import { maisUm, celebrar } from '../jogo-visual.js?v=20261118223633';
+import * as dados from '../dados.js?v=20261118225122';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261118225122';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261118225122';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261118225122';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261118225122';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -80,11 +80,44 @@ export async function recarregarNoLugar(fn) {
   window.scrollTo(0, y);
 }
 
+// ── Organização das listas (revisão de usabilidade, 18/11/2026) ──
+// Pendentes primeiro (ordem original dentro de cada grupo); quem já estava feito ao abrir fica escondido num botão;
+// o 1º pendente ganha o selo "Próximo"; uma linha diz como marcar NESTA lista. Quem é marcado agora não some nem pula
+// de lugar (dá para desfazer na hora).
+export const pendentesPrimeiro = (a, b) => Number(!!a.feito_em) - Number(!!b.feito_em);
+export function organizarLista(el, { comoMarcar = '' } = {}) {
+  const tabela = el.querySelector('table');
+  const tbody = tabela?.querySelector('tbody');
+  if (!tbody) return;
+  const feitos = [...tbody.querySelectorAll('tr.feito[data-id]')];
+  const pendentes = tbody.querySelectorAll('tr[data-id]:not(.feito)').length;
+  feitos.forEach((tr) => tr.classList.add('ja-feito'));
+  const tudo = pendentes === 0;
+  if (tudo) tabela.classList.add('mostra-feitos');
+  const barra = document.createElement('div');
+  barra.className = 'lista-barra';
+  barra.innerHTML = `${tudo ? '<span class="lista-completa">✅ Lista completa: todos os contatos feitos.</span>'
+    : comoMarcar ? `<span class="como-marcar">💡 ${comoMarcar}</span>` : ''}
+    ${feitos.length && !tudo ? `<button class="btn sec peq" type="button" data-alternar>Mostrar os ${feitos.length} já feitos</button>` : ''}`;
+  el.prepend(barra);
+  barra.querySelector('[data-alternar]')?.addEventListener('click', (e) => {
+    const on = tabela.classList.toggle('mostra-feitos');
+    e.target.textContent = on ? 'Esconder os já feitos' : `Mostrar os ${feitos.length} já feitos`;
+  });
+  const proximo = () => {
+    tbody.querySelectorAll('tr.proximo').forEach((tr) => tr.classList.remove('proximo'));
+    tbody.querySelector('tr[data-id]:not(.feito)')?.classList.add('proximo');
+  };
+  proximo();
+  new MutationObserver(proximo).observe(tbody, { childList: true });
+}
+
 // ── Lista de contatos (inadimplência, risco e listas automáticas sem motivo) ──
 // Marcar/desmarcar/mover atualizam só a linha e o cabeçalho — a página não pula para o topo.
 export async function listaContatos(el, ctx, tarefa) {
   const itens = await dados.itensDaTarefa(tarefa.id);
   if (!itens.length) { el.innerHTML = vazio('Nenhum contato nesta tarefa.'); return; }
+  itens.sort(pendentesPrimeiro);
   const podeMexer = ctx.ehAdmin || tarefa.responsavel_id === ctx.perfil.id;
   const modelo = ctx.controles[tarefa.controle_id]?.config?.mensagem_whatsapp || '';
   const ehRisco = tarefa.controle_id === 'risco';
@@ -136,6 +169,7 @@ export async function listaContatos(el, ctx, tarefa) {
   el.innerHTML = `<div class="tabela-wrap"><table class="tabela responsiva">
     <thead><tr><th>Nome</th><th>Celular</th>${ehRisco ? '<th>Última presença</th><th>Observação</th>' : ''}${ehInad ? '<th>Observação</th>' : ''}<th>Status</th><th></th></tr></thead>
     <tbody>${itens.map(linha).join('')}</tbody></table></div>`;
+  if (podeMexer) organizarLista(el, { comoMarcar: 'Toque em <b>WhatsApp</b>: a mensagem vai pronta e o contato já fica marcado sozinho.' });
 
   // troca só a linha do item e atualiza o cabeçalho
   const atualizarLinha = (id, novo) => {
