@@ -1,11 +1,11 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118215749';
-import * as dados from './dados.js?v=20261118215749';
-import { hojeSP } from './regras.js?v=20261118215749';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118215749';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118215749';
-import { anel, sequencia } from './jogo.js?v=20261118215749';
-import { anelSvg, animar, maisUm, festaMinimoUmaVez, celebrar } from './jogo-visual.js?v=20261118215749';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118221345';
+import * as dados from './dados.js?v=20261118221345';
+import { hojeSP } from './regras.js?v=20261118221345';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118221345';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118221345';
+import { anel, sequencia } from './jogo.js?v=20261118221345';
+import { anelSvg, animar, maisUm, festaMinimoUmaVez, celebrar } from './jogo-visual.js?v=20261118221345';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -138,7 +138,14 @@ function ligarVerComo() {
   b.innerHTML = verComoId ? '↩ Voltar a ser coordenador' : '👁 Ver como consultora';
   b.addEventListener('click', () => (verComoId ? sairDoVerComo() : escolherConsultora()));
   $('lateral').querySelector('.pe').prepend(b);
-  if (!verComoId) return;
+  if (!verComoId) {   // também no topo, ao lado do sino: no notebook o pé do menu fica escondido (pedido de 18/11/2026)
+    const t = document.createElement('button');
+    t.type = 'button'; t.className = 'btn-topo-ver-como'; t.title = 'Ver a Central como uma consultora vê (só para olhar)';
+    t.innerHTML = '👁 <span>Ver como consultora</span>';
+    t.addEventListener('click', escolherConsultora);
+    $('sino').before(t);
+    return;
+  }
   document.body.classList.add('modo-ver-como');
   const f = document.createElement('div');
   f.className = 'faixa-ver-como';
@@ -208,7 +215,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261118215749`);
+    const tela = await import(`./telas/${modulo}.js?v=20261118221345`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
