@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261119002117';
+import { hojeSP } from './regras.js?v=20261119002831';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -284,7 +284,7 @@ export function resumoResultados(itens, hoje, vistoAte = null) {
   for (const i of semana) porTipo[i.resultado] = (porTipo[i.resultado] || 0) + 1;
   const novos = vistoAte ? validos.filter((i) => Date.parse(i.quando) > Date.parse(vistoAte)) : validos;
   const ultimo = validos.reduce((m, i) => (!m || Date.parse(i.quando) > Date.parse(m) ? i.quando : m), null);
-  return { total: validos.length, semana: semana.length, porTipo, recentes: semana.slice(0, 6), novos, ultimo };
+  return { total: validos.length, semana: semana.length, porTipo, recentes: semana, novos, ultimo };
 }
 
 // Texto da comemoração de resultado novo
