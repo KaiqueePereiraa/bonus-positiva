@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, rodízio, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261119002831';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119002831';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119002831';
+import * as dados from '../dados.js?v=20261119004503';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119004503';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119004503';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Rodízio'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -242,9 +242,9 @@ const ROTULOS_RESUMO = {
   excluidos_gympass_totalpass: 'Fora: Gympass/Totalpass na ficha', suspensos: 'Fora: contrato suspenso/trancado', cadastro_recente: 'Fora: cadastro recente', sem_ultimo_acesso: 'Sem último acesso na EVO',
   prospects_lidos: 'Oportunidades lidas', ja_viraram_cliente: 'Já viraram cliente', ja_aluno_mesmo_nome: 'Fora: já é aluno ativo (mesmo nome)',
   oportunidades_repetidas: 'Fora: oportunidade repetida (mesmo celular)', aluno_mesmo_celular: 'Marcados: celular de aluno ativo', sem_nome: 'Sem nome', mes: 'Mês',
-  aguardando_resultado: 'Contatos aguardando resultado', pagou: 'Pagaram', nao_pagou: 'Não pagaram (30 dias)', voltou: 'Voltaram a treinar',
-  nao_voltou: 'Não voltaram em 10 dias', matriculou: 'Matricularam', nao_matriculou: 'Não matricularam (35 dias)', valor_recuperado: 'R$ recuperado',
-  a_gravar: 'Resultados novos', gravados: 'Gravados', renovou: 'Renovaram', nao_renovou: 'Não renovaram (35 dias)',
+  aguardando_resultado: 'Contatos aguardando resultado', pagou: 'Pagaram', nao_pagou: 'Não pagaram em 5 dias', voltou: 'Voltaram a treinar',
+  nao_voltou: 'Não voltaram em 10 dias', matriculou: 'Matricularam', nao_matriculou: 'Não matricularam em 7 dias', valor_recuperado: 'R$ recuperado',
+  a_gravar: 'Resultados novos', gravados: 'Gravados', renovou: 'Renovaram', nao_renovou: 'Não renovaram em 7 dias',
   contratos_na_janela: 'Contratos vencendo nas duas semanas', ja_renovaram: 'Fora: já renovaram', especiais: 'Fora: contratos especiais',
   registrados: 'Fora: registrados', em_cobranca: 'Fora: na inadimplência', fora_da_janela: 'Vencem nesta semana (já tiveram contato)',
   a_vencer: 'Lista "a vencer"', venceu_sem_renovar: 'Lista "venceu e não renovou"', excluidos_em_cobranca: 'Fora: já na lista de inadimplência', tirados_da_lista: 'Saíram das listas (já resolveram sozinhos)',
