@@ -1,14 +1,14 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import * as dados from '../dados.js?v=20261118230938';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118230938';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118230938';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118230938';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118230938';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto } from './_vitorias.js?v=20261118230938';
-import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118230938';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118230938';
+import * as dados from '../dados.js?v=20261118235144';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118235144';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118235144';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118235144';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118235144';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261118235144';
+import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118235144';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118235144';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -138,6 +138,11 @@ export async function render(el, ctx) {
   const caixaRes = el.querySelector('.resultados');
   if (caixaRes) {
     ligarPalmas(caixaRes, vits, ctx.perfil.id);
+    caixaRes.addEventListener('aplaudiu', () => {   // atualiza o contador "faltam aplaudir" da aba
+      const n = faltaAplaudir(vits, ctx.perfil.id);
+      const cont = caixaRes.querySelector('[data-aba=equipe] .cont');
+      if (cont) cont.textContent = n || '✓';
+    });
     caixaRes.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => {
       caixaRes.querySelectorAll('[data-aba]').forEach((x) => x.classList.toggle('ativo', x === b));
       caixaRes.querySelectorAll('[data-painel]').forEach((p) => { p.hidden = p.dataset.painel !== b.dataset.aba; });
@@ -163,17 +168,20 @@ function quadroResultados(r, vits = [], euId = '') {
   if (!r && !vits.length) return '';
   const tipos = r ? Object.entries(TIPOS_RESULTADO).filter(([k]) => r.porTipo[k]) : [];
   const novo = new Set(r?.novos || []);
-  const palmasDe = Object.fromEntries(vits.filter((v) => v.consultora_id === euId).map((v) => [v.item_id, v.palmas]));
+  // quem aplaudiu os resultados dela (uma vez por pessoa, mesmo aplaudindo vários dias)
+  const quemAplaudiu = [...new Set(vits.filter((v) => v.consultora_id === euId).flatMap((v) => v.palmas.map((p) => p.nome.split(' ')[0])))];
+  const aAplaudir = faltaAplaudir(vits, euId);
   const equipe = vits.filter((v) => v.consultora_id !== euId);
   const abaInicial = r?.semana ? 'minhas' : equipe.length ? 'equipe' : 'minhas';
   const minhas = r?.semana ? `<div class="res-topo"><b class="res-num" data-contar="${r.semana}">${r.semana}</b>
         <span>${r.semana === 1 ? 'contato seu deu certo' : 'contatos seus deram certo'} nesta semana</span></div>
       <div class="res-tipos">${tipos.map(([k, t], j) => `<span class="res-tipo" style="--k:${j}"><i>${t.icone}</i><b>${r.porTipo[k]}</b> ${r.porTipo[k] === 1 ? t.um : t.varios}</span>`).join('')}</div>
+      ${quemAplaudiu.length ? `<p class="aplaudiram">👏 <b>${esc(quemAplaudiu.slice(0, 3).join(', '))}${quemAplaudiu.length > 3 ? ` e mais ${quemAplaudiu.length - 3}` : ''}</b> ${quemAplaudiu.length === 1 ? 'aplaudiu' : 'aplaudiram'} seus resultados</p>` : ''}
       ${(() => {
-        const li = (i, j) => { const p = palmasDe[i.id] || [];
+        const li = (i, j) => {
           return `<li style="--k:${j}" class="${novo.has(i) ? 'novo' : ''}"><i>${TIPOS_RESULTADO[i.resultado].icone}</i>
           <span><b>${esc(nomeBonito(i.nome))}</b> ${TIPOS_RESULTADO[i.resultado].um}</span>${novo.has(i) ? '<em>novo</em>' : ''}
-          ${p.length ? `<span class="palmas-recebidas" title="Aplaudiram: ${esc(p.map((x) => x.nome.split(' ')[0]).join(', '))}">👏 ${p.length}</span>` : ''}<small>${quandoCurto(i.quando)}</small></li>`; };
+          <small>${quandoCurto(i.quando)}</small></li>`; };
         const [primeiros, resto] = [r.recentes.slice(0, 3), r.recentes.slice(3)];
         return `<ul class="res-lista">${primeiros.map(li).join('')}</ul>${resto.length ? `<details class="res-mais"><summary>Ver mais ${resto.length}</summary><ul class="res-lista">${resto.map(li).join('')}</ul></details>` : ''}`;
       })()}`
@@ -182,11 +190,11 @@ function quadroResultados(r, vits = [], euId = '') {
     <h2>🌟 Deu resultado! <span class="selo cinza">últimos 7 dias</span>${r?.total ? `<span class="mais">${r.total} ${r.total === 1 ? 'seu' : 'seus'} desde o começo</span>` : ''}</h2>
     <div class="abas res-abas">
       <button type="button" data-aba="minhas" class="${abaInicial === 'minhas' ? 'ativo' : ''}">Minhas <span class="cont">${r?.semana || 0}</span></button>
-      <button type="button" data-aba="equipe" class="${abaInicial === 'equipe' ? 'ativo' : ''}">Da equipe 👏 <span class="cont">${equipe.length}</span></button>
+      <button type="button" data-aba="equipe" class="${abaInicial === 'equipe' ? 'ativo' : ''}" title="Dias de colegas que você ainda não aplaudiu">Da equipe 👏 <span class="cont">${aAplaudir || '✓'}</span></button>
     </div>
     <div data-painel="minhas" ${abaInicial === 'minhas' ? '' : 'hidden'}>${minhas}</div>
     <div data-painel="equipe" ${abaInicial === 'equipe' ? '' : 'hidden'}>
-      <p class="dica" style="margin-bottom:8px">Vitórias das colegas da sua unidade. Toque em 👏 para dar os parabéns — ela fica sabendo.</p>
+      <p class="dica" style="margin-bottom:8px">Uma linha por colega por dia. Um 👏 dá os parabéns por todos os resultados daquele dia — ela fica sabendo.</p>
       ${listaVitorias(equipe, euId)}</div>
   </div>`;
 }

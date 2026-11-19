@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261118230938';
+import { sb } from '../../shared/sessao.js?v=20261118235144';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -206,6 +206,7 @@ export async function meusResultados(userId) {
 // vitórias da equipe (mesma unidade; o coordenador vê todas) e 👏 — migração 049
 export const vitoriasEquipe = (dias = 7) => rpc('vitorias_equipe', { p_dias: dias });
 export const aplaudir = (item) => rpc('aplaudir', { p_item: item });
+export const aplaudirDia = (consultora, dia) => rpc('aplaudir_dia', { p_consultora: consultora, p_dia: dia });   // migração 050
 // dias úteis já fechados da consultora (sequência e conquistas do Meu dia); RLS só deixa ler os próprios
 export const meusDias = async (userId) => ok(await sb.from('dias_consultora').select('data,minimo,feitos,bateu,trabalhou')
   .eq('consultora_id', userId).order('data', { ascending: false }).limit(800));

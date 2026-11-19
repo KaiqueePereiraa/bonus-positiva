@@ -1,14 +1,14 @@
 // Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que acontece HOJE e pede ação (gestão por
 // exceção), em frases simples, cada uma com "o que fazer". Comparações de 30 dias ficam em Desempenho; o que cada
 // lista trouxe fica em Resultados; o retorno em R$, em Relatórios → Retorno do mês.
-import * as dados from '../dados.js?v=20261118230938';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118230938';
-import { somarDias, semanaDe } from '../regras.js?v=20261118230938';
+import * as dados from '../dados.js?v=20261118235144';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118235144';
+import { somarDias, semanaDe } from '../regras.js?v=20261118235144';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261118230938';
-import { listaVitorias, ligarPalmas } from './_vitorias.js?v=20261118230938';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261118235144';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261118235144';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -59,8 +59,8 @@ export async function render(el, ctx) {
         <p class="dica" style="margin-top:8px">Pendentes = contatos em aberto em todas as listas dela. "Livre" = zerou as listas: dá para passar uma Lista a fazer. Semana = mínimo cumprido nos dias já fechados desta semana. Comparação de 30 dias: <a href="#/desempenho">Desempenho →</a></p>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
     </div>
 
-    <div class="cartao" id="vitorias"><h2>🎉 Vitórias da equipe <span class="selo cinza">últimos 7 dias</span>${vitorias.length ? `<span class="selo verde">${vitorias.length}</span>` : ''}</h2>
-      <p class="dica" style="margin-bottom:8px">Contatos que deram certo (a EVO confere de madrugada). Um 👏 seu chega para a consultora como "${esc((ctx.perfil.nome || '').split(' ')[0])} te aplaudiu" — reconhecimento do coordenador pesa mais que qualquer medalha.</p>
+    <div class="cartao" id="vitorias"><h2>🎉 Vitórias da equipe <span class="selo cinza">últimos 7 dias</span>${vitorias.length ? `<span class="selo verde">${vitorias.length} resultados</span>` : ''}${faltaAplaudir(vitorias, ctx.perfil.id) ? `<span class="selo laranja">${faltaAplaudir(vitorias, ctx.perfil.id)} para aplaudir</span>` : ''}</h2>
+      <p class="dica" style="margin-bottom:8px">Uma linha por consultora por dia (a EVO confere os resultados de madrugada). Um 👏 vale para todos os resultados do dia dela; ele chega para a consultora como "${esc((ctx.perfil.nome || '').split(' ')[0])} te aplaudiu" — reconhecimento do coordenador pesa mais que qualquer medalha.</p>
       ${listaVitorias(vitorias, ctx.perfil.id)}</div>
 
     ${listasDaSemana(tarefas, hojeIso)}
