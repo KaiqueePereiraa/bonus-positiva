@@ -1,7 +1,7 @@
 // Histórico — tudo o que as pessoas fizeram na plataforma (Central e Bônus): quem, quando, o quê e em qual unidade.
 // O banco já devolve só as unidades que o coordenador pode ver; o administrador geral vê tudo.
-import * as dados from '../dados.js?v=20261119192511';
-import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261119192511';
+import * as dados from '../dados.js?v=20261119195426';
+import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261119195426';
 
 const TABELAS = {
   profiles: 'Cadastro', config_central: 'Configuração', controles: 'Configuração das listas', motivos: 'Motivo',
@@ -31,9 +31,12 @@ const ROTULO_CAMPO = {
 };
 
 const curto = (v) => {
+  if (v == null || v === '') return '—';
   const s = typeof v === 'string' ? v : JSON.stringify(v);
-  return s == null ? '—' : s.length > 60 ? `${s.slice(0, 57)}…` : s;
+  return s.length > 60 ? `${s.slice(0, 57)}…` : s;
 };
+// valores com nome amigável (grupo 'A' = Grupo 1…)
+const valor = (k, v) => (k === 'grupo' && v ? `Grupo ${v.charCodeAt(0) - 64}` : curto(v));
 
 function oQue(e) {
   if (e.tabela === 'itens') return ACOES_ITEM[e.acao] || ACOES[e.acao] || e.acao;
@@ -51,7 +54,8 @@ function detalhe(e) {
   const quem = ref.nome || ref.titulo || ref.student || ref.consultant || ref.chave || ref.key || ref.data || '';
   if (e.acao !== 'editar') return curto(quem);
   const mudou = Object.keys({ ...a, ...d }).filter((k) => !IGNORAR.has(k) && JSON.stringify(a[k]) !== JSON.stringify(d[k]))
-    .map((k) => `${ROTULO_CAMPO[k] || k}: ${curto(a[k])} → ${curto(d[k])}`);
+    .filter((k) => k in d)   // campo que não veio no "depois" não mudou de verdade
+    .map((k) => `${ROTULO_CAMPO[k] || k}: ${valor(k, a[k])} → ${valor(k, d[k])}`);
   return [quem, ...mudou].filter(Boolean).join(' · ');
 }
 

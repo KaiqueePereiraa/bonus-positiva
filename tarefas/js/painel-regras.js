@@ -55,9 +55,11 @@ export function sinais(unidades) {
 
 // "Precisa da sua atenção": só o que pede uma ação do gestor
 // desligadas: rotinas automáticas da EVO ainda desligadas (nomes), para o gestor simular e ligar
-export function atencao(p, unidades, hora = 12, desligadas = []) {
+// geral: administrador geral (EVO, WhatsApp e valores do Retorno só ele muda; o coordenador de unidade é avisado para falar com ele)
+export function atencao(p, unidades, hora = 12, desligadas = [], geral = true) {
   const lista = [];
-  if (desligadas.length) {
+  const comGeral = 'Avise o administrador geral.';
+  if (desligadas.length && geral) {
     lista.push({ texto: `${desligadas.length === 1 ? 'Uma lista automática ainda está desligada' : `${desligadas.length} listas automáticas ainda estão desligadas`}: ${desligadas.join(', ')}.`,
       acao: 'Em Configurações → EVO, clique em "Simular agora", confira os números e depois em "Ligar automático".', rota: '#/configuracoes' });
   }
@@ -72,11 +74,11 @@ export function atencao(p, unidades, hora = 12, desligadas = []) {
       else if (hora >= 14 && c.minimo >= 3 && c.feitos_hoje * 2 < c.minimo) lista.push({ texto: `${c.nome} fez ${c.feitos_hoje} de ${c.minimo} contatos do mínimo de hoje.`, acao: 'Veja se algo está travando o dia dela.' });
       if (c.pct_semana_passada != null && c.pct_semana_passada < 80) lista.push({ texto: `${c.nome} fez ${c.pct_semana_passada}% das listas da semana passada.` });
     }
-    for (const t of u.erros_evo_hoje || []) lista.push({ texto: `A busca automática na EVO (${t}) falhou hoje em ${u.nome}.`, acao: 'Veja o histórico em Configurações → EVO.', rota: '#/configuracoes' });
+    for (const t of u.erros_evo_hoje || []) lista.push({ texto: `A busca automática na EVO (${t}) falhou hoje em ${u.nome}.`, acao: geral ? 'Veja o histórico em Configurações → EVO.' : comGeral, rota: geral ? '#/configuracoes/evo' : undefined });
   }
-  if (p.whatsapp_falhas_hoje > 0) lista.push({ texto: `${plural(p.whatsapp_falhas_hoje, 'mensagem de WhatsApp não foi entregue', 'mensagens de WhatsApp não foram entregues')} hoje.`, acao: 'Confira os números de WhatsApp em Configurações → WhatsApp.', rota: '#/configuracoes' });
+  if (p.whatsapp_falhas_hoje > 0) lista.push({ texto: `${plural(p.whatsapp_falhas_hoje, 'mensagem de WhatsApp não foi entregue', 'mensagens de WhatsApp não foram entregues')} hoje.`, acao: geral ? 'Confira os números de WhatsApp em Configurações → WhatsApp.' : comGeral, rota: geral ? '#/configuracoes/whatsapp' : undefined });
   const cfg = p.config || {};
-  if (!(Number(cfg.mensalidade_media) > 0)) lista.push({ texto: 'Informe a mensalidade média do aluno para o Retorno do mês mostrar os alunos recuperados em R$.', rota: '#/retorno' });
+  if (geral && !(Number(cfg.mensalidade_media) > 0)) lista.push({ texto: 'Informe a mensalidade média do aluno para o Retorno do mês mostrar os alunos recuperados em R$.', rota: '#/retorno' });
   return lista;
 }
 

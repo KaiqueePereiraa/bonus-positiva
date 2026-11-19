@@ -1,14 +1,14 @@
 // Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que acontece HOJE e pede ação (gestão por
 // exceção), em frases simples, cada uma com "o que fazer". Comparações de 30 dias ficam em Desempenho; o que cada
 // lista trouxe fica em Resultados; o retorno em R$, em Relatórios → Retorno do mês.
-import * as dados from '../dados.js?v=20261119192511';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261119192511';
-import { somarDias, semanaDe } from '../regras.js?v=20261119192511';
+import * as dados from '../dados.js?v=20261119195426';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261119195426';
+import { somarDias, semanaDe } from '../regras.js?v=20261119195426';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261119192511';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261119192511';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261119195426';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261119195426';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -27,7 +27,7 @@ export async function render(el, ctx) {
   const ativas = unidades.filter((u) => u.consultoras.length);
   const hora = +new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hour12: false }).format(new Date());
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-  const lista = atencao(p, unidades, hora, desligadas);
+  const lista = atencao(p, unidades, hora, desligadas, ctx.ehSuper);
   const cards = sinais(unidades);
   const todas = ativas.flatMap((u) => u.consultoras.map((c) => ({ ...c, unidade: u.nome })));
 
