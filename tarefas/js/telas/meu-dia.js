@@ -1,13 +1,13 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import * as dados from '../dados.js?v=20261118225122';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118225122';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118225122';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118225122';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118225122';
-import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118225122';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118225122';
+import * as dados from '../dados.js?v=20261118225708';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118225708';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118225708';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118225708';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118225708';
+import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118225708';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118225708';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -64,12 +64,11 @@ export async function render(el, ctx) {
     : adiante[0] ? { href: `#/${ROTA_CONTROLE[adiante[0].controle_id]}/${adiante[0].id}`, nome: tituloTarefa(adiante[0], listasFazer), verbo: 'Adiantar' } : null;
   const prazoTxt = (p) => (p < d.hoje ? `<span class="selo vermelho">atrasada desde ${dataCurta(p)}</span>` : p === d.hoje ? '<span class="selo laranja">último dia hoje</span>' : `<span class="selo cinza">até ${diaSemana(p)} ${dataCurta(p)}</span>`);
 
-  // Ordem da tela (revisão de 18/11/2026): 1) avisos urgentes · 2) meta da semana (compacta, continua no topo)
-  // 3) HOJE: número, frase e o botão de ação · 4) as listas de hoje + o que vem depois · 5) resultados · 6) sequência e medalhas
+  // Ordem da tela (revisão de 18/11/2026): 1) avisos urgentes · 2) HOJE: número, frase e o botão de ação (o que ela faz
+  // agora) · 3) META DA SEMANA logo abaixo (o resultado que esse esforço gera; também fica no placar do topo de todas as
+  // telas) · 4) as listas de hoje + o que vem depois · 5) resultados · 6) sequência e medalhas
   el.innerHTML = `
     ${urgentes.map((a) => `<div class="faixa ${a.nivel === 'urgente' ? 'urgente' : ''}"><div>${esc(a.texto)} <a href="${a.rota}">Abrir →</a></div></div>`).join('')}
-
-    ${cartaoMeta(meta, d.hoje, ctx.perfil.unidade)}
 
     ${guiaVisto() ? '' : `<div class="cartao guia"><h2>Como funciona (30 segundos)</h2>
       <ol>
@@ -99,6 +98,8 @@ export async function render(el, ctx) {
         ${caminhoHtml(seq)}
       </div>
     </section>
+
+    ${cartaoMeta(meta, d.hoje, ctx.perfil.unidade)}
 
     ${listas.length || adiante.length ? `<div class="cartao"><h2>🎯 ${listas.length ? 'Listas de hoje' : 'Para adiantar'} ${listas.length ? `<span class="selo verde">${esc(recado.selo)}</span>` : ''}</h2>
       ${listas.length ? `<div class="missoes">${listas.map((l, k) => {
@@ -173,7 +174,7 @@ export function cartaoMeta(meta, hoje, unidade) {
   const r = resumoSemana(meta.vendas || [], hoje, unidade);
   const p = painelMeta(r, hoje, unidade);
   const ultimo = p.marcos.length - 1;
-  return `<div class="cartao meta-semana compacta ${r.proxima ? '' : 'super'}">
+  return `<div class="cartao meta-semana ${r.proxima ? '' : 'super'}">
     <div class="ms-topo"><span>🎯&nbsp; Meta da semana ${r.semana}</span><span>${dataCurta(r.ini)} a ${dataCurta(r.fim)}</span></div>
     <div class="ms-numero"><b data-contar="${r.feitos}">${r.feitos}</b><span>${r.feitos === 1 ? 'contrato' : 'contratos'}</span>
       <span class="ms-faixa ${r.faixa === 'Abaixo do básico' ? '' : 'ok'}">${esc(r.faixa)}</span></div>

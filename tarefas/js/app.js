@@ -1,11 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118225122';
-import * as dados from './dados.js?v=20261118225122';
-import { hojeSP } from './regras.js?v=20261118225122';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118225122';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118225122';
-import { circulos, disponivelDe, caminhoSequencia } from './jogo.js?v=20261118225122';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia } from './jogo-visual.js?v=20261118225122';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261118225708';
+import * as dados from './dados.js?v=20261118225708';
+import { hojeSP } from './regras.js?v=20261118225708';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261118225708';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261118225708';
+import { circulos, disponivelDe, caminhoSequencia } from './jogo.js?v=20261118225708';
+import { resumoSemana } from './bonus-meta.js?v=20261118225708';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia } from './jogo-visual.js?v=20261118225708';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -216,7 +217,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261118225122`);
+    const tela = await import(`./telas/${modulo}.js?v=20261118225708`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -333,11 +334,12 @@ async function pedirJustificativas() {
 }
 // ── Placar do topo (consultora): anel do mínimo de hoje + sequência 🔥, em todas as telas ──
 // Atualiza a cada contato marcado (evento central:contato, disparado por atualizarCabecalho) e comemora o mínimo.
-let diasFechados = null, ultimoFeitos = null;
+let diasFechados = null, ultimoFeitos = null, metaSemana;   // meta: lida 1x (a EVO atualiza de madrugada)
 async function atualizarHud(animarMudanca = false) {
   const el = $('hud');
   try {
     if (!diasFechados) diasFechados = await dados.meusDias(perfil.id).catch(() => []);
+    if (metaSemana === undefined) metaSemana = perfil.acesso_bonus && perfil.unidade ? await dados.minhaMetaSemana().catch(() => null) : null;
     const d = await dados.meuDia();
     const minimo = d.listas.reduce((s, l) => s + l.minimo, 0), feitos = d.feitos_hoje;
     if (!minimo && !feitos) { el.hidden = true; return; }
@@ -346,12 +348,19 @@ async function atualizarHud(animarMudanca = false) {
     el.hidden = false;
     el.className = `hud${c?.bateuMinimo ? ' bateu' : ''}`;
     el.title = c ? `Hoje: ${feitos} contatos · ${c.zerou ? 'listas zeradas' : `círculo ${c.nivel}: faltam ${c.falta}`} · ${seq.atual} dia(s) seguidos` : '';
-    el.innerHTML = `${c ? aneisSvg(c, { tam: 38, traco: 4, gap: 1 }) : ''}<span class="hud-num"><b>${feitos}</b>/${c ? c.alvo : '–'}</span>${c && c.nivel > 1 ? `<span class="hud-circ">⭕${c.completos}</span>` : ''}${seq.atual ? `<span class="hud-fogo chama-${seq.chama.id}">🔥${seq.atual}</span>` : ''}${seq.escudos ? `<span class="hud-escudo">🛡️${seq.escudos > 1 ? seq.escudos : ''}</span>` : ''}`;
+    el.innerHTML = `${c ? aneisSvg(c, { tam: 38, traco: 4, gap: 1 }) : ''}<span class="hud-num"><b>${feitos}</b>/${c ? c.alvo : '–'}</span>${c && c.nivel > 1 ? `<span class="hud-circ">⭕${c.completos}</span>` : ''}${seq.atual ? `<span class="hud-fogo chama-${seq.chama.id}">🔥${seq.atual}</span>` : ''}${seq.escudos ? `<span class="hud-escudo">🛡️${seq.escudos > 1 ? seq.escudos : ''}</span>` : ''}${hudMeta(d.hoje)}`;
     animar(el);
     if (animarMudanca && ultimoFeitos != null && feitos > ultimoFeitos) maisUm(el, `+${feitos - ultimoFeitos}`);
     if (ultimoFeitos != null && feitos > ultimoFeitos) { festaCirculo(d.hoje, c, perfil.id); festasDaSequencia(seq, d.hoje, perfil.id); }   // fechou um círculo / ganhou escudo agora
     ultimoFeitos = feitos;
   } catch (e) { console.error(e); }
+}
+// "🎯 1/2": contratos da semana / próxima faixa do Bônus (ou ✓ na Super meta) — a meta à vista enquanto ela trabalha nas listas
+function hudMeta(hoje) {
+  if (!metaSemana?.publicado_em) return '';
+  const r = resumoSemana(metaSemana.vendas || [], hoje, perfil.unidade);
+  const alvo = r.proxima ? r.feitos + r.proxima.faltam : null;
+  return `<span class="hud-meta" title="Meta da semana: ${r.feitos} ${r.feitos === 1 ? 'contrato' : 'contratos'}${r.proxima ? ` · faltam ${r.proxima.faltam} para ${r.proxima.nome}` : ' · Super meta batida!'}">🎯 <b>${r.feitos}</b>${alvo ? `/${alvo}` : ' 🏆'}</span>`;
 }
 let hudTimer;
 if (!ehAdmin) window.addEventListener('central:contato', () => { clearTimeout(hudTimer); hudTimer = setTimeout(() => atualizarHud(true), 500); });
