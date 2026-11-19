@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261118225708';
+import { sb } from '../../shared/sessao.js?v=20261118230938';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -8,7 +8,7 @@ let comoId = null;
 export const verComo = (id) => { comoId = id || null; };
 export const vendoComo = () => comoId;
 export const MSG_SO_OLHAR = 'Você está vendo como consultora: neste modo nada é salvo e o WhatsApp não abre.';
-const SO_LEITURA = new Set(['listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como']);
+const SO_LEITURA = new Set(['vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como']);
 const travar = () => { if (comoId) throw new Error(MSG_SO_OLHAR); };
 const rpc = async (nome, args) => {
   if (comoId && !SO_LEITURA.has(nome)) travar();
@@ -199,10 +199,13 @@ export async function meusFeitosHojePorLista(userId, hoje) {
 }
 // contatos DELA que deram certo (conferidos pela EVO de madrugada): nome, tipo e quando
 export async function meusResultados(userId) {
-  const linhas = ok(await sb.from('itens').select('nome,controle_id,resultado,resultado_registrado_em').eq('feito_por', userId)
+  const linhas = ok(await sb.from('itens').select('id,nome,controle_id,resultado,resultado_registrado_em').eq('feito_por', userId)
     .in('resultado', ['voltou', 'pagou', 'matriculou', 'renovou']).order('resultado_registrado_em', { ascending: false }).limit(3000));
   return linhas.map((l) => ({ ...l, quando: l.resultado_registrado_em }));
 }
+// vitórias da equipe (mesma unidade; o coordenador vê todas) e 👏 — migração 049
+export const vitoriasEquipe = (dias = 7) => rpc('vitorias_equipe', { p_dias: dias });
+export const aplaudir = (item) => rpc('aplaudir', { p_item: item });
 // dias úteis já fechados da consultora (sequência e conquistas do Meu dia); RLS só deixa ler os próprios
 export const meusDias = async (userId) => ok(await sb.from('dias_consultora').select('data,minimo,feitos,bateu,trabalhou')
   .eq('consultora_id', userId).order('data', { ascending: false }).limit(800));

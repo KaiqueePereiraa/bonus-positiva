@@ -345,3 +345,21 @@ body[data-rota="meu-dia"] .hud{display:none}
 .chip-escudos.vazio{display:none}
 .hud-meta{display:inline-flex;align-items:center;gap:3px;margin-left:2px;padding-left:8px;border-left:1px solid rgba(255,255,255,.2);font-size:12px;color:rgba(255,255,255,.8)}
 .hud-meta b{font-size:14px;color:var(--neon);font-style:italic}
+
+/* ── Vitórias da equipe com 👏 ── */
+.res-abas{margin:-4px 0 14px}
+.res-abas button{display:inline-flex;align-items:center;gap:6px}
+.vitorias{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.vitoria{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px dashed var(--line);font-size:14px}
+.vitoria:first-child{border-top:0}
+.vitoria>i{font-style:normal;font-size:18px;width:28px;text-align:center;flex:none}
+.vitoria>span{flex:1;min-width:0;line-height:1.35}
+.vitoria small{display:block;font-size:12px;color:var(--mid)}
+.btn-palmas{flex:none;border:none;border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;cursor:pointer;background:#FFF4D6;color:#7A5600;
+  box-shadow:inset 0 0 0 1.5px #F5D76E;transition:transform .15s var(--ease-mola),background .15s;min-height:38px;white-space:nowrap}
+.btn-palmas:hover:not(:disabled){background:#F5D76E;transform:scale(1.05)}
+.btn-palmas.ja,.btn-palmas:disabled{background:#F4FAEC;color:#3F7A1F;box-shadow:inset 0 0 0 1.5px #C9EBA3;cursor:default}
+.palmas-recebidas{flex:none;font-size:12px;font-weight:800;color:#7A5600;background:#FFF4D6;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.res-lista li .palmas-recebidas{margin-left:auto}
+.res-lista li .palmas-recebidas+small{margin-left:8px}
+.res-abas{overflow:visible}

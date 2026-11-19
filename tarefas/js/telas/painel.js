@@ -1,21 +1,24 @@
 // Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que acontece HOJE e pede ação (gestão por
 // exceção), em frases simples, cada uma com "o que fazer". Comparações de 30 dias ficam em Desempenho; o que cada
 // lista trouxe fica em Resultados; o retorno em R$, em Relatórios → Retorno do mês.
-import * as dados from '../dados.js?v=20261118225708';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118225708';
-import { somarDias, semanaDe } from '../regras.js?v=20261118225708';
+import * as dados from '../dados.js?v=20261118230938';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118230938';
+import { somarDias, semanaDe } from '../regras.js?v=20261118230938';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261118225708';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261118230938';
+import { listaVitorias, ligarPalmas } from './_vitorias.js?v=20261118230938';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
   const seg = semanaDe(hojeIso).inicio;
-  const [p, cfg, tarefas, hojeContatos, semana] = await Promise.all([dados.painelGestor(), dados.config().catch(() => ({})),
+  const [p, cfg, tarefas, hojeContatos, semana, todasVitorias] = await Promise.all([dados.painelGestor(), dados.config().catch(() => ({})),
     dados.tarefas({ desde: somarDias(hojeIso, -21), unidade: ctx.unidade || undefined }).catch(() => []),
     dados.contatosHoje(hojeIso).catch(() => ({})),
-    hojeIso > seg ? dados.desempenho(seg, somarDias(hojeIso, -1)).catch(() => []) : Promise.resolve([])]);
+    hojeIso > seg ? dados.desempenho(seg, somarDias(hojeIso, -1)).catch(() => []) : Promise.resolve([]),
+    dados.vitoriasEquipe(7).catch(() => [])]);
+  const vitorias = ctx.unidade ? todasVitorias.filter((v) => v.unidade === ctx.unidade) : todasVitorias;
   const pendentes = pendentesPorConsultora(tarefas, hojeIso);
   const semanaDe_ = Object.fromEntries(semana.map((c) => [c.id, c]));
   const desligadas = Object.entries(ROTINAS_NOVAS).filter(([id]) => cfg[`evo_auto_${id}`] !== true).map(([, nome]) => nome);
@@ -56,10 +59,16 @@ export async function render(el, ctx) {
         <p class="dica" style="margin-top:8px">Pendentes = contatos em aberto em todas as listas dela. "Livre" = zerou as listas: dá para passar uma Lista a fazer. Semana = mínimo cumprido nos dias já fechados desta semana. Comparação de 30 dias: <a href="#/desempenho">Desempenho →</a></p>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
     </div>
 
+    <div class="cartao" id="vitorias"><h2>🎉 Vitórias da equipe <span class="selo cinza">últimos 7 dias</span>${vitorias.length ? `<span class="selo verde">${vitorias.length}</span>` : ''}</h2>
+      <p class="dica" style="margin-bottom:8px">Contatos que deram certo (a EVO confere de madrugada). Um 👏 seu chega para a consultora como "${esc((ctx.perfil.nome || '').split(' ')[0])} te aplaudiu" — reconhecimento do coordenador pesa mais que qualquer medalha.</p>
+      ${listaVitorias(vitorias, ctx.perfil.id)}</div>
+
     ${listasDaSemana(tarefas, hojeIso)}
 
     ${(() => { const t = somar(ativas, 'semana'); return `<p class="dica" style="text-align:center">Nesta semana: ${t.pagou} pagaram${t.valor ? ` (${reais(t.valor)})` : ''} · ${t.voltou} voltaram a treinar · ${t.matriculou} matrículas · ${t.renovou} renovações.
       <a href="#/indicadores">Resultados →</a> · <a href="#/retorno">Retorno do mês →</a></p>`; })()}`;
+  const caixaVit = el.querySelector('#vitorias');
+  if (caixaVit) ligarPalmas(caixaVit, vitorias, ctx.perfil.id);
   // "👁 Ver tela": entra no modo ver como consultora (mesma chave do app.js; só nesta aba)
   el.querySelectorAll('[data-ver-como]').forEach((b) => b.addEventListener('click', () => {
     try { sessionStorage.setItem('central_ver_como', b.dataset.verComo); } catch { return; }

@@ -1,13 +1,14 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import * as dados from '../dados.js?v=20261118225708';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118225708';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118225708';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118225708';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118225708';
-import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118225708';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118225708';
+import * as dados from '../dados.js?v=20261118230938';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261118230938';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261118230938';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261118230938';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261118230938';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto } from './_vitorias.js?v=20261118230938';
+import { circulos, disponivelDe, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261118230938';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia } from '../jogo-visual.js?v=20261118230938';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -23,8 +24,8 @@ export async function render(el, ctx) {
     dados.tarefas({ responsavel: ctx.perfil.id }).catch(() => []), dados.listasFazer().catch(() => []),
     dados.meusDias(ctx.perfil.id).catch(() => [])]);
   // contatos dela hoje em cada lista (sem conexão/permissão: as missões mostram só o que falta)
-  const [porLista, meusRes] = await Promise.all([dados.meusFeitosHojePorLista(ctx.perfil.id, d.hoje).catch(() => null),
-    dados.meusResultados(ctx.perfil.id).catch(() => null)]);
+  const [porLista, meusRes, vits] = await Promise.all([dados.meusFeitosHojePorLista(ctx.perfil.id, d.hoje).catch(() => null),
+    dados.meusResultados(ctx.perfil.id).catch(() => null), dados.vitoriasEquipe(7).catch(() => [])]);
   // contatos dela que deram certo: quadro dos últimos 7 dias + festa para os novos desde a última visita
   const res = meusRes ? resumoResultados(meusRes, d.hoje, lerVisto(ctx.perfil.id)) : null;
   // tudo o que ela ainda tem para fazer, em todas as listas (inclusive a Lista a fazer), até cada prazo
@@ -120,7 +121,7 @@ export async function render(el, ctx) {
           <span class="adiante-num"><b>${t.total - t.feitos}</b> faltam <i>→</i></span></a></li>`).join('')}</ul></div>` : ''}
     </div>` : ''}
 
-    ${quadroResultados(res)}
+    ${quadroResultados(res, vits, ctx.perfil.id)}
 
     ${conquistasHtml(premios)}
 
@@ -133,6 +134,15 @@ export async function render(el, ctx) {
   const festa = res && fraseResultado(res.novos);
   if (res?.ultimo) { try { localStorage.setItem(chaveResultados(ctx.perfil.id), res.ultimo); } catch { /* sem armazenamento */ } }
   if (festa) celebrar(festa.titulo, festa.texto, { icone: '🌟' });
+  festaPalmasRecebidas(vits, ctx.perfil.id);   // colegas/coordenador aplaudiram um resultado dela
+  const caixaRes = el.querySelector('.resultados');
+  if (caixaRes) {
+    ligarPalmas(caixaRes, vits, ctx.perfil.id);
+    caixaRes.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => {
+      caixaRes.querySelectorAll('[data-aba]').forEach((x) => x.classList.toggle('ativo', x === b));
+      caixaRes.querySelectorAll('[data-painel]').forEach((p) => { p.hidden = p.dataset.painel !== b.dataset.aba; });
+    }));
+  }
 
   el.querySelector('#guia-ok')?.addEventListener('click', () => {
     try { localStorage.setItem(CHAVE_GUIA, '1'); } catch { /* sem armazenamento */ }
@@ -147,23 +157,37 @@ const MINUSCULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);
 const nomeBonito = (n) => (n && n === n.toUpperCase()
   ? n.toLowerCase().split(/\s+/).map((p, k) => (k && MINUSCULAS.has(p) ? p : p.charAt(0).toUpperCase() + p.slice(1))).join(' ') : n || '');
 
-function quadroResultados(r) {
-  if (!r) return '';
-  const tipos = Object.entries(TIPOS_RESULTADO).filter(([k]) => r.porTipo[k]);
-  const novo = new Set(r.novos);
-  const quando = (ts) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: '2-digit' }).format(new Date(ts)).replace('.', '');
-  return `<div class="cartao resultados ${r.semana ? '' : 'vazio-res'}">
-    <h2>🌟 Deu resultado! <span class="selo cinza">últimos 7 dias</span>${r.total ? `<span class="mais">${r.total} desde o começo</span>` : ''}</h2>
-    ${r.semana ? `<div class="res-topo"><b class="res-num" data-contar="${r.semana}">${r.semana}</b>
+// Duas abas: "Minhas" (os contatos dela que deram certo, com as palmas recebidas) e "Da equipe" (vitórias das colegas
+// da unidade, com 👏). Abre em "Da equipe" quando ela ainda não tem resultado na semana.
+function quadroResultados(r, vits = [], euId = '') {
+  if (!r && !vits.length) return '';
+  const tipos = r ? Object.entries(TIPOS_RESULTADO).filter(([k]) => r.porTipo[k]) : [];
+  const novo = new Set(r?.novos || []);
+  const palmasDe = Object.fromEntries(vits.filter((v) => v.consultora_id === euId).map((v) => [v.item_id, v.palmas]));
+  const equipe = vits.filter((v) => v.consultora_id !== euId);
+  const abaInicial = r?.semana ? 'minhas' : equipe.length ? 'equipe' : 'minhas';
+  const minhas = r?.semana ? `<div class="res-topo"><b class="res-num" data-contar="${r.semana}">${r.semana}</b>
         <span>${r.semana === 1 ? 'contato seu deu certo' : 'contatos seus deram certo'} nesta semana</span></div>
       <div class="res-tipos">${tipos.map(([k, t], j) => `<span class="res-tipo" style="--k:${j}"><i>${t.icone}</i><b>${r.porTipo[k]}</b> ${r.porTipo[k] === 1 ? t.um : t.varios}</span>`).join('')}</div>
       ${(() => {
-        const li = (i, j) => `<li style="--k:${j}" class="${novo.has(i) ? 'novo' : ''}"><i>${TIPOS_RESULTADO[i.resultado].icone}</i>
-          <span><b>${esc(nomeBonito(i.nome))}</b> ${TIPOS_RESULTADO[i.resultado].um}</span>${novo.has(i) ? '<em>novo</em>' : ''}<small>${quando(i.quando)}</small></li>`;
+        const li = (i, j) => { const p = palmasDe[i.id] || [];
+          return `<li style="--k:${j}" class="${novo.has(i) ? 'novo' : ''}"><i>${TIPOS_RESULTADO[i.resultado].icone}</i>
+          <span><b>${esc(nomeBonito(i.nome))}</b> ${TIPOS_RESULTADO[i.resultado].um}</span>${novo.has(i) ? '<em>novo</em>' : ''}
+          ${p.length ? `<span class="palmas-recebidas" title="Aplaudiram: ${esc(p.map((x) => x.nome.split(' ')[0]).join(', '))}">👏 ${p.length}</span>` : ''}<small>${quandoCurto(i.quando)}</small></li>`; };
         const [primeiros, resto] = [r.recentes.slice(0, 3), r.recentes.slice(3)];
         return `<ul class="res-lista">${primeiros.map(li).join('')}</ul>${resto.length ? `<details class="res-mais"><summary>Ver mais ${resto.length}</summary><ul class="res-lista">${resto.map(li).join('')}</ul></details>` : ''}`;
       })()}`
-    : `<p class="dica">Quando um contato seu fizer o aluno voltar a treinar, pagar ou se matricular, ele aparece aqui. A EVO confere toda madrugada.</p>`}
+    : '<p class="dica">Quando um contato seu fizer o aluno voltar a treinar, pagar ou se matricular, ele aparece aqui. A EVO confere toda madrugada.</p>';
+  return `<div class="cartao resultados ${r?.semana || equipe.length ? '' : 'vazio-res'}">
+    <h2>🌟 Deu resultado! <span class="selo cinza">últimos 7 dias</span>${r?.total ? `<span class="mais">${r.total} ${r.total === 1 ? 'seu' : 'seus'} desde o começo</span>` : ''}</h2>
+    <div class="abas res-abas">
+      <button type="button" data-aba="minhas" class="${abaInicial === 'minhas' ? 'ativo' : ''}">Minhas <span class="cont">${r?.semana || 0}</span></button>
+      <button type="button" data-aba="equipe" class="${abaInicial === 'equipe' ? 'ativo' : ''}">Da equipe 👏 <span class="cont">${equipe.length}</span></button>
+    </div>
+    <div data-painel="minhas" ${abaInicial === 'minhas' ? '' : 'hidden'}>${minhas}</div>
+    <div data-painel="equipe" ${abaInicial === 'equipe' ? '' : 'hidden'}>
+      <p class="dica" style="margin-bottom:8px">Vitórias das colegas da sua unidade. Toque em 👏 para dar os parabéns — ela fica sabendo.</p>
+      ${listaVitorias(equipe, euId)}</div>
   </div>`;
 }
 
