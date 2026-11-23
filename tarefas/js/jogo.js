@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261123145928';
+import { hojeSP } from './regras.js?v=20261123181223';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -86,7 +86,7 @@ export function trilhaSemana(dias, hoje, hojeInfo = null, estados = {}) {
     else if (data === hoje) estado = hojeInfo && hojeInfo.minimo > 0 && hojeInfo.feitos >= hojeInfo.minimo ? 'hoje-ok' : 'hoje';
     else {
       const d = porData[data];
-      estado = !d || d.minimo === 0 ? 'livre' : !d.trabalhou ? 'folga' : d.bateu ? 'bateu' : estados[data] === 'protegido' ? 'protegido' : 'nao';
+      estado = !d ? 'livre' : !d.trabalhou ? 'folga' : d.minimo === 0 ? 'livre' : d.bateu ? 'bateu' : estados[data] === 'protegido' ? 'protegido' : 'nao';
     }
     return { nome, data, estado };
   });

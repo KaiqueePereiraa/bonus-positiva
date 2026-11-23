@@ -1,12 +1,12 @@
 // Histórico — tudo o que as pessoas fizeram na plataforma (Central e Bônus): quem, quando, o quê e em qual unidade.
 // O banco já devolve só as unidades que o coordenador pode ver; o administrador geral vê tudo.
-import * as dados from '../dados.js?v=20261123145928';
-import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261123145928';
+import * as dados from '../dados.js?v=20261123181223';
+import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261123181223';
 
 const TABELAS = {
   profiles: 'Cadastro', config_central: 'Configuração', controles: 'Configuração das listas', motivos: 'Motivo',
   unidades: 'Unidade', feriados: 'Feriado', listas_fazer: 'Lista a fazer', escala_trocas: 'Troca de escala',
-  dias_consultora: 'Dia da consultora', palmas: 'Palmas', evo_unidades: 'Conexão EVO', escala: 'Escala',
+  dias_consultora: 'Dia da consultora', ausencias: 'Folga/atestado', palmas: 'Palmas', evo_unidades: 'Conexão EVO', escala: 'Escala',
   disputes: 'Bônus · contestação', deductions: 'Bônus · desconto', manual_sales: 'Bônus · venda manual',
   unassigned_sales: 'Bônus · venda sem dono', app_settings: 'Bônus · configuração',
 };

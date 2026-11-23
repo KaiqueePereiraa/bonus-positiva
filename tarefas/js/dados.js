@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261123145928';
+import { sb } from '../../shared/sessao.js?v=20261123181223';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -225,6 +225,10 @@ export const meusDias = async (userId) => ok(await sb.from('dias_consultora').se
   .eq('consultora_id', userId).order('data', { ascending: false }).limit(800));
 export const minhaMetaSemana = () => (comoId ? rpc('minha_meta_semana_como', { p_user: comoId }) : rpc('minha_meta_semana', {}));
 export const desempenho = (de, ate) => rpc('desempenho', { p_de: de, p_ate: ate });
+// folgas/atestados/faltas (coordenador marca; RLS: a consultora lê só as dela)
+export const ausencias = async (de, ate) => ok(await sb.from('ausencias').select('consultora_id,data,motivo,obs').gte('data', de).lte('data', ate).order('data'));
+export const marcarAusencia = (pessoa, de, ate, motivo, obs) => rpc('marcar_ausencia', { p_pessoa: pessoa, p_de: de, p_ate: ate || de, p_motivo: motivo, p_obs: obs || null });
+export const desmarcarAusencia = (pessoa, data) => rpc('desmarcar_ausencia', { p_pessoa: pessoa, p_data: data });
 export const retornoMes = (ano, mes) => rpc('retorno_mes', { p_ano: ano, p_mes: mes });
 export const descobrirFiliaisEvo = () => evoAcao('filiais');
 // simular = true (padrão) só conta; false roda de verdade e envia a lista

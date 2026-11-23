@@ -3,11 +3,12 @@
 //  • A consultora escalada pode pedir troca a uma colega, que aceita ou recusa (sem aprovação do coordenador).
 //  • O coordenador monta o ciclo (que se repete para sempre), define quem trabalha em cada feriado,
 //    edita um dia específico e acompanha o histórico de trocas.
-import * as dados from '../dados.js?v=20261123145928';
-import { somarDias } from '../regras.js?v=20261123145928';
-import { esc, dataCurta, dataHora, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123145928';
-import { agendaEscala, opcoesTroca, lerOpcaoTroca, rotuloData } from '../escala.js?v=20261123145928';
-import { calendarioHtml, chipsDoDia, legendaHtml } from '../escala-visual.js?v=20261123145928';
+import * as dados from '../dados.js?v=20261123181223';
+import { somarDias } from '../regras.js?v=20261123181223';
+import { esc, dataCurta, dataHora, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123181223';
+import { agendaEscala, opcoesTroca, lerOpcaoTroca, rotuloData } from '../escala.js?v=20261123181223';
+import { calendarioHtml, chipsDoDia, legendaHtml } from '../escala-visual.js?v=20261123181223';
+import { cartaoAusencias } from './_ausencias.js?v=20261123181223';
 
 const SEMANAS_A_FRENTE = 10;
 const ehSabado = (d) => new Date(`${d}T12:00:00Z`).getUTCDay() === 6;
@@ -68,7 +69,7 @@ export async function render(el, ctx) {
     ? 'Ainda não há escala. Monte o ciclo dos fins de semana logo abaixo e escolha quem trabalha em cada feriado.'
     : 'O coordenador ainda não montou a escala.')}</div>` : '';
 
-  el.innerHTML = `${cartaoPedidos}${cartaoMeus}${aviso}
+  el.innerHTML = `${cartaoPedidos}${cartaoMeus}<div id="ausencias-card"></div>${aviso}
     ${linhas.length ? `<div class="esc-barra"><div class="esc-legenda" aria-label="Cores de cada pessoa">${legendaHtml(blocos, { hoje, eu })}</div>
       ${!ctx.ehAdmin && blocos.some((b) => b.dias.some((d) => d.data >= hoje && d.pessoas.some((p) => p.id === eu))) ? '<button class="btn sec peq" data-acao="so-meus" aria-pressed="false">Só os meus dias</button>' : ''}</div>` : ''}
     <div class="esc-lista">${calendarioHtml(blocos, { hoje, eu, ehAdmin: ctx.ehAdmin })}</div>
@@ -76,6 +77,7 @@ export async function render(el, ctx) {
     <p class="dica">Mostrando as próximas ${SEMANAS_A_FRENTE} semanas.${ctx.ehAdmin ? '' : ' Para trocar um dia, use "Pedir troca": a colega escolhida aceita ou recusa.'}</p>`;
 
   const recarregar = () => { ctx.atualizarSino(); return render(el, ctx); };
+  cartaoAusencias(el.querySelector('#ausencias-card'), ctx, recarregar).catch((e) => console.error(e));
   const pessoasDoDia = (data) => blocos.flatMap((b) => b.dias).find((d) => d.data === data)?.pessoas.map((p) => (p.id ? { id: p.id } : { nome: p.nome })) || [];
 
   // ── ciclo (coordenador) ──
