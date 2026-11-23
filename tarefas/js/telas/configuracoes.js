@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, unidades e grupos, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261123133925';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261123133925';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123133925';
+import * as dados from '../dados.js?v=20261123145928';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261123145928';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123145928';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -263,7 +263,7 @@ const ROTINAS_EVO = [
   { id: 'renovacao', titulo: 'Renovação de contratos', quando: 'Toda segunda-feira',
     texto: 'Monta duas listas: "a vencer" (contratos que vencem na próxima semana — na primeira vez, também nesta) e "venceu e não renovou" (venceram na semana passada). Tira quem já renovou, contratos com categoria (VIP, Colaborador, Wellhub…), registrados e quem está na inadimplência, e divide entre as consultoras.' },
   { id: 'relacionamento', titulo: 'Relacionamento (primeiros 90 dias, cancelou, ex-alunos)', quando: 'Toda segunda-feira, 5h30',
-    texto: 'Monta três listas da semana: alunos nas semanas 1, 2, 4 e 8 depois da matrícula (quem veio menos aparece primeiro), quem CANCELOU na semana passada (entrevista de saída com motivo; troca de plano e transferência ficam fora) e EX-ALUNOS cujo contrato terminou há uns 3 ou 6 meses e não voltaram. Tira contratos especiais, registrados e quem já está em outra lista de contato (uma conversa por vez). Prazo na sexta.' },
+    texto: 'Monta três listas da semana: alunos nas semanas 2, 5, 8 e 12 depois da matrícula (quem veio menos aparece primeiro), quem CANCELOU na semana passada (entrevista de saída com motivo; troca de plano e transferência ficam fora) e EX-ALUNOS cujo contrato terminou há uns 3 ou 6 meses e não voltaram. Tira contratos especiais, registrados e quem já está em outra lista de contato (uma conversa por vez). Prazo na sexta.' },
   { id: 'resultados', titulo: 'Resultado dos contatos', quando: 'Todo dia, de madrugada',
     texto: 'Toda madrugada confere na EVO: quem ainda está esperando contato e JÁ pagou, voltou a treinar ou se matriculou sai da lista sozinho (ninguém manda mensagem à toa). E para quem já recebeu contato, registra se deu certo — aparece em Indicadores, no desempenho e no retorno do mês. Não manda mensagem para ninguém.' },
   { id: 'lembrete_experimental', titulo: 'Lembrete da aula experimental (WhatsApp oficial)', quando: 'De 30 em 30 minutos, das 8h às 20h30',
@@ -286,7 +286,7 @@ const ROTULOS_RESUMO = {
   ja_matricularam: 'Fora: já se matricularam', interessados_lidos: 'Interessados cadastrados', interessados_ja_cliente: 'Fora: já viraram cliente',
   interessados_ja_aluno: 'Fora: já é aluno (mesmo nome)', interessados_repetidos: 'Fora: cadastro repetido (mesmo celular)', interessados_na_experimental: 'Fora: já estão na lista da experimental',
   confirmar: 'Lista "confirmar"', pos_aula: 'Lista "pós-aula"', interessados_novos: 'Lista "interessados novos"', janela_confirmar: 'Aulas de', janela_pos: 'Pós-aula das aulas de',
-  matriculas_lidas: 'Matrículas lidas (semanas 1, 2, 4 e 8)', cancelamentos_lidos: 'Cancelamentos lidos', contratos_terminados_lidos: 'Contratos terminados há 3/6 meses',
+  matriculas_lidas: 'Matrículas lidas (semanas 2, 5, 8 e 12)', cancelamentos_lidos: 'Cancelamentos lidos', contratos_terminados_lidos: 'Contratos terminados há 3/6 meses',
   fora_especiais: 'Fora: contratos especiais', fora_registrados: 'Fora: registrados', fora_em_outra_lista: 'Fora: já em outra lista de contato',
   cancelou_mas_tem_contrato: 'Fora: cancelou mas tem outro contrato (troca de plano)', transferencias_trocas: 'Fora: transferência/troca de contrato',
   ex_aluno_ja_voltou: 'Fora: ex-aluno que já voltou', primeiros_90_dias: 'Lista "primeiros 90 dias"', cancelaram: 'Lista "cancelou"', ex_alunos: 'Lista "ex-alunos"',
