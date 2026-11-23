@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261123182319';
-import * as dados from './dados.js?v=20261123182319';
-import { hojeSP } from './regras.js?v=20261123182319';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261123182319';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261123182319';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261123182319';
-import { resumoSemana } from './bonus-meta.js?v=20261123182319';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261123182319';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261123203255';
+import * as dados from './dados.js?v=20261123203255';
+import { hojeSP } from './regras.js?v=20261123203255';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261123203255';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261123203255';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261123203255';
+import { resumoSemana } from './bonus-meta.js?v=20261123203255';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261123203255';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -148,14 +148,10 @@ async function escolherConsultora() {
   location.reload();
 }
 
-// Botão no menu do coordenador e, no modo "ver como", a faixa no topo com Trocar / Voltar
+// Botão no topo (ao lado do sino) e, no modo "ver como", a faixa no topo com Trocar / Voltar.
+// 23/11/2026: só no topo — o do pé do menu saiu (pedido do Kaique: não repetir o botão).
 function ligarVerComo() {
-  const b = document.createElement('button');
-  b.type = 'button'; b.className = 'btn-ver-como';
-  b.innerHTML = verComoId ? '↩ Voltar a ser coordenador' : '👁 Ver como consultora';
-  b.addEventListener('click', () => (verComoId ? sairDoVerComo() : escolherConsultora()));
-  $('lateral').querySelector('.pe').prepend(b);
-  if (!verComoId) {   // também no topo, ao lado do sino: no notebook o pé do menu fica escondido (pedido de 18/11/2026)
+  if (!verComoId) {
     const t = document.createElement('button');
     t.type = 'button'; t.className = 'btn-topo-ver-como'; t.title = 'Ver a Central como uma consultora vê (só para olhar)';
     t.innerHTML = '👁 <span>Ver como consultora</span>';
@@ -236,7 +232,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261123182319`);
+    const tela = await import(`./telas/${modulo}.js?v=20261123203255`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
