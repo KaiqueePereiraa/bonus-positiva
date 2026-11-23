@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, unidades e grupos, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261119195426';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261119195426';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261119195426';
+import * as dados from '../dados.js?v=20261123125843';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261123125843';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123125843';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -256,7 +256,7 @@ async function whatsapp(el) {
 const ROTINAS_EVO = [
   { id: 'inadimplencia', titulo: 'Inadimplentes', quando: 'Toda quinta-feira (no dia útil antes da sexta da inadimplência)',
     texto: 'Busca na EVO os clientes ATIVOS com dívida em aberto há MAIS DE 3 DIAS (prazo para a pessoa se ajustar) e sobe a lista na tarefa da inadimplência da sexta. Inativos não aparecem. Se a responsável já subiu a planilha à mão, não mexe.' },
-  { id: 'risco', titulo: 'Risco de abandono', quando: 'Toda segunda-feira',
+  { id: 'risco', titulo: 'Risco de abandono', quando: 'Toda quarta-feira, 5h10 (prazo na sexta)',
     texto: 'Busca os clientes ativos com mais de 15 dias sem vir, tira quem está registrado (Gympass, benefício colaborador, contrato VIP) e os contratos listados abaixo, e divide entre as consultoras da unidade.' },
   { id: 'nao_fechou', titulo: 'Por que não fechou?', quando: 'De segunda a sexta, 6h da manhã',
     texto: 'Monta a lista do dia com os interessados PARADOS há 5 dias, em duas etapas: quem se cadastrou e não marcou aula experimental, e quem fez a experimental e não se matriculou (na segunda, também os que completaram 5 dias no fim de semana). Tira quem já se matriculou, quem já é aluno (mesmo nome), cadastros repetidos (mesmo celular) e quem já esteve na lista nessa etapa. Fica com quem cadastrou; cada consultora registra o motivo até o próximo dia útil.' },
