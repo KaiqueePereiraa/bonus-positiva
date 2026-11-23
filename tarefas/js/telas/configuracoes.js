@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, unidades e grupos, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261123132339';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261123132339';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123132339';
+import * as dados from '../dados.js?v=20261123133440';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261123133440';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123133440';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -359,7 +359,9 @@ async function evo(el, ctx) {
     <label class="campo" style="max-width:640px">Palavras do nome do contrato, separadas por vírgula
       <input id="palavras-renov" value="${esc(palavrasRenov.join(', '))}" placeholder="recorrente"></label>
     <div class="linha-acoes" style="margin-top:8px"><button class="btn sec peq" id="salvar-palavras-renov">Salvar palavras</button></div>
-    <p class="dica" style="margin-top:6px">Contratos que renovam e cobram sozinhos (ex.: "Recorrente") não entram na lista de renovação, mas continuam no risco de abandono e no relacionamento. Vale para as listas que chegarem a partir de agora.</p>
+    <p class="dica" style="margin-top:6px">Além dessas palavras, a renovação confere na EVO o <b>tipo do contrato de cada aluno</b> e tira quem tem contrato de
+      <b>recorrência mensal</b>, <b>renovação automática</b> ou <b>Pix recorrente</b> (renovam e cobram sozinhos). Ficam na lista: contrato comum e
+      débito recorrente com prazo. Quem sai continua no risco de abandono e no relacionamento, e aparece no Histórico como "Saiu da renovação".</p>
 
     <h2 style="font-size:14px;margin:26px 0 10px">IA do Claude <span class="selo ${cfg.ia_ativa === true ? 'verde' : 'cinza'}">${cfg.ia_ativa === true ? 'ligada' : 'desligada'}</span></h2>
     <p class="dica" style="max-width:760px">Duas tarefas: <b>classificar o "Outro motivo"</b> (toda madrugada, Haiku) e escrever a <b>leitura do mês</b> que entra no Retorno do dia 1º (Sonnet). Desligada, nada disso roda e a Central funciona normalmente com a escolha da consultora.
