@@ -1,7 +1,7 @@
 // Configurações (só admin): usuários, unidades e grupos, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261123125843';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261123125843';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123125843';
+import * as dados from '../dados.js?v=20261123132339';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261123132339';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261123132339';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -319,6 +319,7 @@ async function evo(el, ctx) {
   const [cfg, ligadas, execs] = await Promise.all([dados.config(), dados.evoUnidades(), dados.evoExecucoes(25)]);
   const idDe = (u) => ligadas.find((l) => l.unidade === u)?.id_branch ?? '';
   const palavras = Array.isArray(cfg.risco_contratos_excluidos) ? cfg.risco_contratos_excluidos : [];
+  const palavrasRenov = Array.isArray(cfg.renovacao_contratos_excluidos) ? cfg.renovacao_contratos_excluidos : [];
   const nomeUni = (id) => ctx.nomeUnidade(id);
 
   el.innerHTML = `
@@ -348,11 +349,17 @@ async function evo(el, ctx) {
         <button class="btn ${cfg[`evo_auto_${r.id}`] === true ? 'perigo' : 'verde'} peq" data-acao="alternar">${cfg[`evo_auto_${r.id}`] === true ? 'Desligar automático' : 'Ligar automático'}</button>
       </div><div class="res-rotina"></div></div>`).join('')}
 
-    <h2 style="font-size:14px;margin:26px 0 10px">3. Contratos que ficam fora do risco de abandono</h2>
+    <h2 style="font-size:14px;margin:26px 0 10px">3. Contratos especiais (ficam fora do risco, da renovação e do relacionamento)</h2>
     <label class="campo" style="max-width:640px">Palavras do nome do contrato, separadas por vírgula
       <input id="palavras" value="${esc(palavras.join(', '))}" placeholder="gympass, totalpass, vip, colaborador"></label>
     <div class="linha-acoes" style="margin-top:8px"><button class="btn sec peq" id="salvar-palavras">Salvar palavras</button></div>
     <p class="dica" style="margin-top:6px">Ficam de fora automaticamente os contratos com categoria na EVO (VIP, Colaborador, Personal, Wellhub, Totalpass, Classpass, Freepass, Locação, Gogood, GuruPass — só \"Nenhuma\" entra). Também sai quem tem contrato com uma dessas palavras, ou foi registrado pela consultora (Gympass/convênios, benefício colaborador, contrato VIP), não entra na lista. A simulação mostra quais contratos foram excluídos.</p>
+
+    <h2 style="font-size:14px;margin:26px 0 10px">4. Contratos que ficam fora só da renovação</h2>
+    <label class="campo" style="max-width:640px">Palavras do nome do contrato, separadas por vírgula
+      <input id="palavras-renov" value="${esc(palavrasRenov.join(', '))}" placeholder="recorrente"></label>
+    <div class="linha-acoes" style="margin-top:8px"><button class="btn sec peq" id="salvar-palavras-renov">Salvar palavras</button></div>
+    <p class="dica" style="margin-top:6px">Contratos que renovam e cobram sozinhos (ex.: "Recorrente") não entram na lista de renovação, mas continuam no risco de abandono e no relacionamento. Vale para as listas que chegarem a partir de agora.</p>
 
     <h2 style="font-size:14px;margin:26px 0 10px">IA do Claude <span class="selo ${cfg.ia_ativa === true ? 'verde' : 'cinza'}">${cfg.ia_ativa === true ? 'ligada' : 'desligada'}</span></h2>
     <p class="dica" style="max-width:760px">Duas tarefas: <b>classificar o "Outro motivo"</b> (toda madrugada, Haiku) e escrever a <b>leitura do mês</b> que entra no Retorno do dia 1º (Sonnet). Desligada, nada disso roda e a Central funciona normalmente com a escolha da consultora.
@@ -447,5 +454,9 @@ async function evo(el, ctx) {
   el.querySelector('#salvar-palavras').onclick = async () => {
     const lista = el.querySelector('#palavras').value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
     try { await dados.salvarConfig('risco_contratos_excluidos', lista); toast('Palavras salvas.'); } catch (err) { erro(err); }
+  };
+  el.querySelector('#salvar-palavras-renov').onclick = async () => {
+    const lista = el.querySelector('#palavras-renov').value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+    try { await dados.salvarConfig('renovacao_contratos_excluidos', lista); toast('Palavras salvas.'); } catch (err) { erro(err); }
   };
 }

@@ -1,7 +1,7 @@
 // Histórico — tudo o que as pessoas fizeram na plataforma (Central e Bônus): quem, quando, o quê e em qual unidade.
 // O banco já devolve só as unidades que o coordenador pode ver; o administrador geral vê tudo.
-import * as dados from '../dados.js?v=20261123125843';
-import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261123125843';
+import * as dados from '../dados.js?v=20261123132339';
+import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261123132339';
 
 const TABELAS = {
   profiles: 'Cadastro', config_central: 'Configuração', controles: 'Configuração das listas', motivos: 'Motivo',
@@ -19,7 +19,7 @@ const ACOES_ITEM = {
 const ACOES = {
   importar: 'Subiu uma lista', desfazer_importacao: 'Desfez uma lista', dividir_sem_responsavel: 'Dividiu interessados sem responsável',
   trocada_pela_automatica: 'Lista trocada pela automática da EVO', definir_dia: 'Mudou um dia da escala', salvar_ciclo: 'Salvou o ciclo da escala',
-  substituir_nome: 'Trocou um nome na escala', convidar: 'Convidou uma pessoa', criar: 'Criou', editar: 'Alterou', apagar: 'Apagou',
+  substituir_nome: 'Trocou um nome na escala', convidar: 'Convidou uma pessoa', tirado_recorrente: 'Saiu da renovação (contrato recorrente)', criar: 'Criou', editar: 'Alterou', apagar: 'Apagou',
 };
 // campos que mudam sozinhos ou não dizem nada para quem lê
 const IGNORAR = new Set(['inserted_at', 'updated_at', 'criado_em', 'criada_em', 'atualizado_em', 'em', 'id', 'local_id']);
@@ -47,7 +47,7 @@ function oQue(e) {
 
 function detalhe(e) {
   const a = e.antes || {}, d = e.depois || {}, ref = e.depois || e.antes || {};
-  if (e.tabela === 'itens') return [e.aluno, NOMES_CONTROLE[ref.controle_id]].filter(Boolean).join(' · ');
+  if (e.tabela === 'itens') return [e.aluno || ref.nome, NOMES_CONTROLE[ref.controle_id]].filter(Boolean).join(' · ');
   if (e.tabela === 'importacoes') {
     return [NOMES_CONTROLE[ref.controle] || NOMES_CONTROLE[ref.controle_id], ref.linhas != null ? `${ref.linhas} linha(s)` : null].filter(Boolean).join(' · ');
   }
