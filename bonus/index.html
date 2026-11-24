@@ -780,6 +780,7 @@ function showSyncToast(msg) {
 //  DADOS — vêm do Supabase depois do login (carregarPublicacao); nada fica no HTML
 // ══════════════════════════════════════════════
 let RAW_SALES  = [];
+let RAW_SALES_TODAS = [];   // sem o filtro de unidade do coordenador: a meta da Acqua (v3) junta Laranjeiras + República
 let MONTH      = '';
 let UNIT_KEYS  = [];
 let UNIT_LABELS= {};
@@ -806,6 +807,7 @@ async function carregarPublicacao() {
     if (data.length < 1000) break;
   }
   RAW_SALES = vendas.filter(v => unidadePermitida(v.unit));
+  RAW_SALES_TODAS = vendas;
   MONTH = pub.mes;
   UNIT_KEYS = pub.unidades.filter(unidadePermitida);
   UNIT_LABELS = pub.rotulos;
@@ -1078,7 +1080,9 @@ function switchSection(id) {
 //  FILTER SALES
 // ══════════════════════════════════════════════
 function getFilteredSales(monthOverride, opts) {
-  let sales = RAW_SALES.map(s => ({...s}));
+  // allUnits: base da meta — inclui a outra unidade da Acqua mesmo para o coordenador de uma unidade só
+  // (o que aparece na tela continua filtrado pelas unidades dele: os cartões e tabelas filtram por grupo/unidade depois)
+  let sales = (opts && opts.allUnits ? RAW_SALES_TODAS.filter(s => unidadePermitida(s.unit) || ACQUA_UNITS.includes(s.unit)) : RAW_SALES).map(s => ({...s}));
   const overrides = loadOverrides();
   // Apply dispute transfers
   disputes.filter(d => d.status === 'resolved' && d.action === 'transfer').forEach(d => {
@@ -1482,7 +1486,9 @@ function teamBonusAcquaV3(sales, month) {
   const saidas = r.saidas_mes;
   const trava = saidas == null ? 'pendente' : count >= saidas ? 'aberta' : 'fechada';
   const perPerson = trava === 'aberta' ? previsto : 0;
-  const people = [...new Set(groupSales.map(s => s.consultant))].filter(n => n !== DEFAULT_CONSULTANT);
+  // só as consultoras da Acqua recebem (coordenação e quem vendeu de passagem não entram) — lista vem da régua
+  const nomes = new Set(r.nomes || []);
+  const people = [...new Set(groupSales.map(s => s.consultant))].filter(n => n !== DEFAULT_CONSULTANT && (!nomes.size || nomes.has(n)));
   const byPerson = {};
   if (perPerson > 0) people.forEach(n => { byPerson[n] = perPerson; });
   const nextGoal = count < r.equipe_200 ? r.equipe_200 - count : count < r.equipe_300 ? r.equipe_300 - count : 0;
@@ -2730,6 +2736,7 @@ function adminMetaAcquaHtml() {
         <b>Entrada ${r.entrada}</b> (30%) · <b>Básico ${r.basico}</b> (60%) · <b>Meta real ${r.meta_real}+</b> (100%) por semana.
         Bônus de equipe: R$ 200 com ${r.equipe_200} contratos, R$ 300 com ${r.equipe_300}.
         Saídas do próprio mês: <b>${r.saidas_mes != null ? r.saidas_mes : 'ainda não lançadas'}</b> (sem elas, os extras ficam "previstos").
+        ${r.fixa ? 'Meta do mês travada (a partir do dia 4 ela não muda mais).' : 'Meta do mês provisória: trava no dia 4, depois das saídas do mês que fechou serem lançadas.'}
         Régua da Central: ${money(r.regua_central)} pontos por semana (Bom ${money(r.regua_central * 0.7)}, Ótimo ${money(r.regua_central * 0.9)}).</p>`
         : '<p style="font-size:13px;color:var(--mid);margin-bottom:12px">A régua ainda não carregou.</p>'}
       ${session.super ? `

@@ -1,14 +1,14 @@
 // Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que acontece HOJE e pede ação (gestão por
 // exceção), em frases simples, cada uma com "o que fazer". Comparações de 30 dias ficam em Desempenho; o que cada
 // lista trouxe fica em Resultados; o retorno em R$, em Relatórios → Retorno do mês.
-import * as dados from '../dados.js?v=20261124194920';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261124194920';
-import { somarDias, semanaDe } from '../regras.js?v=20261124194920';
+import * as dados from '../dados.js?v=20261124195352';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261124195352';
+import { somarDias, semanaDe } from '../regras.js?v=20261124195352';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261124194920';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261124194920';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261124195352';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261124195352';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();

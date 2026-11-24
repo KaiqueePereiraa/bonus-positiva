@@ -1,7 +1,7 @@
 // Histórico — tudo o que as pessoas fizeram na plataforma (Central e Bônus): quem, quando, o quê e em qual unidade.
 // O banco já devolve só as unidades que o coordenador pode ver; o administrador geral vê tudo.
-import * as dados from '../dados.js?v=20261124194920';
-import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261124194920';
+import * as dados from '../dados.js?v=20261124195352';
+import { esc, dataHora, vazio, NOMES_CONTROLE } from '../ui.js?v=20261124195352';
 
 const TABELAS = {
   profiles: 'Cadastro', config_central: 'Configuração', controles: 'Configuração das listas', motivos: 'Motivo',
