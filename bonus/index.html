@@ -1098,7 +1098,7 @@ function getFilteredSales(monthOverride, opts) {
 
   const month = monthOverride || activeMonth;
   sales = sales.filter(s => s.month === month);
-  if (activeUnit) sales = sales.filter(s => s.unit === activeUnit);
+  if (activeUnit && !(opts && opts.allUnits)) sales = sales.filter(s => s.unit === activeUnit);
   // Vendas sem dono são excluídas de todos os cálculos e visões (exceto tabela do coordenador)
   if (!(opts && opts.includeUnassigned)) {
     sales = sales.filter(s => !!s.consultant);
@@ -1242,6 +1242,46 @@ function policyV2(label) {
   return !!p && (p.year * 100 + p.month + 1) >= 202609;
 }
 
+// Política v3 (aprovada nas unidades em 24/11/2026; vendas de dezembro/2026 em diante): Laranjeiras + República são UMA
+// equipe ("Acqua", 5 consultoras atendendo misturado). A meta vem das saídas da EVO (função bonus_regua): Básico = média das
+// saídas dos 3 meses anteriores ÷ consultoras ÷ 4; Entrada = Básico − 1 (30%), Básico (60%), Meta real = Básico + 1 (100%).
+// Bônus de equipe: R$ 200 com Básico × consultoras × 4 contratos, R$ 300 com Meta real × consultoras × 4 — só se a equipe
+// vender pelo menos o número de saídas do mês. Bônus da Central (função bonus_central): +5% (Bom) / +20% (Ótimo) da comissão
+// da semana, com as travas: Básico na semana + mínimo da Central em 4 de 5 dias + equipe ≥ saídas no mês. O Club não muda.
+const ACQUA_UNITS = ['laranjeiras', 'republica'];
+const GRUPO_ACQUA = 'acqua';
+const ROTULO_ACQUA = 'Acqua (Laranjeiras + República)';
+function policyV3(label) {
+  const p = parseMonthLabel(label);
+  return !!p && (p.year * 100 + p.month + 1) >= 202612;
+}
+const REGUAS = {};    // rótulo do mês → régua da Acqua (bonus_regua)
+const CENTRAL = {};   // rótulo do mês → pontos da Central por consultora e semana (bonus_central)
+function mesISO(label) {
+  const p = parseMonthLabel(label);
+  return p ? `${p.year}-${String(p.month + 1).padStart(2, '0')}-01` : null;
+}
+function reguaDe(label) {
+  return REGUAS[label || activeMonth] || { entrada: 2, basico: 3, meta_real: 4, equipe_200: 60, equipe_300: 80, consultoras: 5,
+    saidas_base: 52, saidas_mes: null, regua_central: 33 };
+}
+function grupoMeta(unit, label) { return policyV3(label || activeMonth) && ACQUA_UNITS.includes(unit) ? GRUPO_ACQUA : unit; }
+function unidadesDoGrupo(g) { return g === GRUPO_ACQUA ? ACQUA_UNITS : [g]; }
+function noGrupo(s, g) { return unidadesDoGrupo(g).includes(s.unit); }
+function rotuloGrupo(g) { return g === GRUPO_ACQUA ? ROTULO_ACQUA : (UNIT_LABELS[g] || g); }
+function gruposDe(units, label) { return [...new Set(units.map(u => grupoMeta(u, label)))]; }
+async function carregarReguas() {
+  const meses = [...new Set([...ALL_MONTHS, MONTH])].filter(policyV3);
+  if (!meses.length && session.role === 'coordinator') meses.push('Dezembro/2026');   // Configurações mostram a régua que vem
+  await Promise.all(meses.map(async m => {
+    try {
+      const [r, c] = await Promise.all([db.rpc('bonus_regua', { p_mes: mesISO(m) }), db.rpc('bonus_central', { p_mes: mesISO(m) })]);
+      if (r.data) REGUAS[m] = r.data;
+      if (c.data) CENTRAL[m] = c.data;
+    } catch (e) { console.warn('Régua/Central não carregou', m, e); }
+  }));
+}
+
 // Uma venda vale como unidade da meta semanal quando é do dono do cadastro (cadastro,
 // rematrícula, renovação, venda completa) E o Python não marcou `counts_goal: false`
 // (v2: renovação mês 13 e upgrade continuam pagando, mas não entram na contagem).
@@ -1291,20 +1331,33 @@ const WEEKLY_TIERS = {
 const WEEK_TIER_NAMES = [[12,'Super meta'],[9,'Meta real'],[6,'Básico'],[0,'Abaixo do básico']]; // club
 const WEEK_TIER_NAMES_ACQUA = [[4,'Super meta'],[3,'Meta real'],[2,'Básico'],[0,'Abaixo do básico']];
 
-function weeklyTiers(unit) { return WEEKLY_TIERS[unit] || WEEKLY_TIERS.club; }
-function weekTierNames(unit) { return unit === 'club' ? WEEK_TIER_NAMES : WEEK_TIER_NAMES_ACQUA; }
+const ehAcquaV3 = (unit, label) => unit === GRUPO_ACQUA || (ACQUA_UNITS.includes(unit) && policyV3(label || activeMonth));
+function weeklyTiers(unit, label) {
+  if (ehAcquaV3(unit, label)) {
+    const r = reguaDe(label);
+    return [[r.meta_real, 1.0], [r.basico, 0.6], [r.entrada, 0.3], [0, 0]];
+  }
+  return WEEKLY_TIERS[unit] || WEEKLY_TIERS.club;
+}
+function weekTierNames(unit, label) {
+  if (ehAcquaV3(unit, label)) {
+    const r = reguaDe(label);
+    return [[r.meta_real, 'Meta real'], [r.basico, 'Básico'], [r.entrada, 'Entrada'], [0, 'Abaixo da entrada']];
+  }
+  return unit === 'club' ? WEEK_TIER_NAMES : WEEK_TIER_NAMES_ACQUA;
+}
 
-function weeklyTierPct(unit, count) {
-  for (const [min, pct] of weeklyTiers(unit)) { if (count >= min) return pct; }
+function weeklyTierPct(unit, count, label) {
+  for (const [min, pct] of weeklyTiers(unit, label)) { if (count >= min) return pct; }
   return 0;
 }
-function weekTierLabel(unit, count) {
-  for (const [min, label] of weekTierNames(unit)) { if (count >= min) return label; }
+function weekTierLabel(unit, count, label) {
+  for (const [min, name] of weekTierNames(unit, label)) { if (count >= min) return name; }
   return 'Abaixo do básico';
 }
 // Quantos contratos faltam pra bater a PRÓXIMA faixa (0 = já está na faixa máxima).
-function weekTierNextGoal(unit, count) {
-  const asc = weeklyTiers(unit).slice().reverse();
+function weekTierNextGoal(unit, count, label) {
+  const asc = weeklyTiers(unit, label).slice().reverse();
   for (const [min] of asc) { if (count < min) return min - count; }
   return 0;
 }
@@ -1321,21 +1374,22 @@ function computeWeeklyBreakdown(sales) {
   // converteu naquela semana (0 contratos de meta) nunca teria uma chave em `counts`, e o
   // saleWeekPct() caía no fallback de "chave não encontrada" pagando 100% por engano em vez
   // de aplicar a faixa 0% de quem não cadastrou ninguém.
-  const seenKeys = new Set();
+  // v3: na Acqua a chave é o grupo (Laranjeiras + República juntas), não a unidade.
+  const seenKeys = new Map();
   sales.forEach(s => {
     if (!s.consultant) return;
     const wk = weekIndexForSale(s);
     if (!wk) return;
-    const key = s.consultant + '|' + s.unit + '|' + wk;
-    seenKeys.add(key);
+    const g = grupoMeta(s.unit, s.month);
+    const key = s.consultant + '|' + g + '|' + wk;
+    seenKeys.set(key, {g, month: s.month});
     if (countsToGoal(s)) {
       counts[key] = (counts[key] || 0) + 1;
     }
   });
   const pctByKey = {};
-  seenKeys.forEach(key => {
-    const unit = key.split('|')[1];
-    pctByKey[key] = weeklyTierPct(unit, counts[key] || 0);
+  seenKeys.forEach(({g, month}, key) => {
+    pctByKey[key] = weeklyTierPct(g, counts[key] || 0, month);
   });
   return {counts, pctByKey};
 }
@@ -1344,7 +1398,7 @@ function saleWeekPct(sale, breakdown) {
   if (!sale.consultant) return 1;           // sem dono: não participa de meta nenhuma, mantém como está
   const wk = weekIndexForSale(sale);
   if (!wk) return 1;                        // data inválida/fora do mês: não penaliza, paga cheio
-  const key = sale.consultant + '|' + sale.unit + '|' + wk;
+  const key = sale.consultant + '|' + grupoMeta(sale.unit, sale.month) + '|' + wk;
   return breakdown.pctByKey[key] !== undefined ? breakdown.pctByKey[key] : 1;
 }
 
@@ -1354,7 +1408,8 @@ function saleWeekPct(sale, breakdown) {
 // tipo, consultor) que às vezes é o que efetivamente será exibido — senão filtrar a
 // tabela de vendas mudaria a meta batida de todo mundo.
 function pricedSales(sales, monthOverride) {
-  const base = getFilteredSales(monthOverride, {includeUnassigned: false});
+  // allUnits: na Acqua v3 a meta junta as duas unidades — a aba de uma unidade não pode mudar a faixa de ninguém
+  const base = getFilteredSales(monthOverride, {includeUnassigned: false, allUnits: true});
   const breakdown = computeWeeklyBreakdown(base);
   return sales.map(s => {
     const pct = saleWeekPct(s, breakdown);
@@ -1417,7 +1472,51 @@ function teamBonusNextGoalV2(unit, count) {
   return 0;   // faixa máxima (R$ 500)
 }
 
+// v3 (Acqua, dez/2026+): uma conta só para Laranjeiras + República. "Trava da equipe" = a equipe fechou pelo menos tantos
+// contratos quanto as saídas do mês (lidas na EVO e lançadas em Configurações). Sem as saídas lançadas, fica "pendente".
+function teamBonusAcquaV3(sales, month) {
+  const m = month || activeMonth, r = reguaDe(m);
+  const groupSales = sales.filter(s => ACQUA_UNITS.includes(s.unit) && s.consultant);
+  const count = new Set(groupSales.filter(s => s.counts_goal !== false).map(s => s.unit + ':' + s.type + ':' + s.id)).size;
+  const previsto = count >= r.equipe_300 ? 300 : count >= r.equipe_200 ? 200 : 0;
+  const saidas = r.saidas_mes;
+  const trava = saidas == null ? 'pendente' : count >= saidas ? 'aberta' : 'fechada';
+  const perPerson = trava === 'aberta' ? previsto : 0;
+  const people = [...new Set(groupSales.map(s => s.consultant))].filter(n => n !== DEFAULT_CONSULTANT);
+  const byPerson = {};
+  if (perPerson > 0) people.forEach(n => { byPerson[n] = perPerson; });
+  const nextGoal = count < r.equipe_200 ? r.equipe_200 - count : count < r.equipe_300 ? r.equipe_300 - count : 0;
+  return {v2: true, v3: true, count, perPerson, previsto, people: people.length, total: perPerson * people.length,
+          nextGoal, byPerson, trava, saidas, saidasBase: r.saidas_base, regua: r};
+}
+
+// Bônus da Central da semana (v3): +5% (Bom) / +20% (Ótimo) da comissão que ela ganhou na semana, nas duas unidades.
+// Devolve { nivel, pct, valor, motivo, pontos } — valor 0 quando alguma trava fecha (o motivo diz qual).
+const NIVEL_CENTRAL = { otimo: { nome: 'Ótimo', pct: 0.20 }, bom: { nome: 'Bom', pct: 0.05 }, normal: { nome: 'Normal', pct: 0 } };
+function centralDaSemana(name, wk, metaCount, earned, month) {
+  const m = month || activeMonth;
+  if (!policyV3(m)) return null;
+  const dadosC = CENTRAL[m];
+  const c = dadosC && (dadosC.consultoras || []).find(x => x.nome_bonus === name);
+  if (!c) return { nivel: null, pct: 0, valor: 0, motivo: 'sem pontos da Central', pontos: null };
+  const s = c.semanas.find(x => x.n === wk) || {};
+  const n = NIVEL_CENTRAL[s.nivel] || NIVEL_CENTRAL.normal;
+  const r = reguaDe(m);
+  const equipe = teamBonusAcquaV3(getFilteredSales(m, {includeUnassigned: false, allUnits: true}), m);
+  let motivo = '';
+  if (!n.pct) motivo = `${s.total ?? 0} pontos (Bom a partir de ${dadosC.bom})`;
+  else if (metaCount < r.basico) motivo = `faltou o Básico (${r.basico} contratos) na semana`;
+  else if (!s.trava_minimo) motivo = `mínimo da Central em ${s.dias_ok} de ${s.dias_validos} dias`;
+  else if (equipe.trava === 'fechada') motivo = `a equipe fechou ${equipe.count} contratos e saíram ${equipe.saidas} alunos`;
+  else if (equipe.trava === 'pendente') motivo = 'aguardando as saídas do mês para liberar';
+  const libera = n.pct > 0 && !motivo;
+  const previsto = Math.round(earned * n.pct * 100) / 100;
+  return { nivel: n.nome, pct: n.pct, valor: libera ? previsto : 0, previsto, motivo, pontos: s.total ?? 0, semana: s,
+           pendente: n.pct > 0 && equipe.trava === 'pendente' && metaCount >= r.basico && s.trava_minimo };
+}
+
 function computeTeamBonus(sales, unit, month) {
+  if (unit === GRUPO_ACQUA) return teamBonusAcquaV3(sales, month);
   const unitSales = sales.filter(s => s.unit === unit && s.consultant);
   if (policyV2(month || activeMonth)) {
     const count = uniqueSaleCount(unitSales.filter(s => s.counts_goal !== false));
@@ -1738,6 +1837,7 @@ function switchUnitByKey(uk) {
 // aplicado) — vem de renderSection() já assim de propósito, porque tanto a contagem
 // de contratos quanto o valor ganho precisam da mesma base pra baterem entre si.
 function weekBonusCard(unit) {
+  if (unit === GRUPO_ACQUA) return teamBonusCardV3();
   const base = getFilteredSales(null, {includeUnassigned: false}).filter(s => s.unit === unit);
   const b = computeTeamBonus(base, unit);
   const pct = b.nextGoal === 0 ? 100 : Math.min(100, Math.round((b.count / (b.count + b.nextGoal)) * 100));
@@ -1752,6 +1852,24 @@ function weekBonusCard(unit) {
       <div class="kpi-value">${valueHtml}</div>
       <div class="kpi-sub">${b.count} contrato${b.count!==1?'s':''} no mês${peopleTxt}
         ${b.nextGoal > 0 ? ` · faltam ${b.nextGoal} pra próxima faixa` : ' · faixa máxima'}</div>
+    </div>`;
+}
+
+function teamBonusCardV3() {
+  const b = teamBonusAcquaV3(getFilteredSales(null, {includeUnassigned: false, allUnits: true}));
+  const r = b.regua;
+  const pct = b.nextGoal === 0 ? 100 : Math.min(100, Math.round((b.count / (b.count + b.nextGoal)) * 100));
+  const alvoSaidas = b.saidas != null ? b.saidas : Math.round(b.saidasBase);
+  const caixa = b.trava === 'aberta' ? `✓ repôs as ${b.saidas} saídas do mês`
+    : b.trava === 'fechada' ? `✗ saíram ${b.saidas} alunos — extras travados`
+    : `para não perder alunos: ${alvoSaidas} (${b.count >= alvoSaidas ? 'já passou da média' : `faltam ${alvoSaidas - b.count}`}; libera quando as saídas do mês forem lançadas)`;
+  const valor = b.trava === 'aberta' ? b.perPerson : b.previsto;
+  return `
+    <div class="kpi-card ${b.total > 0 ? 'highlight' : ''}">
+      <div class="kpi-label">Bônus de Equipe — ${ROTULO_ACQUA}</div>
+      <div class="kpi-value">R$ ${money(valor)} <span style="font-size:13px;font-weight:600">por consultora${b.trava === 'pendente' && valor ? ' (previsto)' : b.trava === 'fechada' && valor ? ' (travado)' : ''}</span></div>
+      <div class="kpi-sub">${b.count} contrato${b.count!==1?'s':''} da equipe no mês · R$ 200 com ${r.equipe_200}, R$ 300 com ${r.equipe_300}
+        ${b.nextGoal > 0 ? ` · faltam ${b.nextGoal} pra próxima faixa` : ' · faixa máxima'}<br>Caixa d'água: ${caixa}</div>
     </div>`;
 }
 
@@ -1784,20 +1902,31 @@ function weekCardHtml(w, unit, name) {
       <div class="kpi-label">Semana ${w.wk} · ${fmt(w.range.start)}–${fmt(w.range.end)}${weekStatusBadge(w.status)}</div>
       <div class="kpi-value">R$ ${money(w.earned)}</div>
       <div class="kpi-sub">${w.count} contrato${w.count!==1?'s':''}${breakdown} · ${w.label} (${pctLabel})
-        ${w.toNext > 0 ? `<br>faltam ${w.toNext} pra próxima faixa` : ''}</div>
+        ${w.toNext > 0 ? `<br>faltam ${w.toNext} pra próxima faixa` : ''}${centralLinha(w.central)}</div>
       ${w.hasAny ? `<button class="btn-sm" style="margin-top:10px;background:#eef1f4;color:var(--navy)" onclick="openWeekDetailModal('${name}','${unit}',${w.wk})">Ver alunos</button>` : ''}
     </div>`;
 }
 
+// Linha do bônus da Central no cartão da semana (v3)
+function centralLinha(c) {
+  if (!c || !c.semana) return '';
+  const pts = `${money(c.pontos)} pts`;
+  if (c.valor > 0) return `<br><span style="color:#2e7d32;font-weight:700">⭐ Central: ${c.nivel} (+${Math.round(c.pct*100)}%) · +R$ ${money(c.valor)}</span> <span style="color:var(--mid)">(${pts})</span>`;
+  if (c.pendente) return `<br><span style="color:#e65100;font-weight:700">⭐ Central: ${c.nivel} · +R$ ${money(c.previsto)} previsto</span> <span style="color:var(--mid)">(${c.motivo})</span>`;
+  if (c.pct > 0) return `<br><span style="color:#c62828">⭐ Central: ${c.nivel}, mas ${c.motivo}</span>`;
+  return `<br><span style="color:var(--mid)">⭐ Central: ${c.motivo}</span>`;
+}
+
+// `unit` pode ser uma unidade ou o grupo 'acqua' (v3: Laranjeiras + República juntas)
 function personWeeklyRows(name, unit, rawSales, priced) {
   const bounds = weekBoundsForMonth(activeMonth);
   if (!bounds) return [];
   return bounds.map((range, i) => {
     const wk = i + 1;
-    const weekSales = rawSales.filter(s => s.consultant === name && s.unit === unit && weekIndexForSale(s) === wk);
+    const weekSales = rawSales.filter(s => s.consultant === name && noGrupo(s, unit) && weekIndexForSale(s) === wk);
     const metaSales = weekSales.filter(countsToGoal);
     const earned = priced
-      .filter(s => s.consultant === name && s.unit === unit && weekIndexForSale(s) === wk)
+      .filter(s => s.consultant === name && noGrupo(s, unit) && weekIndexForSale(s) === wk)
       .reduce((a,s) => a + s.commission, 0);
     const typeBreak = {
       novos:        metaSales.filter(s=>s.type==='new').length,
@@ -1812,6 +1941,7 @@ function personWeeklyRows(name, unit, rawSales, priced) {
       label: weekTierLabel(unit, metaSales.length),
       toNext: weekTierNextGoal(unit, metaSales.length),
       status: weekStatus(range),
+      central: unit === GRUPO_ACQUA ? centralDaSemana(name, wk, metaSales.length, earned) : null,
     };
   });
 }
@@ -1822,10 +1952,10 @@ function openWeekDetailModal(name, unit, wk) {
   const bounds = weekBoundsForMonth(activeMonth);
   if (!bounds) return;
   const range = bounds[wk - 1];
-  const raw    = getFilteredSales(null, {includeUnassigned: false});
+  const raw    = getFilteredSales(null, {includeUnassigned: false, allUnits: unit === GRUPO_ACQUA});
   const priced = pricedSales(raw);
-  const weekSales   = raw.filter(s => s.consultant === name && s.unit === unit && weekIndexForSale(s) === wk);
-  const weekPriced  = priced.filter(s => s.consultant === name && s.unit === unit && weekIndexForSale(s) === wk);
+  const weekSales   = raw.filter(s => s.consultant === name && noGrupo(s, unit) && weekIndexForSale(s) === wk);
+  const weekPriced  = priced.filter(s => s.consultant === name && noGrupo(s, unit) && weekIndexForSale(s) === wk);
   const metaCount   = weekSales.filter(countsToGoal).length;
   const earned      = weekPriced.reduce((a,s) => a + s.commission, 0);
   const pct         = weeklyTierPct(unit, metaCount);
@@ -1835,7 +1965,7 @@ function openWeekDetailModal(name, unit, wk) {
   document.getElementById('week-detail-info').innerHTML = `
     <strong>Período:</strong> ${fmt(range.start)}–${fmt(range.end)}${weekStatusBadge(weekStatus(range))}<br>
     <strong>${weekTierLabel(unit, metaCount)}</strong> (${Math.round(pct*100)}%) · <strong>${metaCount}</strong> contrato${metaCount!==1?'s':''} pra meta ·
-    <strong>R$ ${money(earned)}</strong> ganho na semana
+    <strong>R$ ${money(earned)}</strong> ganho na semana${centralLinha(unit === GRUPO_ACQUA ? centralDaSemana(name, wk, metaCount, earned) : null)}
   `;
 
   const rows = weekSales.map(s => {
@@ -1843,7 +1973,7 @@ function openWeekDetailModal(name, unit, wk) {
     const p = weekPriced.find(x => x.line_id === s.line_id);
     const typeTxt = s.type === 'new' ? 'Novo' : (s.source === 'filtro' ? 'Renovação' : 'Rematrícula');
     return `<tr>
-      <td>${s.student}</td>
+      <td>${s.student}${unit === GRUPO_ACQUA ? `<div style="font-size:10px;color:var(--mid)">${UNIT_LABELS[s.unit] || s.unit}</div>` : ''}</td>
       <td>${typeTxt}</td>
       <td style="font-size:12px">${s.contract}</td>
       <td>${roleLabel(s)}${!isMeta ? '<div style="font-size:10px;color:var(--mid)">não conta pra meta</div>' : ''}</td>
@@ -1860,6 +1990,26 @@ function openWeekDetailModal(name, unit, wk) {
   openModal('modal-week-detail');
 }
 
+// Explicação curta da meta v3 (Acqua) para o topo da aba Semanal
+function metaV3Sub() {
+  const r = reguaDe();
+  return `<br>Acqua (Laranjeiras + República juntas): Entrada ${r.entrada} contrato${r.entrada!==1?'s':''} (30%) · Básico ${r.basico} (60%) · Meta real ${r.meta_real}+ (100%) por semana — saídas usadas na meta: ${money(r.saidas_base)} por mês, ${r.consultoras} consultoras.`;
+}
+// Resumo do bônus da Central no mês, para a consultora
+function centralResumoHtml(weeks) {
+  const c = CENTRAL[activeMonth];
+  if (!c) return '';
+  const valor = weeks.reduce((a, w) => a + (w.central ? w.central.valor : 0), 0);
+  const previsto = weeks.reduce((a, w) => a + (w.central && w.central.pendente ? w.central.previsto : 0), 0);
+  return `<div class="kpi-grid"><div class="kpi-card ${valor > 0 ? 'highlight' : ''}">
+    <div class="kpi-label">⭐ Bônus da Central — ${activeMonth}</div>
+    <div class="kpi-value">R$ ${money(valor)}${previsto > 0 ? ` <span style="font-size:13px;font-weight:600">+ R$ ${money(previsto)} previsto</span>` : ''}</div>
+    <div class="kpi-sub">Pontos por semana: matrícula 4, renovação 3, pagamento 2, voltou a treinar 1 (+ esforço e medalhas, até 5).
+      Bom a partir de ${money(c.bom)} pontos (+5%), Ótimo a partir de ${money(c.otimo)} (+20%) — régua: a melhor da equipe.
+      Só vale na semana em que você bate o Básico e o mínimo em 4 de 5 dias, e no mês em que a equipe repõe as saídas.</div>
+  </div></div>`;
+}
+
 function renderWeekly(rawSales) {
   const el = document.getElementById('panel-weekly');
   const isCoord = session.role === 'coordinator';
@@ -1870,25 +2020,29 @@ function renderWeekly(rawSales) {
     return;
   }
 
+  // v3: Laranjeiras + República aparecem juntas (uma meta só) — conta com as vendas das duas, mesmo na aba de uma unidade
+  const v3 = policyV3(activeMonth);
+  if (v3) rawSales = getFilteredSales(null, {includeUnassigned: false, allUnits: true});
   const priced = pricedSales(rawSales);
-  const unitsInView = activeUnit ? [activeUnit] : UNIT_KEYS;
+  const unitsInView = gruposDe(activeUnit ? [activeUnit] : UNIT_KEYS);
   const bonusCardsHtml = unitsInView.map(weekBonusCard).join('');
 
   if (!isCoord) {
     // Quem vende em mais de uma unidade tem uma aba por unidade (ver buildTabs()) — aqui só
     // falta cobrir a visão combinada ("Meu Dashboard", sem unidade selecionada): mostra a
     // semana de CADA unidade em que a pessoa vende, não só a primeira que aparecer nos dados.
-    const myUnits = activeUnit ? [activeUnit] : [...new Set(RAW_SALES.filter(s => s.consultant === session.name).map(s => s.unit))];
+    const myUnits = gruposDe(activeUnit ? [activeUnit] : [...new Set(RAW_SALES.filter(s => s.consultant === session.name).map(s => s.unit))]);
     const myBonusHtml = (activeUnit ? unitsInView : myUnits).map(weekBonusCard).join('');
     const sectionsHtml = myUnits.map(uk => {
       const myWeeks = personWeeklyRows(session.name, uk, rawSales, priced);
       return `
-        ${myUnits.length > 1 ? `<p class="page-title" style="font-size:17px;margin-top:20px">${UNIT_LABELS[uk]||uk}</p>` : ''}
-        <div class="kpi-grid">${myWeeks.map(w => weekCardHtml(w, uk, session.name)).join('')}</div>`;
+        ${myUnits.length > 1 || uk === GRUPO_ACQUA ? `<p class="page-title" style="font-size:17px;margin-top:20px">${rotuloGrupo(uk)}</p>` : ''}
+        <div class="kpi-grid">${myWeeks.map(w => weekCardHtml(w, uk, session.name)).join('')}</div>
+        ${uk === GRUPO_ACQUA ? centralResumoHtml(myWeeks) : ''}`;
     }).join('');
     el.innerHTML = `
       <p class="page-title">Minha Semana</p>
-      <p class="page-sub">${activeMonth} · meta contada pelos contratos que você cadastrou (ou rematrícula sua; renovação não conta a partir de setembro/2026)</p>
+      <p class="page-sub">${activeMonth} · meta contada pelos contratos que você cadastrou (ou rematrícula sua; renovação não conta a partir de setembro/2026)${v3 ? metaV3Sub() : ''}</p>
       ${sectionsHtml}
       <p class="page-title" style="font-size:17px;margin-top:8px">Bônus de Equipe</p>
       <p class="page-sub">Coletivo — pago junto com o bônus individual</p>
@@ -1900,25 +2054,28 @@ function renderWeekly(rawSales) {
   // Coordenador: todo mundo lado a lado, por unidade — clique numa célula pra ver quem são
   const unitTitle = activeUnit ? UNIT_LABELS[activeUnit] : 'Todas as Unidades';
   const rowsHtml = unitsInView.map(uk => {
-    const consultants = getConsultants(rawSales.filter(s => s.unit === uk));
+    const consultants = getConsultants(rawSales.filter(s => noGrupo(s, uk)));
     if (!consultants.length) return '';
+    const comCentral = uk === GRUPO_ACQUA;
     const bodyRows = consultants.map(name => {
       const weeks = personWeeklyRows(name, uk, rawSales, priced);
       const total = weeks.reduce((a,w) => a + w.earned, 0);
+      const central = weeks.reduce((a,w) => a + (w.central ? w.central.valor : 0), 0);
+      const previsto = weeks.reduce((a,w) => a + (w.central && w.central.pendente ? w.central.previsto : 0), 0);
       const weekCells = weeks.map(w => `
         <td ${w.hasAny ? `style="cursor:pointer" onclick="openWeekDetailModal('${name}','${uk}',${w.wk})"` : ''}>
           <span class="tag" style="background:${w.pct>=1?'#e8f5e9':w.pct>0?'#fff3e0':'#ffebee'};color:${w.pct>=1?'#2e7d32':w.pct>0?'#e65100':'#c62828'}">
             ${w.count} · ${Math.round(w.pct*100)}%
-          </span>${weekStatusBadge(w.status)}
+          </span>${weekStatusBadge(w.status)}${comCentral && w.central && w.central.semana ? `<div style="font-size:10px;color:${w.central.valor > 0 ? '#2e7d32' : 'var(--mid)'};margin-top:3px" title="${w.central.motivo || ''}">⭐ ${money(w.central.pontos)} pts${w.central.pct ? ` · ${w.central.nivel}` : ''}</div>` : ''}
         </td>`).join('');
-      return `<tr><td>${shortName(name)}</td>${weekCells}<td><strong>R$ ${money(total)}</strong></td></tr>`;
+      return `<tr><td>${shortName(name)}</td>${weekCells}<td><strong>R$ ${money(total)}</strong></td>${comCentral ? `<td>${central > 0 ? `<strong style="color:#2e7d32">+R$ ${money(central)}</strong>` : previsto > 0 ? `<span style="color:#e65100">+R$ ${money(previsto)} previsto</span>` : '—'}</td>` : ''}</tr>`;
     }).join('');
     return `
       <div class="table-card">
-        <h3>${UNIT_LABELS[uk]||uk}</h3>
-        <p style="font-size:12px;color:var(--mid);margin-bottom:12px">Clique numa célula pra ver quem são os alunos daquela semana.</p>
+        <h3>${rotuloGrupo(uk)}</h3>
+        <p style="font-size:12px;color:var(--mid);margin-bottom:12px">Clique numa célula pra ver quem são os alunos daquela semana.${comCentral ? ` ⭐ = pontos da Central na semana (Bom a partir de ${money((CENTRAL[activeMonth] || {}).bom || 0)}, Ótimo a partir de ${money((CENTRAL[activeMonth] || {}).otimo || 0)}).` : ''}</p>
         <table class="data-table">
-          <thead><tr><th>Consultor</th><th>Sem. 1</th><th>Sem. 2</th><th>Sem. 3</th><th>Sem. 4</th><th>Total no mês</th></tr></thead>
+          <thead><tr><th>Consultor</th><th>Sem. 1</th><th>Sem. 2</th><th>Sem. 3</th><th>Sem. 4</th><th>Total no mês</th>${comCentral ? '<th>Bônus da Central</th>' : ''}</tr></thead>
           <tbody>${bodyRows}</tbody>
         </table>
       </div>`;
@@ -1926,7 +2083,7 @@ function renderWeekly(rawSales) {
 
   el.innerHTML = `
     <p class="page-title">Semanal — ${unitTitle}</p>
-    <p class="page-sub">${activeMonth} · meta semanal (segunda a domingo) por pessoa, contada pelos cadastros/rematrículas/renovações dela</p>
+    <p class="page-sub">${activeMonth} · meta semanal (segunda a domingo) por pessoa, contada pelos cadastros/rematrículas/renovações dela${v3 ? metaV3Sub() : ''}</p>
     <div class="kpi-grid">${bonusCardsHtml}</div>
     ${rowsHtml || '<div class="empty-state"><div class="icon">📭</div><p>Nenhum consultor com vendas no período.</p></div>'}
   `;
@@ -2555,8 +2712,48 @@ function renderAdmin() {
         <span style="font-weight:700;font-size:14px;color:${salesVisibleToConsultants?'#2e7d32':'#c62828'}">${salesVisibleToConsultants ? 'Exceção ligada — liberado fora do prazo' : 'Exceção desligada — vale a regra do dia 10'}</span>
       </label>
     </div>
-
+    ${adminMetaAcquaHtml()}
   `;
+}
+
+// Meta da Acqua (v3): saídas do mês lidas no dashboard da EVO (Laranjeiras + República). A meta de cada mês usa a média dos
+// 3 meses anteriores; as saídas do próprio mês liberam (ou travam) os extras no fechamento. Só o administrador geral lança.
+function adminMetaAcquaHtml() {
+  const label = policyV3(activeMonth) ? activeMonth : 'Dezembro/2026';
+  const r = REGUAS[label];
+  const hoje = hojeSPBonus();
+  const mesPassado = (() => { const a = +hoje.slice(0, 4), m = +hoje.slice(5, 7); return m === 1 ? `${a - 1}-12` : `${a}-${String(m - 1).padStart(2, '0')}`; })();
+  return `
+    <div class="admin-section">
+      <h3>Meta da Acqua (Laranjeiras + República) — vale de dezembro/2026 em diante</h3>
+      ${r ? `<p style="font-size:13px;color:var(--mid);margin-bottom:12px"><b>${label}:</b> saídas usadas na meta ${money(r.saidas_base)} por mês (média dos 3 meses anteriores) ÷ ${r.consultoras} consultoras ÷ 4 semanas →
+        <b>Entrada ${r.entrada}</b> (30%) · <b>Básico ${r.basico}</b> (60%) · <b>Meta real ${r.meta_real}+</b> (100%) por semana.
+        Bônus de equipe: R$ 200 com ${r.equipe_200} contratos, R$ 300 com ${r.equipe_300}.
+        Saídas do próprio mês: <b>${r.saidas_mes != null ? r.saidas_mes : 'ainda não lançadas'}</b> (sem elas, os extras ficam "previstos").
+        Régua da Central: ${money(r.regua_central)} pontos por semana (Bom ${money(r.regua_central * 0.7)}, Ótimo ${money(r.regua_central * 0.9)}).</p>`
+        : '<p style="font-size:13px;color:var(--mid);margin-bottom:12px">A régua ainda não carregou.</p>'}
+      ${session.super ? `
+      <p style="font-size:13px;color:var(--mid);margin-bottom:10px">Lance as saídas do mês que fechou (dashboard da EVO → saídas de cada unidade) até o dia 3. Elas entram na meta dos próximos 3 meses e liberam os extras do mês.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <label style="font-size:12px;font-weight:700">Mês<br><input type="month" id="saidas-mes" value="${mesPassado}" style="padding:6px 10px;border:1.5px solid var(--gray);border-radius:8px"></label>
+        <label style="font-size:12px;font-weight:700">Saídas Laranjeiras<br><input type="number" min="0" id="saidas-lar" style="width:110px;padding:6px 10px;border:1.5px solid var(--gray);border-radius:8px"></label>
+        <label style="font-size:12px;font-weight:700">Saídas República<br><input type="number" min="0" id="saidas-rep" style="width:110px;padding:6px 10px;border:1.5px solid var(--gray);border-radius:8px"></label>
+        <label style="font-size:12px;font-weight:700">Consultoras (vazio = as ativas)<br><input type="number" min="1" id="saidas-cons" style="width:110px;padding:6px 10px;border:1.5px solid var(--gray);border-radius:8px"></label>
+        <button class="btn-sm" onclick="salvarSaidas()">Salvar saídas</button>
+      </div>` : '<p style="font-size:12px;color:var(--mid)">Só o administrador geral lança as saídas.</p>'}
+    </div>`;
+}
+async function salvarSaidas() {
+  const mes = document.getElementById('saidas-mes').value;
+  const lar = document.getElementById('saidas-lar').value, rep = document.getElementById('saidas-rep').value;
+  const cons = document.getElementById('saidas-cons').value;
+  if (!mes || lar === '' || rep === '') { showSyncToast('Preencha o mês e as saídas das duas unidades'); return; }
+  const { error } = await db.rpc('bonus_salvar_saidas', { p_mes: `${mes}-01`, p_laranjeiras: +lar, p_republica: +rep, p_consultoras: cons ? +cons : null });
+  if (error) { showSyncToast('⚠ Não salvou: ' + error.message); return; }
+  await carregarReguas();
+  showSyncToast('✓ Saídas salvas');
+  destroyCharts();
+  renderSection(activeSection);
 }
 
 
@@ -3030,7 +3227,8 @@ ${detailSections}
   (veja a aba Semanal do dashboard). Vendas com origem "Manual" foram adicionadas pela coordenação; "Disputa
   resolvida" indica venda reatribuída após contestação analisada no sistema. Descontos por não conformidade
   (lançados na aba Vendas, confirmados pela gestão/financeiro antes de aplicar) já estão subtraídos do total —
-  o motivo de cada um aparece no detalhamento da pessoa.
+  o motivo de cada um aparece no detalhamento da pessoa. Bônus de equipe e bônus da Central (Acqua, a partir de
+  dezembro/2026) são pagos à parte — veja a aba Semanal.
 </div>
 
 <div class="signatures">
@@ -3082,6 +3280,7 @@ function destroyCharts() {
     login: p.email || s.user.email,
     name: p.nome_bonus || p.nome,          // precisa ser igual ao nome nas vendas
     role: p.papel_bonus === 'coordinator' ? 'coordinator' : 'consultant',
+    super: !!p.super_admin,
   };
   if (session.role === 'coordinator' && !p.super_admin) UNIDADES_PERMITIDAS = p.unidades_coord || [];
   document.getElementById('btn-trocar').hidden = !(p.acesso_tarefas && p.papel_tarefas);
@@ -3089,6 +3288,7 @@ function destroyCharts() {
     document.getElementById('carregando-msg').textContent = 'Não foi possível carregar o bônus. Atualize a página.';
     return;
   }
+  await carregarReguas();
   bootApp();
 })();
 </script>

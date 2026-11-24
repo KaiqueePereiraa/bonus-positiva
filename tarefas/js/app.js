@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261123203255';
-import * as dados from './dados.js?v=20261123203255';
-import { hojeSP } from './regras.js?v=20261123203255';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261123203255';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261123203255';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261123203255';
-import { resumoSemana } from './bonus-meta.js?v=20261123203255';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261123203255';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261124194736';
+import * as dados from './dados.js?v=20261124194736';
+import { hojeSP } from './regras.js?v=20261124194736';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261124194736';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261124194736';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261124194736';
+import { resumoSemana } from './bonus-meta.js?v=20261124194736';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261124194736';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -232,7 +232,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261123203255`);
+    const tela = await import(`./telas/${modulo}.js?v=20261124194736`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -374,9 +374,9 @@ async function atualizarHud(animarMudanca = false) {
 // "🎯 1/2": contratos da semana / próxima faixa do Bônus (ou ✓ na Super meta) — a meta à vista enquanto ela trabalha nas listas
 function hudMeta(hoje) {
   if (!metaSemana?.publicado_em) return '';
-  const r = resumoSemana(metaSemana.vendas || [], hoje, perfil.unidade);
+  const r = resumoSemana(metaSemana.vendas || [], hoje, perfil.unidade, metaSemana.regua);
   const alvo = r.proxima ? r.feitos + r.proxima.faltam : null;
-  return `<span class="hud-meta" title="Meta da semana: ${r.feitos} ${r.feitos === 1 ? 'contrato' : 'contratos'}${r.proxima ? ` · faltam ${r.proxima.faltam} para ${r.proxima.nome}` : ' · Super meta batida!'}">🎯 <b>${r.feitos}</b>${alvo ? `/${alvo}` : ' 🏆'}</span>`;
+  return `<span class="hud-meta" title="Meta da semana: ${r.feitos} ${r.feitos === 1 ? 'contrato' : 'contratos'}${r.proxima ? ` · faltam ${r.proxima.faltam} para ${r.proxima.nome}` : ` · ${r.topo} batida!`}">🎯 <b>${r.feitos}</b>${alvo ? `/${alvo}` : ' 🏆'}</span>`;
 }
 let hudTimer;
 if (!ehAdmin) window.addEventListener('central:contato', () => { clearTimeout(hudTimer); hudTimer = setTimeout(() => atualizarHud(true), 500); });

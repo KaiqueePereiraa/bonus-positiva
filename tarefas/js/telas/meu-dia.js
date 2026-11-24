@@ -1,15 +1,15 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import { MOTIVOS } from './_ausencias.js?v=20261123203255';
-import * as dados from '../dados.js?v=20261123203255';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261123203255';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261123203255';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261123203255';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261123203255';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261123203255';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261123203255';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261123203255';
+import { MOTIVOS } from './_ausencias.js?v=20261124194736';
+import * as dados from '../dados.js?v=20261124194736';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261124194736';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261124194736';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261124194736';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261124194736';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261124194736';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261124194736';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261124194736';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -208,21 +208,25 @@ function quadroResultados(r, vits = [], euId = '') {
 }
 
 // Meta da semana do Bônus, em destaque no topo: contratos "de meta" dela na semana (mês dividido em 4, como no Bônus),
-// com a barra até a Super meta e os marcos de cada faixa. Os números vêm da EVO de madrugada.
+// com a barra até a faixa mais alta (Super meta; Meta real na Acqua desde dez/2026) e os marcos de cada faixa. Os números vêm da EVO de madrugada.
 export function cartaoMeta(meta, hoje, unidade) {
   if (!meta || !meta.publicado_em) return '';
-  const r = resumoSemana(meta.vendas || [], hoje, unidade);
+  const r = resumoSemana(meta.vendas || [], hoje, unidade, meta.regua);
   const p = painelMeta(r, hoje, unidade);
+  // dez/2026+: a caixa d'água da equipe (Laranjeiras + República) — os extras só saem se a equipe repor as saídas do mês
+  const rg = meta.regua?.v3 && meta.equipe != null ? meta.regua : null;
+  const saidas = rg ? (rg.saidas_mes ?? Math.round(rg.saidas_base)) : 0;
+  const equipe = rg ? `<p class="ms-nota"><b>Equipe no mês: ${meta.equipe} de ${saidas} contratos</b> para não perder alunos${meta.equipe >= saidas ? ' ✓ — bônus de equipe e da Central liberados' : ` — faltam ${saidas - meta.equipe}`}.</p>` : '';
   const ultimo = p.marcos.length - 1;
   return `<div class="cartao meta-semana ${r.proxima ? '' : 'super'}">
     <div class="ms-topo"><span>🎯&nbsp; Meta da semana ${r.semana}</span><span>${dataCurta(r.ini)} a ${dataCurta(r.fim)}</span></div>
     <div class="ms-numero"><b data-contar="${r.feitos}">${r.feitos}</b><span>${r.feitos === 1 ? 'contrato' : 'contratos'}</span>
-      <span class="ms-faixa ${r.faixa === 'Abaixo do básico' ? '' : 'ok'}">${esc(r.faixa)}</span></div>
+      <span class="ms-faixa ${r.abaixo ? '' : 'ok'}">${esc(r.faixa)}</span></div>
     <div class="ms-trilha" role="progressbar" aria-valuenow="${r.feitos}" aria-valuemin="0" aria-valuemax="${p.topo}" aria-label="Contratos da semana">
       <div class="ms-fill" style="width:0" data-largura="${p.pct}%"></div>
       ${p.marcos.map((m) => `<i class="${m.atingido ? 'ok' : ''}" style="left:${m.pos}%"></i>`).join('')}</div>
     <div class="ms-marcos">${p.marcos.map((m, k) => `<span class="${m.atingido ? 'ok' : ''}" style="left:${m.pos}%;${k === ultimo ? 'transform:translateX(-100%);text-align:right' : ''}">${m.atingido ? '✓ ' : ''}${esc(m.nome)}<small>${m.n}</small></span>`).join('')}</div>
-    <p class="ms-frase">${esc(p.frase)}</p>
+    <p class="ms-frase">${esc(p.frase)}</p>${equipe}
     <p class="ms-nota">Contam matrícula, rematrícula e venda completa. Atualiza de madrugada pela EVO: a venda de hoje aparece amanhã. <a href="../bonus/index.html">Ver detalhes no Bônus →</a></p>
   </div>`;
 }

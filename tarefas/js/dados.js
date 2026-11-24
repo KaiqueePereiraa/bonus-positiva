@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261123203255';
+import { sb } from '../../shared/sessao.js?v=20261124194736';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -221,7 +221,7 @@ export async function meuRecordeDia(userId, hoje) {
   return Object.values(porDia).reduce((m, n) => Math.max(m, n), 0);
 }
 // dias úteis já fechados da consultora (sequência e conquistas do Meu dia); RLS só deixa ler os próprios
-export const meusDias = async (userId) => ok(await sb.from('dias_consultora').select('data,minimo,feitos,bateu,trabalhou')
+export const meusDias = async (userId) => ok(await sb.from('dias_consultora').select('data,minimo,feitos,bateu,trabalhou,adiantou')
   .eq('consultora_id', userId).order('data', { ascending: false }).limit(800));
 export const minhaMetaSemana = () => (comoId ? rpc('minha_meta_semana_como', { p_user: comoId }) : rpc('minha_meta_semana', {}));
 export const desempenho = (de, ate) => rpc('desempenho', { p_de: de, p_ate: ate });

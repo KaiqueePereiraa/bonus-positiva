@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261123203255';
+import { hojeSP } from './regras.js?v=20261124194736';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -25,10 +25,15 @@ export const CHAMAS = [
 ];
 export const chamaDe = (n) => [...CHAMAS].reverse().find((c) => n >= c.min);
 
-// dias: [{ data, minimo, feitos, bateu, trabalhou }] fechados (hoje nunca está aqui — fecha às 23h55); hojeInfo { feitos, minimo }.
+// Dia que conta no jogo: trabalhou e tinha mínimo — ou ficou sem mínimo porque ela ADIANTOU tudo (adiantou = true, desde
+// 24/11/2026: conta como dia cumprido, soma na sequência e no "4 de 5"). Dia sem lista nenhuma continua neutro.
+export const contaNoJogo = (d) => !!d.trabalhou && (d.minimo > 0 || !!d.adiantou);
+const cumpriu = (d) => !!d.bateu || !!d.adiantou;
+
+// dias: [{ data, minimo, feitos, bateu, trabalhou, adiantou }] fechados (hoje nunca está aqui — fecha às 23h55); hojeInfo { feitos, minimo }.
 // Devolve o estado de cada dia (bateu | protegido | quebrou), os eventos (ganhou/usou escudo) e os próximos prêmios.
 export function caminhoSequencia(dias, hojeInfo = null) {
-  const validos = [...dias].filter((d) => d.trabalhou && d.minimo > 0).sort((a, b) => a.data.localeCompare(b.data));
+  const validos = [...dias].filter(contaNoJogo).map((d) => ({ ...d, bateu: cumpriu(d) })).sort((a, b) => a.data.localeCompare(b.data));
   const bateuHoje = !!hojeInfo && hojeInfo.minimo > 0 && hojeInfo.feitos >= hojeInfo.minimo;
   if (bateuHoje) validos.push({ data: '9999-12-31', hoje: true, bateu: true });
   let atual = 0, escudos = 0, recorde = 0;
@@ -66,8 +71,8 @@ export const sequencia = (dias, hojeInfo = null) => caminhoSequencia(dias, hojeI
 export function recorde(dias) {
   let melhor = 0, corrida = 0;
   for (const d of [...dias].sort((a, b) => a.data.localeCompare(b.data))) {
-    if (!d.trabalhou || d.minimo === 0) continue;
-    corrida = d.bateu ? corrida + 1 : 0;
+    if (!contaNoJogo(d)) continue;
+    corrida = cumpriu(d) ? corrida + 1 : 0;
     melhor = Math.max(melhor, corrida);
   }
   return melhor;
@@ -86,7 +91,7 @@ export function trilhaSemana(dias, hoje, hojeInfo = null, estados = {}) {
     else if (data === hoje) estado = hojeInfo && hojeInfo.minimo > 0 && hojeInfo.feitos >= hojeInfo.minimo ? 'hoje-ok' : 'hoje';
     else {
       const d = porData[data];
-      estado = !d ? 'livre' : !d.trabalhou ? 'folga' : d.minimo === 0 ? 'livre' : d.bateu ? 'bateu' : estados[data] === 'protegido' ? 'protegido' : 'nao';
+      estado = !d ? 'livre' : !d.trabalhou ? 'folga' : !contaNoJogo(d) ? 'livre' : cumpriu(d) ? 'bateu' : estados[data] === 'protegido' ? 'protegido' : 'nao';
     }
     return { nome, data, estado };
   });
@@ -196,7 +201,7 @@ const ultimoDiaDoMes = (ym) => iso(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)
 
 // Números de um mês. dias: fechados (+ hoje, se for o mês atual); res: datas (AAAA-MM-DD) dos resultados; fechado: o mês acabou
 function metricasDoMes(dias, res, fechado, hoje, estados = {}) {
-  const validos = dias.filter((d) => d.trabalhou && d.minimo > 0).sort((a, b) => a.data.localeCompare(b.data));
+  const validos = dias.filter(contaNoJogo).map((d) => ({ ...d, bateu: cumpriu(d) })).sort((a, b) => a.data.localeCompare(b.data));
   let seq = 0, corrida = 0;
   for (const d of validos) {
     if (d.data === hoje && !d.bateu) continue;   // hoje ainda em andamento não quebra

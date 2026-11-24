@@ -1,6 +1,8 @@
 // Meta da semana do Bônus (resumo do "Meu dia"). Mesmas regras da página do Bônus (site/bonus/index.html):
 // o mês é dividido em exatamente 4 semanas — dias soltos do começo entram na 1ª e os do fim na 4ª — e as faixas são
 // Club 6/9/12 e Acqua 2/3/4 contratos "de meta" (cadastro, rematrícula ou venda completa) na semana.
+// Dezembro/2026 em diante (comissão aprovada em 24/11/2026): Laranjeiras + República são uma equipe só — contam as vendas
+// dela nas duas unidades e as faixas vêm da régua do mês (minha_meta_semana → regua): Entrada, Básico e Meta real.
 // Puro: testado em tests/bonus-meta.test.js.
 
 export const FAIXAS = {
@@ -8,6 +10,14 @@ export const FAIXAS = {
   laranjeiras: [[4, 'Super meta'], [3, 'Meta real'], [2, 'Básico']],
   republica: [[4, 'Super meta'], [3, 'Meta real'], [2, 'Básico']],
 };
+
+export const ACQUA = ['laranjeiras', 'republica'];
+const ehV3 = (unidade, regua) => !!regua?.v3 && ACQUA.includes(unidade);
+// Faixas da unidade, da maior para a menor: [[contratos, nome], …]
+export function faixasDe(unidade, regua = null) {
+  if (ehV3(unidade, regua)) return [[regua.meta_real, 'Meta real'], [regua.basico, 'Básico'], [regua.entrada, 'Entrada']];
+  return FAIXAS[unidade] || FAIXAS.club;
+}
 
 const iso = (d) => d.toISOString().slice(0, 10);
 const dataISO = (br) => { const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(br || '')); return m ? `${m[3]}-${m[2]}-${m[1]}` : null; };
@@ -24,36 +34,39 @@ export function semanasDoMes(hoje) {
 }
 
 // vendas: [{ data: 'DD/MM/AAAA', unit }] (já só as "de meta" da consultora, vindas de minha_meta_semana)
-export function resumoSemana(vendas, hoje, unidade) {
+export function resumoSemana(vendas, hoje, unidade, regua = null) {
   const semanas = semanasDoMes(hoje);
   const n = semanas.findIndex((s) => hoje >= s.ini && hoje <= s.fim);
   const s = semanas[n];
-  const faixas = FAIXAS[unidade] || FAIXAS.club;
-  const feitos = vendas.filter((v) => v.unit === unidade).map((v) => dataISO(v.data)).filter((d) => d && d >= s.ini && d <= s.fim).length;
+  const v3 = ehV3(unidade, regua);
+  const faixas = faixasDe(unidade, regua);
+  const daUnidade = (v) => (v3 ? ACQUA.includes(v.unit) : v.unit === unidade);
+  const feitos = vendas.filter(daUnidade).map((v) => dataISO(v.data)).filter((d) => d && d >= s.ini && d <= s.fim).length;
   const atual = faixas.find(([min]) => feitos >= min);
   const proxima = [...faixas].reverse().find(([min]) => feitos < min);
-  return { semana: n + 1, ini: s.ini, fim: s.fim, feitos, faixa: atual ? atual[1] : 'Abaixo do básico',
+  const abaixo = v3 ? 'Abaixo da entrada' : 'Abaixo do básico';
+  return { semana: n + 1, ini: s.ini, fim: s.fim, feitos, faixa: atual ? atual[1] : abaixo, abaixo: !atual, faixas, topo: faixas[0][1],
     proxima: proxima ? { nome: proxima[1], faltam: proxima[0] - feitos } : null, basico: faixas[faixas.length - 1][0] };
 }
 
 // Quadro da meta no topo do "Meu dia": marcos das faixas na barra, quantos dias faltam e uma frase de incentivo.
 // r = resumoSemana(...). A barra vai até a Super meta; cada faixa vira um marco (✓ quando atingida).
 export function painelMeta(r, hoje, unidade) {
-  const faixas = [...(FAIXAS[unidade] || FAIXAS.club)].reverse();   // da menor para a maior
+  const faixas = [...(r.faixas || FAIXAS[unidade] || FAIXAS.club)].reverse();   // da menor para a maior
   const topo = faixas[faixas.length - 1][0];
   const dia = (s) => Date.parse(`${s}T12:00:00Z`);
   const dias = Math.max(1, Math.round((dia(r.fim) - dia(hoje)) / 864e5) + 1);   // hoje incluído
   const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
   const marcos = faixas.map(([n, nome]) => ({ n, nome, atingido: r.feitos >= n, pos: Math.round((100 * n) / topo) }));
   let frase;
-  if (!r.proxima) frase = 'Super meta batida! 🏆 Semana de referência — tudo o que vier agora é extra.';
+  if (!r.proxima) frase = `${r.topo || 'Super meta'} batida! 🏆 Semana de referência — tudo o que vier agora é extra.`;
   else {
-    const alvo = r.proxima.nome === 'Básico' ? 'o Básico' : `a ${r.proxima.nome}`;
+    const alvo = ['Básico', 'Entrada'].includes(r.proxima.nome) ? `${r.proxima.nome === 'Básico' ? 'o' : 'a'} ${r.proxima.nome}` : `a ${r.proxima.nome}`;
     // dias DEPOIS de hoje, com a data: "5 dias contando hoje" confundia à noite (pedido de 18/11/2026)
     const depois = dias - 1;
     const quando = depois === 0 ? 'hoje é o último dia da semana'
       : `a semana fecha domingo (${r.fim.slice(8, 10)}/${r.fim.slice(5, 7)}), ${depois === 1 ? 'amanhã' : `daqui a ${depois} dias`}`;
-    frase = `${r.feitos === 0 ? 'Bora começar!' : r.faixa === 'Abaixo do básico' ? 'Você está no caminho!' : `${r.faixa} garantida!`} `
+    frase = `${r.feitos === 0 ? 'Bora começar!' : (r.abaixo ?? r.faixa === 'Abaixo do básico') ? 'Você está no caminho!' : `${r.faixa} garantid${r.faixa === 'Básico' ? 'o' : 'a'}!`} `
       + `${r.proxima.faltam === 1 ? 'Falta' : 'Faltam'} ${plural(r.proxima.faltam, 'contrato', 'contratos')} para ${alvo} — ${quando}.`;
   }
   return { marcos, pct: Math.min(100, Math.round((100 * r.feitos) / topo)), dias, frase, topo };
