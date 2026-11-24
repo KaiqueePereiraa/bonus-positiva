@@ -1504,7 +1504,7 @@ function centralDaSemana(name, wk, metaCount, earned, month) {
   const r = reguaDe(m);
   const equipe = teamBonusAcquaV3(getFilteredSales(m, {includeUnassigned: false, allUnits: true}), m);
   let motivo = '';
-  if (!n.pct) motivo = `${s.total ?? 0} pontos (Bom a partir de ${dadosC.bom})`;
+  if (!n.pct) motivo = `${money(s.total ?? 0)} pontos (Bom a partir de ${money(dadosC.bom)})`;
   else if (metaCount < r.basico) motivo = `faltou o Básico (${r.basico} contratos) na semana`;
   else if (!s.trava_minimo) motivo = `mínimo da Central em ${s.dias_ok} de ${s.dias_validos} dias`;
   else if (equipe.trava === 'fechada') motivo = `a equipe fechou ${equipe.count} contratos e saíram ${equipe.saidas} alunos`;
