@@ -578,8 +578,8 @@ function roleFromLineId(lineId) {
 // sem precisar abrir a venda original.
 function disputeTypeLabel(saleId) {
   return {
-    cadastro: 'Cadastro (70%)', conversao: 'Conversão (30%)',
-    completo: 'Completo (100%)', consultor: 'Rematrícula (100%)',
+    cadastro: 'Cadastro', conversao: 'Conversão',
+    completo: 'Completo (100%)', consultor: 'Rematrícula / renovação (100%)',
   }[roleFromLineId(saleId)] || 'Não identificado';
 }
 
@@ -1173,7 +1173,7 @@ function roleBreakdownText(b) {
   if (b.conv)  parts.push(`${b.conv} convers${b.conv!==1?'ões':'ão'}`);
   if (b.full)  parts.push(`${b.full} venda${b.full!==1?'s':''} completa${b.full!==1?'s':''}`);
   if (b.ren)   parts.push(`${b.ren} rematrícula${b.ren!==1?'s':''}`);
-  if (b.renF)  parts.push(`${b.renF} renovaç${b.renF!==1?'ões':'ão'} (FiltroClientes)`);
+  if (b.renF)  parts.push(`${b.renF} renovaç${b.renF!==1?'ões':'ão'}`);
   return parts.length ? parts.join(' · ') : 'Sem vendas no período';
 }
 
@@ -1183,8 +1183,9 @@ function money(v) {
 }
 
 function roleLabel(s) {
-  if (s.role === 'consultor') return s.source === 'filtro' ? 'Renovação (100%)' : 'Rematrícula (100%)';
-  return {cadastro:'Cadastro (70%)', conversao:'Conversão (30%)', completo:'Completo (100%)'}[s.role] || '';
+  if (s.role === 'consultor') return s.kind === 'upgrade' ? 'Upgrade (100%)' : s.source === 'filtro' ? 'Renovação (100%)' : 'Rematrícula (100%)';
+  const [cad, conv] = divisaoNova(s.unit, s.month);
+  return {cadastro:`Cadastro (${cad}%)`, conversao:`Conversão (${conv}%)`, completo:'Completo (100%)'}[s.role] || '';
 }
 
 // ══════════════════════════════════════════════
@@ -1259,6 +1260,26 @@ function policyV3(label) {
   const p = parseMonthLabel(label);
   return !!p && (p.year * 100 + p.month + 1) >= 202612;
 }
+// Club — Política de Bonificações (documento da gestão; vale para novembro/2026 inteiro, pedido de 25/11/2026): meta semanal
+// 4/7/10 contratos (50/70/100%), cada Black vale meio contrato na meta, matrícula nova 50/50, renovação/troca/upgrade pagam mas
+// não contam, bônus de equipe R$ 100–500 (49/61/71/81/91 vendas) e prêmio mensal em vale-compras pelas semanas em Super meta.
+function policyClubV3(label) {
+  const p = parseMonthLabel(label);
+  return !!p && (p.year * 100 + p.month + 1) >= 202611;
+}
+const ehClubV3 = (unit, label) => unit === 'club' && policyClubV3(label || activeMonth);
+const CLUB_V3_TIERS = [[10, 1.0], [7, 0.7], [4, 0.5], [0, 0]];
+const CLUB_V3_TIER_NAMES = [[10, 'Super meta'], [7, 'Meta real'], [4, 'Básico'], [0, 'Abaixo do básico']];
+const CLUB_V3_TEAM = { steps: [49, 61, 71, 81, 91], amounts: [100, 200, 300, 400, 500] };
+// Prêmio mensal (vale-compras do Showroom Dus2, pago à parte): R$ 200 / 300 / 450 com 2 / 3 / 4 semanas em Super meta.
+// pisoTodas: além disso, nenhuma semana pode ficar abaixo do Básico ("bater todas as metas semanais").
+const PREMIO_CLUB = { faixas: [[4, 450], [3, 300], [2, 200]], pisoTodas: true };
+// Peso de uma venda na meta: Black do Club (nov/2026+) vale meio contrato — "a cada 2 vale 1"
+const pesoMeta = s => Number(s.goal_weight) || 1;
+const somaMeta = sales => Math.floor(sales.reduce((a, s) => a + pesoMeta(s), 0) + 1e-9);
+// Parte do cadastro / da conversão na matrícula nova
+const divisaoNova = (unit, label) => ehClubV3(unit, label) ? [50, 50] : [70, 30];
+
 const REGUAS = {};    // rótulo do mês → régua da Acqua (bonus_regua)
 const CENTRAL = {};   // rótulo do mês → pontos da Central por consultora e semana (bonus_central)
 function mesISO(label) {
@@ -1341,6 +1362,7 @@ function weeklyTiers(unit, label) {
     const r = reguaDe(label);
     return [[r.meta_real, 1.0], [r.basico, 0.6], [r.entrada, 0.3], [0, 0]];
   }
+  if (ehClubV3(unit, label)) return CLUB_V3_TIERS;
   return WEEKLY_TIERS[unit] || WEEKLY_TIERS.club;
 }
 function weekTierNames(unit, label) {
@@ -1348,6 +1370,7 @@ function weekTierNames(unit, label) {
     const r = reguaDe(label);
     return [[r.meta_real, 'Meta real'], [r.basico, 'Básico'], [r.entrada, 'Entrada'], [0, 'Abaixo da entrada']];
   }
+  if (ehClubV3(unit, label)) return CLUB_V3_TIER_NAMES;
   return unit === 'club' ? WEEK_TIER_NAMES : WEEK_TIER_NAMES_ACQUA;
 }
 
@@ -1388,9 +1411,10 @@ function computeWeeklyBreakdown(sales) {
     const key = s.consultant + '|' + g + '|' + wk;
     seenKeys.set(key, {g, month: s.month});
     if (countsToGoal(s)) {
-      counts[key] = (counts[key] || 0) + 1;
+      counts[key] = (counts[key] || 0) + pesoMeta(s);   // Black do Club v3 = meio contrato
     }
   });
+  Object.keys(counts).forEach(k => { counts[k] = Math.floor(counts[k] + 1e-9); });
   const pctByKey = {};
   seenKeys.forEach(({g, month}, key) => {
     pctByKey[key] = weeklyTierPct(g, counts[key] || 0, month);
@@ -1524,6 +1548,21 @@ function centralDaSemana(name, wk, metaCount, earned, month) {
 function computeTeamBonus(sales, unit, month) {
   if (unit === GRUPO_ACQUA) return teamBonusAcquaV3(sales, month);
   const unitSales = sales.filter(s => s.unit === unit && s.consultant);
+  if (ehClubV3(unit, month)) {
+    // só matrícula nova e rematrícula contam (Black = meio); recebe quem teve cadastro ou conversão (ou rematrícula) no mês
+    const metaLines = unitSales.filter(s => s.counts_goal !== false);
+    const porVenda = new Map();
+    metaLines.forEach(s => porVenda.set(s.type + ':' + s.id, pesoMeta(s)));
+    const count = Math.floor([...porVenda.values()].reduce((a, b) => a + b, 0) + 1e-9);
+    let perPerson = 0;
+    CLUB_V3_TEAM.steps.forEach((min, i) => { if (count >= min) perPerson = CLUB_V3_TEAM.amounts[i]; });
+    const people = [...new Set(metaLines.map(s => s.consultant))].filter(n => n !== DEFAULT_CONSULTANT);
+    const byPerson = {};
+    if (perPerson > 0) people.forEach(n => { byPerson[n] = perPerson; });
+    const prox = CLUB_V3_TEAM.steps.find(st => count < st);
+    return {v2: true, clubV3: true, count, perPerson, people: people.length, total: perPerson * people.length,
+            nextGoal: prox ? prox - count : 0, byPerson};
+  }
   if (policyV2(month || activeMonth)) {
     const count = uniqueSaleCount(unitSales.filter(s => s.counts_goal !== false));
     const perPerson = teamBonusPerPersonV2(unit, count);
@@ -1652,12 +1691,12 @@ function renderOverview(allSales) {
         <div class="kpi-card">
           <div class="kpi-label">Cadastros</div>
           <div class="kpi-value">${myBreak.cad + myBreak.full}</div>
-          <div class="kpi-sub">R$ ${money(calcCommission(my.filter(s=>s.role==='cadastro'||s.role==='completo')))} · 70% da venda nova</div>
+          <div class="kpi-sub">R$ ${money(calcCommission(my.filter(s=>s.role==='cadastro'||s.role==='completo')))} · ${my.length && my.every(s => ehClubV3(s.unit, s.month)) ? '50%' : my.some(s => ehClubV3(s.unit, s.month)) ? 'sua parte' : '70%'} da venda nova</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Conversões</div>
           <div class="kpi-value">${myBreak.conv}</div>
-          <div class="kpi-sub">R$ ${money(calcCommission(my.filter(s=>s.role==='conversao')))} · 30% da venda nova</div>
+          <div class="kpi-sub">R$ ${money(calcCommission(my.filter(s=>s.role==='conversao')))} · ${my.length && my.every(s => ehClubV3(s.unit, s.month)) ? '50%' : my.some(s => ehClubV3(s.unit, s.month)) ? 'sua parte' : '30%'} da venda nova</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Rematrículas</div>
@@ -1668,7 +1707,7 @@ function renderOverview(allSales) {
         <div class="kpi-card">
           <div class="kpi-label">Renovações</div>
           <div class="kpi-value">${myBreak.renF}</div>
-          <div class="kpi-sub">R$ ${money(calcCommission(my.filter(s=>s.type==='renewal'&&s.source==='filtro')))} · não capturadas no relatório (FiltroClientes)</div>
+          <div class="kpi-sub">R$ ${money(calcCommission(my.filter(s=>s.type==='renewal'&&s.source==='filtro')))} · renovação, troca e upgrade (não contam pra meta)</div>
         </div>` : ''}
         <div class="kpi-card">
           <div class="kpi-label">Minhas Disputas</div>
@@ -1750,7 +1789,7 @@ function renderOverview(allSales) {
       <div class="kpi-card">
         <div class="kpi-label">Renovações</div>
         <div class="kpi-value">${totalRenF}</div>
-        <div class="kpi-sub">R$ ${money(calcCommission(sales.filter(s=>s.type==='renewal'&&s.source==='filtro')))} · não capturadas no relatório (FiltroClientes)</div>
+        <div class="kpi-sub">R$ ${money(calcCommission(sales.filter(s=>s.type==='renewal'&&s.source==='filtro')))} · renovação, troca e upgrade (não contam pra meta)</div>
       </div>` : ''}
       <div class="kpi-card">
         <div class="kpi-label">Consultores Ativos</div>
@@ -1857,7 +1896,7 @@ function weekBonusCard(unit) {
       <div class="kpi-label">Bônus de Equipe — ${UNIT_LABELS[unit]||unit}</div>
       <div class="kpi-value">${valueHtml}</div>
       <div class="kpi-sub">${b.count} contrato${b.count!==1?'s':''} no mês${peopleTxt}
-        ${b.nextGoal > 0 ? ` · faltam ${b.nextGoal} pra próxima faixa` : ' · faixa máxima'}</div>
+        ${b.nextGoal > 0 ? ` · faltam ${b.nextGoal} pra próxima faixa` : ' · faixa máxima'}${b.clubV3 ? `<br>R$ ${CLUB_V3_TEAM.amounts.map((v, i) => `${v} com ${CLUB_V3_TEAM.steps[i]}`).join(' · ')}+ vendas (só matrícula nova e rematrícula; Black vale meio)` : ''}</div>
     </div>`;
 }
 
@@ -1931,6 +1970,7 @@ function personWeeklyRows(name, unit, rawSales, priced) {
     const wk = i + 1;
     const weekSales = rawSales.filter(s => s.consultant === name && noGrupo(s, unit) && weekIndexForSale(s) === wk);
     const metaSales = weekSales.filter(countsToGoal);
+    const mc = somaMeta(metaSales);
     const earned = priced
       .filter(s => s.consultant === name && noGrupo(s, unit) && weekIndexForSale(s) === wk)
       .reduce((a,s) => a + s.commission, 0);
@@ -1941,13 +1981,13 @@ function personWeeklyRows(name, unit, rawSales, priced) {
     };
     return {
       wk, range, earned, typeBreak,
-      count: metaSales.length,
+      count: mc,
       hasAny: weekSales.length > 0,
-      pct: weeklyTierPct(unit, metaSales.length),
-      label: weekTierLabel(unit, metaSales.length),
-      toNext: weekTierNextGoal(unit, metaSales.length),
+      pct: weeklyTierPct(unit, mc),
+      label: weekTierLabel(unit, mc),
+      toNext: weekTierNextGoal(unit, mc),
       status: weekStatus(range),
-      central: unit === GRUPO_ACQUA ? centralDaSemana(name, wk, metaSales.length, earned) : null,
+      central: unit === GRUPO_ACQUA ? centralDaSemana(name, wk, mc, earned) : null,
     };
   });
 }
@@ -1962,7 +2002,7 @@ function openWeekDetailModal(name, unit, wk) {
   const priced = pricedSales(raw);
   const weekSales   = raw.filter(s => s.consultant === name && noGrupo(s, unit) && weekIndexForSale(s) === wk);
   const weekPriced  = priced.filter(s => s.consultant === name && noGrupo(s, unit) && weekIndexForSale(s) === wk);
-  const metaCount   = weekSales.filter(countsToGoal).length;
+  const metaCount   = somaMeta(weekSales.filter(countsToGoal));
   const earned      = weekPriced.reduce((a,s) => a + s.commission, 0);
   const pct         = weeklyTierPct(unit, metaCount);
   const fmt = d => d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
@@ -1977,12 +2017,12 @@ function openWeekDetailModal(name, unit, wk) {
   const rows = weekSales.map(s => {
     const isMeta = countsToGoal(s);
     const p = weekPriced.find(x => x.line_id === s.line_id);
-    const typeTxt = s.type === 'new' ? 'Novo' : (s.source === 'filtro' ? 'Renovação' : 'Rematrícula');
+    const typeTxt = s.type === 'new' ? 'Novo' : s.kind === 'upgrade' ? 'Upgrade' : (s.source === 'filtro' ? 'Renovação' : 'Rematrícula');
     return `<tr>
       <td>${s.student}${unit === GRUPO_ACQUA ? `<div style="font-size:10px;color:var(--mid)">${UNIT_LABELS[s.unit] || s.unit}</div>` : ''}</td>
       <td>${typeTxt}</td>
       <td style="font-size:12px">${s.contract}</td>
-      <td>${roleLabel(s)}${!isMeta ? '<div style="font-size:10px;color:var(--mid)">não conta pra meta</div>' : ''}</td>
+      <td>${roleLabel(s)}${!isMeta ? '<div style="font-size:10px;color:var(--mid)">não conta pra meta</div>' : pesoMeta(s) !== 1 ? '<div style="font-size:10px;color:var(--mid)">Black: vale meio contrato na meta</div>' : ''}</td>
       <td style="text-align:right">R$ ${money(p ? p.commission : s.commission)}</td>
     </tr>`;
   }).join('');
@@ -2000,6 +2040,27 @@ function openWeekDetailModal(name, unit, wk) {
 function metaV3Sub() {
   const r = reguaDe();
   return `<br>Acqua (Laranjeiras + República juntas): Entrada ${r.entrada} contrato${r.entrada!==1?'s':''} (30%) · Básico ${r.basico} (60%) · Meta real ${r.meta_real}+ (100%) por semana — saídas usadas na meta: ${money(r.saidas_base)} por mês, ${r.consultoras} consultoras.`;
+}
+// Explicação curta da meta do Club (nov/2026+) para o topo da aba Semanal
+function clubV3Sub() {
+  return `<br>Club: Básico 4 contratos (50%) · Meta real 7 (70%) · Super meta 10+ (100%) por semana — cada Black vale meio contrato; renovação, troca e upgrade pagam, mas não contam pra meta.`;
+}
+// Prêmio mensal do Club (vale-compras): quantas semanas em Super meta; perde se alguma semana já fechada ficou abaixo do Básico
+function premioClub(weeks) {
+  const supers = weeks.filter(w => w.pct >= 1).length;
+  const perdeu = PREMIO_CLUB.pisoTodas && weeks.some(w => w.status === 'closed' && w.pct === 0);
+  const faixa = PREMIO_CLUB.faixas.find(([n]) => supers >= n);
+  return { supers, perdeu, valor: !perdeu && faixa ? faixa[1] : 0, aberto: weeks.some(w => w.status !== 'closed') };
+}
+function premioClubCard(weeks) {
+  const p = premioClub(weeks);
+  const regra = `R$ ${PREMIO_CLUB.faixas.slice().reverse().map(([n, v]) => `${v} com ${n}`).join(' · ')} semanas em Super meta${PREMIO_CLUB.pisoTodas ? ', sem nenhuma semana abaixo do Básico' : ''}`;
+  const sub = p.perdeu ? 'uma semana ficou abaixo do Básico — sem prêmio este mês' : `${p.supers} de 4 semana${p.supers !== 1 ? 's' : ''} em Super meta${p.aberto ? ' até agora' : ''}`;
+  return `<div class="kpi-grid"><div class="kpi-card ${p.valor > 0 ? 'highlight' : ''}">
+    <div class="kpi-label">🎁 Prêmio do mês — vale-compras Showroom Dus2</div>
+    <div class="kpi-value">R$ ${money(p.valor)}${p.valor > 0 && p.aberto ? ' <span style="font-size:13px;font-weight:600">garantido até agora</span>' : ''}</div>
+    <div class="kpi-sub">${sub}<br>${regra}. Pago à parte, fora do Pix do bônus.</div>
+  </div></div>`;
 }
 // Resumo do bônus da Central no mês, para a consultora
 function centralResumoHtml(weeks) {
@@ -2044,11 +2105,11 @@ function renderWeekly(rawSales) {
       return `
         ${myUnits.length > 1 || uk === GRUPO_ACQUA ? `<p class="page-title" style="font-size:17px;margin-top:20px">${rotuloGrupo(uk)}</p>` : ''}
         <div class="kpi-grid">${myWeeks.map(w => weekCardHtml(w, uk, session.name)).join('')}</div>
-        ${uk === GRUPO_ACQUA ? centralResumoHtml(myWeeks) : ''}`;
+        ${uk === GRUPO_ACQUA ? centralResumoHtml(myWeeks) : ''}${ehClubV3(uk) ? premioClubCard(myWeeks) : ''}`;
     }).join('');
     el.innerHTML = `
       <p class="page-title">Minha Semana</p>
-      <p class="page-sub">${activeMonth} · meta contada pelos contratos que você cadastrou (ou rematrícula sua; renovação não conta a partir de setembro/2026)${v3 ? metaV3Sub() : ''}</p>
+      <p class="page-sub">${activeMonth} · meta contada pelos contratos que você cadastrou (ou rematrícula sua; renovação não conta a partir de setembro/2026)${v3 ? metaV3Sub() : ''}${policyClubV3(activeMonth) && myUnits.includes('club') ? clubV3Sub() : ''}</p>
       ${sectionsHtml}
       <p class="page-title" style="font-size:17px;margin-top:8px">Bônus de Equipe</p>
       <p class="page-sub">Coletivo — pago junto com o bônus individual</p>
@@ -2063,6 +2124,7 @@ function renderWeekly(rawSales) {
     const consultants = getConsultants(rawSales.filter(s => noGrupo(s, uk)));
     if (!consultants.length) return '';
     const comCentral = uk === GRUPO_ACQUA;
+    const comPremio = ehClubV3(uk);
     const bodyRows = consultants.map(name => {
       const weeks = personWeeklyRows(name, uk, rawSales, priced);
       const total = weeks.reduce((a,w) => a + w.earned, 0);
@@ -2074,14 +2136,14 @@ function renderWeekly(rawSales) {
             ${w.count} · ${Math.round(w.pct*100)}%
           </span>${weekStatusBadge(w.status)}${comCentral && w.central && w.central.semana ? `<div style="font-size:10px;color:${w.central.valor > 0 ? '#2e7d32' : 'var(--mid)'};margin-top:3px" title="${w.central.motivo || ''}">⭐ ${money(w.central.pontos)} pts${w.central.pct ? ` · ${w.central.nivel}` : ''}</div>` : ''}
         </td>`).join('');
-      return `<tr><td>${shortName(name)}</td>${weekCells}<td><strong>R$ ${money(total)}</strong></td>${comCentral ? `<td>${central > 0 ? `<strong style="color:#2e7d32">+R$ ${money(central)}</strong>` : previsto > 0 ? `<span style="color:#e65100">+R$ ${money(previsto)} previsto</span>` : '—'}</td>` : ''}</tr>`;
+      return `<tr><td>${shortName(name)}</td>${weekCells}<td><strong>R$ ${money(total)}</strong></td>${comCentral ? `<td>${central > 0 ? `<strong style="color:#2e7d32">+R$ ${money(central)}</strong>` : previsto > 0 ? `<span style="color:#e65100">+R$ ${money(previsto)} previsto</span>` : '—'}</td>` : ''}${comPremio ? (() => { const p = premioClub(weeks); return `<td title="${p.supers} semana(s) em Super meta">${p.valor > 0 ? `<strong style="color:#2e7d32">R$ ${money(p.valor)}</strong>` : p.perdeu ? '<span style="color:#c62828">—</span>' : `<span style="color:var(--mid)">${p.supers}/4 Super</span>`}</td>`; })() : ''}</tr>`;
     }).join('');
     return `
       <div class="table-card">
         <h3>${rotuloGrupo(uk)}</h3>
         <p style="font-size:12px;color:var(--mid);margin-bottom:12px">Clique numa célula pra ver quem são os alunos daquela semana.${comCentral ? ` ⭐ = pontos da Central na semana (Bom a partir de ${money((CENTRAL[activeMonth] || {}).bom || 0)}, Ótimo a partir de ${money((CENTRAL[activeMonth] || {}).otimo || 0)}).` : ''}</p>
         <table class="data-table">
-          <thead><tr><th>Consultor</th><th>Sem. 1</th><th>Sem. 2</th><th>Sem. 3</th><th>Sem. 4</th><th>Total no mês</th>${comCentral ? '<th>Bônus da Central</th>' : ''}</tr></thead>
+          <thead><tr><th>Consultor</th><th>Sem. 1</th><th>Sem. 2</th><th>Sem. 3</th><th>Sem. 4</th><th>Total no mês</th>${comCentral ? '<th>Bônus da Central</th>' : ''}${comPremio ? '<th>Prêmio (vale)</th>' : ''}</tr></thead>
           <tbody>${bodyRows}</tbody>
         </table>
       </div>`;
@@ -2089,7 +2151,7 @@ function renderWeekly(rawSales) {
 
   el.innerHTML = `
     <p class="page-title">Semanal — ${unitTitle}</p>
-    <p class="page-sub">${activeMonth} · meta semanal (segunda a domingo) por pessoa, contada pelos cadastros/rematrículas/renovações dela${v3 ? metaV3Sub() : ''}</p>
+    <p class="page-sub">${activeMonth} · meta semanal (segunda a domingo) por pessoa, contada pelos cadastros/rematrículas/renovações dela${v3 ? metaV3Sub() : ''}${unitsInView.some(u => ehClubV3(u)) ? clubV3Sub() : ''}</p>
     <div class="kpi-grid">${bonusCardsHtml}</div>
     ${rowsHtml || '<div class="empty-state"><div class="icon">📭</div><p>Nenhum consultor com vendas no período.</p></div>'}
   `;
@@ -3105,7 +3167,7 @@ function exportPaymentReport() {
   const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const brl = v => 'R$ ' + (Math.round(v * 100) / 100).toFixed(2).replace('.', ',');
   const origem = s => {
-    if (s.source === 'filtro') return 'Renovação (FiltroClientes)';
+    if (s.source === 'filtro') return s.kind === 'upgrade' ? 'Upgrade' : 'Renovação';
     const d = disputes.find(d => d.saleId === s.line_id && d.unit === s.unit && d.status === 'resolved');
     return s._manual ? 'Manual' : (d ? 'Disputa resolvida' : 'Relatório');
   };
@@ -3227,7 +3289,9 @@ ${detailSections}
 
 <div class="rules">
   <strong>Regras de bônus:</strong> matrículas novas têm o bônus dividido em 70% para quem fez o cadastro
-  e 30% para quem fez a conversão (quando a mesma pessoa faz as duas etapas, recebe as duas partes).
+  e 30% para quem fez a conversão (no Club, a partir de novembro/2026: 50% e 50%; quando a mesma pessoa faz as duas
+  etapas, recebe as duas partes). No Club (novembro/2026+), renovação, troca de contrato e upgrade pagam 100% ao
+  consultor responsável e não contam pra meta; cada Black vale meio contrato na meta.
   Rematrículas pagam valor integral ao consultor responsável. O valor de cada linha já reflete a meta semanal:
   quem bate a meta da semana (segunda a domingo, contada pelos próprios cadastros/rematrículas) recebe 100% do
   que é dela naquela semana, inclusive conversão; quem fica abaixo da meta recebe o percentual da faixa atingida

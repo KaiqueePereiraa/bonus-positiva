@@ -1,6 +1,6 @@
 // Meta da semana do Bônus (resumo do "Meu dia"). Mesmas regras da página do Bônus (site/bonus/index.html):
 // o mês é dividido em exatamente 4 semanas — dias soltos do começo entram na 1ª e os do fim na 4ª — e as faixas são
-// Club 6/9/12 e Acqua 2/3/4 contratos "de meta" (cadastro, rematrícula ou venda completa) na semana.
+// Club 6/9/12 (4/7/10 a partir de novembro/2026) e Acqua 2/3/4 contratos "de meta" (cadastro, rematrícula ou venda completa) na semana.
 // Dezembro/2026 em diante (comissão aprovada em 24/11/2026): Laranjeiras + República são uma equipe só — contam as vendas
 // dela nas duas unidades e as faixas vêm da régua do mês (minha_meta_semana → regua): Entrada, Básico e Meta real.
 // Puro: testado em tests/bonus-meta.test.js.
@@ -11,11 +11,16 @@ export const FAIXAS = {
   republica: [[4, 'Super meta'], [3, 'Meta real'], [2, 'Básico']],
 };
 
+// Club, novembro/2026 em diante (Política de Bonificações): Básico 4, Meta real 7, Super meta 10; cada Black vale meio contrato
+export const FAIXAS_CLUB_V3 = [[10, 'Super meta'], [7, 'Meta real'], [4, 'Básico']];
+const clubV3 = (unidade, hoje) => unidade === 'club' && !!hoje && hoje >= '2026-11-01';
+
 export const ACQUA = ['laranjeiras', 'republica'];
 const ehV3 = (unidade, regua) => !!regua?.v3 && ACQUA.includes(unidade);
 // Faixas da unidade, da maior para a menor: [[contratos, nome], …]
-export function faixasDe(unidade, regua = null) {
+export function faixasDe(unidade, regua = null, hoje = null) {
   if (ehV3(unidade, regua)) return [[regua.meta_real, 'Meta real'], [regua.basico, 'Básico'], [regua.entrada, 'Entrada']];
+  if (clubV3(unidade, hoje)) return FAIXAS_CLUB_V3;
   return FAIXAS[unidade] || FAIXAS.club;
 }
 
@@ -33,15 +38,16 @@ export function semanasDoMes(hoje) {
   return [{ ini: iso(primeiro), fim: antes(s2) }, { ini: iso(s2), fim: antes(s3) }, { ini: iso(s3), fim: antes(s4) }, { ini: iso(s4), fim: iso(ultimo) }];
 }
 
-// vendas: [{ data: 'DD/MM/AAAA', unit }] (já só as "de meta" da consultora, vindas de minha_meta_semana)
+// vendas: [{ data: 'DD/MM/AAAA', unit, peso? }] (já só as "de meta" da consultora, vindas de minha_meta_semana; peso 0,5 = Black do Club)
 export function resumoSemana(vendas, hoje, unidade, regua = null) {
   const semanas = semanasDoMes(hoje);
   const n = semanas.findIndex((s) => hoje >= s.ini && hoje <= s.fim);
   const s = semanas[n];
   const v3 = ehV3(unidade, regua);
-  const faixas = faixasDe(unidade, regua);
+  const faixas = faixasDe(unidade, regua, hoje);
   const daUnidade = (v) => (v3 ? ACQUA.includes(v.unit) : v.unit === unidade);
-  const feitos = vendas.filter(daUnidade).map((v) => dataISO(v.data)).filter((d) => d && d >= s.ini && d <= s.fim).length;
+  const naSemana = vendas.filter(daUnidade).filter((v) => { const d = dataISO(v.data); return d && d >= s.ini && d <= s.fim; });
+  const feitos = Math.floor(naSemana.reduce((a, v) => a + (Number(v.peso) || 1), 0) + 1e-9);
   const atual = faixas.find(([min]) => feitos >= min);
   const proxima = [...faixas].reverse().find(([min]) => feitos < min);
   const abaixo = v3 ? 'Abaixo da entrada' : 'Abaixo do básico';

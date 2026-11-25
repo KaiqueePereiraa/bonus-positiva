@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261125194615';
-import * as dados from './dados.js?v=20261125194615';
-import { hojeSP } from './regras.js?v=20261125194615';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261125194615';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261125194615';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261125194615';
-import { resumoSemana } from './bonus-meta.js?v=20261125194615';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261125194615';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261125194747';
+import * as dados from './dados.js?v=20261125194747';
+import { hojeSP } from './regras.js?v=20261125194747';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261125194747';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261125194747';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261125194747';
+import { resumoSemana } from './bonus-meta.js?v=20261125194747';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261125194747';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -34,7 +34,7 @@ const ROTAS = {
   painel: { titulo: 'Painel do gestor', modulo: 'painel', icone: 'visao', quem: 'admin', grupo: 'inicio', frase: 'O que pede sua atenção hoje e como a equipe está agora. Comece pelos cartões coloridos.' },
   'meu-dia': { titulo: 'Meu dia', modulo: 'meu-dia', icone: 'tarefas', quem: 'consultora', grupo: 'inicio', frase: 'O que fazer hoje, na ordem certa. Toque em "Começar" e siga a lista.' },
   'minhas-tarefas': { titulo: 'Todas as minhas tarefas', modulo: 'minhas-tarefas', icone: 'tarefas', quem: 'consultora', grupo: null, frase: 'Todas as suas listas, separadas por situação.' },
-  vendas: { titulo: 'Vendas', modulo: 'vendas', icone: 'alvo', quem: 'todos', grupo: 'vendas', frase: 'Ex-alunos que saíram há uns 3 ou 6 meses (toda segunda). Convide para voltar.' },
+  vendas: { titulo: 'Vendas', modulo: 'vendas', icone: 'alvo', quem: 'todos', grupo: 'vendas', frase: 'Assinatura do contrato (todo dia útil) e ex-alunos que saíram há uns 3 ou 6 meses (toda segunda).' },
   'nao-fechou': { titulo: 'Por que não fechou?', modulo: 'nao-fechou', icone: 'nf', quem: 'todos', grupo: 'vendas', frase: 'Interessados parados há 5 dias (sem experimental ou fez e não fechou), todo dia útil. Fale com cada um e escolha o motivo.' },
   risco: { titulo: 'Risco de abandono', modulo: 'risco', icone: 'risco', quem: 'todos', grupo: 'retencao', frase: 'Alunos que pararam de vir. Pergunte o motivo e convide para voltar.' },
   renovacao: { titulo: 'Renovação', modulo: 'renovacao', icone: 'renov', quem: 'todos', grupo: 'retencao', frase: 'Contratos vencendo ou vencidos. Ofereça a renovação ou registre o motivo.' },
@@ -232,7 +232,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261125194615`);
+    const tela = await import(`./telas/${modulo}.js?v=20261125194747`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
