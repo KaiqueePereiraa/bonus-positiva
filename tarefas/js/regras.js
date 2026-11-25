@@ -35,8 +35,12 @@ export function normalizarTelefone(bruto) {
   return null;
 }
 
-export function montarMensagem(modelo, { nome } = {}) {
-  return String(modelo ?? '').replaceAll('{nome}', primeiroNome(nome));
+// {nome} = primeiro nome; {link} = link do item (ex.: assinatura do contrato). Sem link, o trecho "neste link: {link}" vira ponto final.
+export function montarMensagem(modelo, { nome, link } = {}) {
+  const t = String(modelo ?? '').replaceAll('{nome}', primeiroNome(nome));
+  if (!t.includes('{link}')) return t;
+  if (link) return t.replaceAll('{link}', link);
+  return t.replace(/\s*(?:neste |no |pelo )?link:?\s*\{link\}\s*/gi, '. ').replaceAll('{link}', '');
 }
 
 // No computador abre direto no WhatsApp Web; no celular, o app.

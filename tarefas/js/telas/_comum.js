@@ -1,9 +1,9 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261124195352';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261124195352';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261124195352';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261124195352';
-import { maisUm, celebrar } from '../jogo-visual.js?v=20261124195352';
+import * as dados from '../dados.js?v=20261125194615';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261125194615';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261125194615';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261125194615';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261125194615';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -139,7 +139,7 @@ export async function listaContatos(el, ctx, tarefa) {
     : `<td style="min-width:200px"><input class="ctrl" data-campo="obs" placeholder="Observação (opcional)" value="${esc(i.observacao || '')}" style="width:100%" maxlength="500"></td>`);
 
   // resolvido sozinho (conferido na EVO de madrugada): não precisa mais de contato
-  const SOZINHO = { pagou_sem_contato: 'Já pagou', voltou_sem_contato: 'Já voltou a treinar', matriculou_sem_contato: 'Já se matriculou', renovou_sem_contato: 'Já renovou' };
+  const SOZINHO = { pagou_sem_contato: 'Já pagou', voltou_sem_contato: 'Já voltou a treinar', matriculou_sem_contato: 'Já se matriculou', renovou_sem_contato: 'Já renovou', assinou_sem_contato: 'Já assinou' };
   const linha = (i) => {
     const tel = normalizarTelefone(i.celular);
     if (SOZINHO[i.resultado]) {
@@ -204,7 +204,7 @@ export async function listaContatos(el, ctx, tarefa) {
       if (dados.vendoComo()) { toast(dados.MSG_SO_OLHAR, 'erro'); return; }   // ver como consultora: não abre WhatsApp
       if (ehRisco && campos().classe) { toast('Você escolheu um tipo de aluno (Gympass, benefício colaborador, contrato VIP ou que não quer mais contato): use "Registrar" em vez do WhatsApp.', 'erro'); return; }
       const i = itens.find((x) => x.id === id);
-      const url = linkWhatsApp(normalizarTelefone(i.celular), montarMensagem(modelo, { nome: i.nome }), { celular: ehCelular() });
+      const url = linkWhatsApp(normalizarTelefone(i.celular), montarMensagem(modelo, { nome: i.nome, link: i.dados?.link_assinatura }), { celular: ehCelular() });
       window.open(url, 'whatsapp');
       const obs = campos().obs;
       agir(b, id, () => (ehRisco ? dados.marcarRisco(id, obs, null) : marcarComObs(id, obs)));

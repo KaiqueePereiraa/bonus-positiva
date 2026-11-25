@@ -1,10 +1,10 @@
 // Resultados — o que os contatos trouxeram (conferido na EVO), o que os números dizem (frases automáticas, antes na
 // tela "Insights"), cumprimento dos prazos e os motivos do "Por que não fechou?". O resultado de cada consultora e o ranking ficam em Desempenho.
-import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261124195352';
-import * as dados from '../dados.js?v=20261124195352';
-import { linha, barras } from '../graficos.js?v=20261124195352';
-import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261124195352';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261124195352';
+import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261125194615';
+import * as dados from '../dados.js?v=20261125194615';
+import { linha, barras } from '../graficos.js?v=20261125194615';
+import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261125194615';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261125194615';
 
 let filtros;
 
@@ -22,7 +22,7 @@ export async function render(el, ctx) {
 
 const numero = (rotulo, valor, cor = '', sub = '') => `<div class="numero ${cor}"><small>${rotulo}</small><b>${valor}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
 const reais$ = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const PALAVRA = { pagou: 'pagaram', voltou: 'voltaram a treinar', matriculou: 'se matricularam', renovou: 'renovaram' };
+const PALAVRA = { pagou: 'pagaram', voltou: 'voltaram a treinar', matriculou: 'se matricularam', renovou: 'renovaram', assinou: 'assinaram' };
 
 async function desenhar(el, ctx) {
   el.innerHTML = '<div class="esqueleto"><i></i><i></i></div>';

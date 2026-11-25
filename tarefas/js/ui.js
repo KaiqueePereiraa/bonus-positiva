@@ -43,11 +43,12 @@ export function barra(feitos, total, { rotulo = true } = {}) {
 
 export const NOMES_CONTROLE = { inadimplencia: 'Inadimplência', risco: 'Risco de abandono', nao_fechou: 'Por que não fechou?', lista_fazer: 'Lista a fazer', renovacao_vencer: 'Renovação: a vencer', renovacao_venceu: 'Renovação: venceu e não renovou',
   experimental_confirmar: 'Experimental: confirmar', experimental_pos: 'Experimental: pós-aula', lead_novo: 'Interessado novo (24h)',
-  primeiros_90: 'Primeiros 90 dias', cancelou: 'Cancelou: entrevista de saída', ex_alunos: 'Ex-alunos: campanha de volta' };
+  primeiros_90: 'Primeiros 90 dias', cancelou: 'Cancelou: entrevista de saída', ex_alunos: 'Ex-alunos: campanha de volta',
+  assinatura: 'Assinatura do contrato' };
 export const ROTA_CONTROLE = { inadimplencia: 'inadimplencia', risco: 'risco', nao_fechou: 'nao-fechou', lista_fazer: 'lista-fazer', renovacao_vencer: 'renovacao', renovacao_venceu: 'renovacao',
-  experimental_confirmar: 'vendas', experimental_pos: 'vendas', lead_novo: 'vendas', primeiros_90: 'relacionamento', cancelou: 'relacionamento', ex_alunos: 'vendas' };
+  experimental_confirmar: 'vendas', experimental_pos: 'vendas', lead_novo: 'vendas', primeiros_90: 'relacionamento', cancelou: 'relacionamento', ex_alunos: 'vendas', assinatura: 'vendas' };
 // listas que chegam todo dia (as demais semanais/mensais)
-export const LISTAS_DIARIAS = ['nao_fechou', 'experimental_confirmar', 'experimental_pos', 'lead_novo'];
+export const LISTAS_DIARIAS = ['nao_fechou', 'experimental_confirmar', 'experimental_pos', 'lead_novo', 'assinatura'];
 
 // ── Avisos rápidos ──
 let toastTimer;
