@@ -1183,6 +1183,7 @@ function money(v) {
 }
 
 function roleLabel(s) {
+  if (s.extra_clt) return 'Renda extra CLT (20% a 35%)';
   if (s.role === 'consultor') return s.kind === 'upgrade' ? 'Upgrade (100%)' : s.source === 'filtro' ? 'Renovação (100%)' : 'Rematrícula (100%)';
   const [cad, conv] = divisaoNova(s.unit, s.month);
   return {cadastro:`Cadastro (${cad}%)`, conversao:`Conversão (${conv}%)`, completo:'Completo (100%)'}[s.role] || '';
@@ -1274,6 +1275,10 @@ const CLUB_V3_TEAM = { steps: [49, 61, 71, 81, 91], amounts: [100, 200, 300, 400
 // Prêmio mensal (vale-compras do Showroom Dus2, pago à parte): R$ 200 / 300 / 450 com 2 / 3 / 4 semanas em Super meta.
 // pisoTodas: além disso, nenhuma semana pode ficar abaixo do Básico ("bater todas as metas semanais").
 const PREMIO_CLUB = { faixas: [[4, 450], [3, 300], [2, 200]], pisoTodas: true };
+// Renda extra do plano CLT Laranjeiras (Club, fora da carga horária): o contrato gera o bônus de um Seja Positiva e paga só esta
+// porcentagem, pela quantidade de contratos CLT da pessoa na semana; não conta para meta, equipe nem prêmio
+const RENDA_EXTRA_CLT = [[10, 0.35], [7, 0.30], [4, 0.25], [1, 0.20]];
+const pctRendaExtra = n => (RENDA_EXTRA_CLT.find(([min]) => n >= min) || [0, 0])[1];
 // Peso de uma venda na meta: Black do Club (nov/2026+) vale meio contrato — "a cada 2 vale 1"
 const pesoMeta = s => Number(s.goal_weight) || 1;
 const somaMeta = sales => Math.floor(sales.reduce((a, s) => a + pesoMeta(s), 0) + 1e-9);
@@ -1403,6 +1408,7 @@ function computeWeeklyBreakdown(sales) {
   // de aplicar a faixa 0% de quem não cadastrou ninguém.
   // v3: na Acqua a chave é o grupo (Laranjeiras + República juntas), não a unidade.
   const seenKeys = new Map();
+  const cltIds = {};   // renda extra CLT: contratos CLT distintos da pessoa na semana
   sales.forEach(s => {
     if (!s.consultant) return;
     const wk = weekIndexForSale(s);
@@ -1410,6 +1416,7 @@ function computeWeeklyBreakdown(sales) {
     const g = grupoMeta(s.unit, s.month);
     const key = s.consultant + '|' + g + '|' + wk;
     seenKeys.set(key, {g, month: s.month});
+    if (s.extra_clt) (cltIds[key] = cltIds[key] || new Set()).add(s.type + ':' + s.id);
     if (countsToGoal(s)) {
       counts[key] = (counts[key] || 0) + pesoMeta(s);   // Black do Club v3 = meio contrato
     }
@@ -1419,7 +1426,9 @@ function computeWeeklyBreakdown(sales) {
   seenKeys.forEach(({g, month}, key) => {
     pctByKey[key] = weeklyTierPct(g, counts[key] || 0, month);
   });
-  return {counts, pctByKey};
+  const cltPctByKey = {};
+  Object.keys(cltIds).forEach(k => { cltPctByKey[k] = pctRendaExtra(cltIds[k].size); });
+  return {counts, pctByKey, cltPctByKey};
 }
 
 function saleWeekPct(sale, breakdown) {
@@ -1427,6 +1436,7 @@ function saleWeekPct(sale, breakdown) {
   const wk = weekIndexForSale(sale);
   if (!wk) return 1;                        // data inválida/fora do mês: não penaliza, paga cheio
   const key = sale.consultant + '|' + grupoMeta(sale.unit, sale.month) + '|' + wk;
+  if (sale.extra_clt) return breakdown.cltPctByKey[key] || 0;   // renda extra CLT: 20% a 35% do bônus de Seja
   return breakdown.pctByKey[key] !== undefined ? breakdown.pctByKey[key] : 1;
 }
 
@@ -2043,7 +2053,7 @@ function metaV3Sub() {
 }
 // Explicação curta da meta do Club (nov/2026+) para o topo da aba Semanal
 function clubV3Sub() {
-  return `<br>Club: Básico 4 contratos (50%) · Meta real 7 (70%) · Super meta 10+ (100%) por semana — cada Black vale meio contrato; renovação, troca e upgrade pagam, mas não contam pra meta.`;
+  return `<br>Club: Básico 4 contratos (50%) · Meta real 7 (70%) · Super meta 10+ (100%) por semana — cada Black vale meio contrato; renovação, troca e upgrade pagam, mas não contam pra meta. Plano CLT Laranjeiras: renda extra de 20% (1 a 3 na semana), 25% (4 a 6), 30% (7 a 9) ou 35% (10+) do bônus de um Seja, fora da meta.`;
 }
 // Prêmio mensal do Club (vale-compras): quantas semanas em Super meta; perde se alguma semana já fechada ficou abaixo do Básico
 function premioClub(weeks) {
