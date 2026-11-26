@@ -1,10 +1,10 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126173138';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126173138';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126173138';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126173138';
+import * as dados from '../dados.js?v=20261126173503';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126173503';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126173503';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126173503';
 
-const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
+const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
 // coordenador de unidade: só a equipe e as unidades dele (o resto vale para todas e fica com o administrador geral)
 const ABAS_COORD = ['usuarios', 'rodizio', 'kanban'];
@@ -20,8 +20,9 @@ export async function render(el, ctx, [aba = 'usuarios']) {
 }
 
 // ── Kanban: quanto tempo sem ação é Normal, Atrasado e Crítico (padrão e, se quiser, por coluna) ──
-async function kanban(el) {
-  const r = await dados.kanbanWasfit();
+async function kanban(el, ctx) {
+  const [r, cfg] = await Promise.all([dados.kanbanWasfit(), ctx?.ehSuper ? dados.config() : null]);
+  const canais = Array.isArray(cfg?.oportunidade_canais_excluidos) ? cfg.oportunidade_canais_excluidos : [];
   const padrao = r.regras.find((x) => x.coluna === '*');
   const porColuna = Object.fromEntries(r.regras.filter((x) => x.coluna !== '*').map((x) => [x.coluna, x]));
   const dp = diasDe(padrao);
@@ -32,7 +33,14 @@ async function kanban(el) {
       <td><input class="ctrl" style="width:70px" type="number" min="1" data-a value="${d ? d.atrasadoAte : ''}" placeholder="${dp.atrasadoAte}"></td>
       <td><input type="checkbox" data-m ${(x ?? padrao).monitorar ? 'checked' : ''}></td></tr>`;
   };
-  el.innerHTML = `<h2>Monitoramento do kanban da WasFit</h2>
+  el.innerHTML = `${cfg ? `<h2>O que não conta como oportunidade</h2>
+    <p class="dica">Cadastros em que o "Como conheceu" da EVO tem uma destas palavras saem da conta de oportunidades e conversão (unidades, consultoras e IA).
+      Separe por vírgula; não importa maiúscula nem acento — "gympass" pega GYMPASS, GymPass etc.</p>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin:10px 0 22px">
+      <label class="campo" style="flex:1;min-width:280px">Palavras do "Como conheceu"<input class="ctrl" id="k-canais" value="${esc(canais.join(', '))}"></label>
+      <button class="btn peq sec" id="k-canais-salvar">Salvar palavras</button>
+    </div>` : ''}
+  <h2>Monitoramento do kanban da WasFit</h2>
     <p class="dica">Conta o tempo sem nenhuma ação no contato (mudança de etiqueta na WasFit). Vale para o gestor e para a tela de cada consultora.</p>
     <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin:12px 0">
       <label class="campo">⏳ Etiqueta de espera (a IA marca quando precisa de uma pessoa)<input class="ctrl" id="k-espera" value="${esc(r.espera?.tag || 'Em espera')}"></label>
@@ -57,6 +65,10 @@ async function kanban(el) {
     el.querySelector('#k-resumo').textContent = h.erro || regraTexto({ ...h, monitorar: true });
   };
   el.querySelectorAll('#k-normal, #k-atrasado').forEach((i) => i.addEventListener('input', resumo));
+  el.querySelector('#k-canais-salvar')?.addEventListener('click', async () => {
+    const lista = el.querySelector('#k-canais').value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+    try { await dados.salvarConfig('oportunidade_canais_excluidos', lista); toast('Palavras salvas — a conta de oportunidades já usa a lista nova.'); } catch (e) { erro(e); }
+  });
   el.querySelector('#k-espera-salvar').addEventListener('click', async () => {
     try { await dados.kanbanSalvarTagEspera(el.querySelector('#k-espera').value); toast('Etiqueta de espera salva.'); } catch (e) { erro(e); }
   });
@@ -72,7 +84,7 @@ async function kanban(el) {
       if (h.erro) { erro(new Error(`Coluna "${coluna}": ${h.erro}`)); return; }
       regras.push({ coluna, ...h, monitorar: m });
     }
-    try { await dados.kanbanSalvarRegras(regras); toast('Regras do kanban salvas.'); kanban(el); } catch (e) { erro(e); }
+    try { await dados.kanbanSalvarRegras(regras); toast('Regras do kanban salvas.'); kanban(el, ctx); } catch (e) { erro(e); }
   });
 }
 

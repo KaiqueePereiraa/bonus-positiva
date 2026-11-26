@@ -2,9 +2,9 @@
 // contatos da IA que ela assumiu; não importa quem fechou), comparada entre as consultoras e com o mês anterior; o funil da
 // IA à parte (a IA só cadastra e manda o pagamento — não é comparada com as meninas); números do time e as semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126173138';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126173138';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, MIN_CADASTROS } from '../comercial-regras.js?v=20261126173138';
+import * as dados from '../dados.js?v=20261126173503';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126173503';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, MIN_CADASTROS } from '../comercial-regras.js?v=20261126173503';
 
 let escolhido = null;
 
@@ -39,7 +39,7 @@ export async function render(el, ctx) {
     <div class="cartao"><div class="linha-acoes">
       <label class="campo">Mês<select class="ctrl" id="mes">${meses.map((x) => `<option value="${x}" ${x === escolhido ? 'selected' : ''}>${nomeMesCap(+x.slice(0, 4), +x.slice(5, 7))}</option>`).join('')}</select></label></div>
       <p class="dica" style="margin-top:8px">Conversão da consultora = da carteira dela no mês (o que ela cadastrou + os contatos da IA que ela assumiu), quantos viraram cliente no mesmo mês — não importa quem fechou a venda.
-      Quem cadastrou no mês e fechou depois aparece como "conversão futura". Gympass, diária, convidado, permuta, Kids e VIP não contam.
+      Quem cadastrou no mês e fechou depois aparece como "conversão futura". Não contam: contratos Gympass, diária, convidado, permuta, Kids e VIP, nem quem chegou por Gympass, TotalPass ou convênio ("Como conheceu" — lista em Configurações → Comercial e kanban).
       ${r.fechado ? '' : `Mês em andamento: a comparação é com ${esc(rotuloAnt)}.`}
       ${r.sincronizado_em ? `Dados da EVO atualizados em ${esc(dataHora(r.sincronizado_em))}.` : ''}</p></div>
     ${times.length ? times.map((t) => time(t, r, ctx, rotuloAnt, prof?.times?.find((x) => x.id === t.id))).join('') : `<div class="cartao">${vazio('Ainda não há cadastros lidos da EVO para este mês.')}</div>`}`;

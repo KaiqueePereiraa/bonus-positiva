@@ -3,9 +3,9 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com os dias que o gestor define em Configurações → Kanban.
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261126173138';
-import { esc, vazio, toast, erro } from '../ui.js?v=20261126173138';
-import { texto as regraTexto } from '../kanban-regras.js?v=20261126173138';
+import * as dados from '../dados.js?v=20261126173503';
+import { esc, vazio, toast, erro } from '../ui.js?v=20261126173503';
+import { texto as regraTexto } from '../kanban-regras.js?v=20261126173503';
 
 const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], espera: ['azul', '⏳ Em espera'], fora: ['cinza', 'Não monitorada'] };
 // minutos → "25 min", "2 h 10 min", "3 dias"
@@ -83,7 +83,7 @@ function resumoRegras(r) {
   const outras = r.regras.filter((x) => x.coluna !== '*');
   return `<div class="cartao"><h2>Regras do monitoramento</h2>
     <p><b>${esc(regraTexto(padrao))}</b>${outras.length ? `<span class="dica"> · ${outras.length} coluna(s) com regra própria</span>` : ''}</p>
-    <p class="dica">Ação = mudança de etiqueta na WasFit. <a href="#/configuracoes/kanban">Mudar os dias em Configurações → Kanban →</a></p></div>`;
+    <p class="dica">Ação = mudança de etiqueta na WasFit. <a href="#/configuracoes/kanban">Mudar os dias em Configurações → Comercial e kanban →</a></p></div>`;
 }
 
 // Quem é quem: usuário da WasFit → pessoa da Central (para a consultora ver os contatos dela)
