@@ -1,9 +1,9 @@
 // Desempenho comercial — o "coordenador comercial": conversão dos cadastros de cada consultora (crédito de quem cadastrou,
 // não importa quem fechou), comparada com a equipe e com o mês anterior; números do time e as 4 semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126154102';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126154102';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, placarIa, MIN_CADASTROS } from '../comercial-regras.js?v=20261126154102';
+import * as dados from '../dados.js?v=20261126154150';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126154150';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, placarIa, MIN_CADASTROS } from '../comercial-regras.js?v=20261126154150';
 
 let escolhido = null;
 
@@ -98,7 +98,7 @@ function tabelaPessoas(pessoas, padrao, pl) {
     ${pessoas.map((p) => {
       const [cor, rot] = SELO[p.status];
       return `<tr><td class="nome">${esc(p.nome)}${p.ativa ? '' : '<span class="sub">fora da equipe</span>'}</td>
-        <td>${p.atual.cadastros - (p.atual.da_ia || 0)}</td><td>${p.atual.da_ia || 0}${p.atual.da_ia ? `<span class="sub">${p.atual.da_ia_vendas} viraram</span>` : ''}</td>
+        <td>${p.atual.cadastros - (p.atual.da_ia || 0)}</td><td>${p.atual.da_ia || 0}${p.atual.da_ia ? `<span class="sub">${p.atual.da_ia_vendas} ${p.atual.da_ia_vendas === 1 ? 'virou' : 'viraram'} cliente</span>` : ''}</td>
         <td><b>${p.atual.cadastros}</b></td><td>${p.atual.vendas}${p.atual.futuras ? `<span class="sub">+${p.atual.futuras} depois</span>` : ''}</td>
         <td><b>${pctTxt(p.taxa)}</b></td>
         <td>${pctTxt(p.taxaAnt)}${p.tend ? `<span class="sub">${TEND[p.tend.tipo]}</span>` : ''}</td>
