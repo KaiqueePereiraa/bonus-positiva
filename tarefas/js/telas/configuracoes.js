@@ -1,8 +1,8 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126172117';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126172117';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126172117';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126172117';
+import * as dados from '../dados.js?v=20261126172941';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126172941';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126172941';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126172941';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -34,6 +34,11 @@ async function kanban(el) {
   };
   el.innerHTML = `<h2>Monitoramento do kanban da WasFit</h2>
     <p class="dica">Conta o tempo sem nenhuma ação no contato (mudança de etiqueta na WasFit). Vale para o gestor e para a tela de cada consultora.</p>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin:12px 0">
+      <label class="campo">⏳ Etiqueta de espera (a IA marca quando precisa de uma pessoa)<input class="ctrl" id="k-espera" value="${esc(r.espera?.tag || 'Em espera')}"></label>
+      <button class="btn peq sec" id="k-espera-salvar">Salvar etiqueta</button>
+    </div>
+    <p class="dica">Quem está nessa etiqueta fica na fila de espera, medida em minutos até alguém assumir, e não entra no Normal / Atrasado / Crítico abaixo.</p>
     <div style="display:flex;gap:16px;flex-wrap:wrap;max-width:560px;margin:12px 0">
       <label class="campo">🟢 Normal até (dias sem ação)<input class="ctrl" id="k-normal" type="number" min="0" value="${dp.normalAte}"></label>
       <label class="campo">🟠 Atrasado até (dias)<input class="ctrl" id="k-atrasado" type="number" min="1" value="${dp.atrasadoAte}"></label>
@@ -52,6 +57,9 @@ async function kanban(el) {
     el.querySelector('#k-resumo').textContent = h.erro || regraTexto({ ...h, monitorar: true });
   };
   el.querySelectorAll('#k-normal, #k-atrasado').forEach((i) => i.addEventListener('input', resumo));
+  el.querySelector('#k-espera-salvar').addEventListener('click', async () => {
+    try { await dados.kanbanSalvarTagEspera(el.querySelector('#k-espera').value); toast('Etiqueta de espera salva.'); } catch (e) { erro(e); }
+  });
   el.querySelector('#k-salvar').addEventListener('click', async () => {
     const g = horasDe(+el.querySelector('#k-normal').value, +el.querySelector('#k-atrasado').value);
     if (g.erro) { erro(new Error(g.erro)); return; }

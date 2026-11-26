@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261126172117';
+import { sb } from '../../shared/sessao.js?v=20261126172941';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -228,6 +228,7 @@ export const desempenhoComercial = (mes) => rpc('desempenho_comercial', { p_mes:
 // Kanban da WasFit espelhado e conversão por professor (gestor)
 export const kanbanWasfit = () => rpc('kanban_wasfit', {});
 export const kanbanWebhooks = () => rpc('kanban_webhooks', {});
+export const kanbanSalvarTagEspera = (nome) => rpc('kanban_salvar_tag_espera', { p_nome: nome });
 export const meuKanban = () => rpc('meu_kanban', { p_como: comoId || null });
 export const kanbanSalvarRegras = (regras) => rpc('kanban_salvar_regras', { p_regras: regras });
 export const kanbanLigarUsuario = (usuario, profile) => rpc('kanban_ligar_usuario', { p_usuario: usuario, p_profile: profile || null });

@@ -3,11 +3,14 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com os dias que o gestor define em Configurações → Kanban.
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261126172117';
-import { esc, vazio, toast, erro } from '../ui.js?v=20261126172117';
-import { texto as regraTexto } from '../kanban-regras.js?v=20261126172117';
+import * as dados from '../dados.js?v=20261126172941';
+import { esc, vazio, toast, erro } from '../ui.js?v=20261126172941';
+import { texto as regraTexto } from '../kanban-regras.js?v=20261126172941';
 
-const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], fora: ['cinza', 'Não monitorada'] };
+const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], espera: ['azul', '⏳ Em espera'], fora: ['cinza', 'Não monitorada'] };
+// minutos → "25 min", "2 h 10 min", "3 dias"
+const minTxt = (m) => (m == null ? '—' : m < 60 ? `${Math.round(m)} min` : m < 48 * 60 ? `${Math.floor(m / 60)} h${Math.round(m % 60) ? ` ${Math.round(m % 60)} min` : ''}` : `${Math.floor(m / 1440)} dias`);
+const pctDe = (n, t) => (t ? `${Math.round((100 * n) / t)}%` : '—');
 const tempo = (h) => (h == null ? '—' : h < 1 ? 'menos de 1 h' : h < 48 ? `${Math.floor(h)} h` : `${Math.floor(h / 24)} dias`);
 const selo = (n) => `<span class="selo ${NIVEL[n][0]}">${NIVEL[n][1]}</span>`;
 
@@ -27,6 +30,7 @@ export async function render(el, ctx) {
       <div class="numero verde"><small>🟢 Normais</small><b>${n.normal || 0}</b><span>dentro do padrão</span></div>
       <div class="numero azul"><small>Contatos no kanban</small><b>${r.contatos}</b><span>${n.fora ? `${n.fora} em colunas não monitoradas` : 'com etiqueta de coluna'}</span></div>
     </div>
+    ${fila(r.espera)}
     <div class="cartao"><h2>Por consultora</h2>
       <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Dona</th><th>Contatos</th><th>🔴 Críticos</th><th>🟠 Atrasados</th><th>🟢 Normais</th>${r.colunas.map((c) => `<th>${esc(c.coluna)}</th>`).join('')}</tr></thead><tbody>
       ${r.pessoas.map((p) => `<tr><td class="nome">${esc(p.dona)}</td><td>${p.contatos}</td>
@@ -47,6 +51,30 @@ export async function render(el, ctx) {
   el.querySelectorAll('[data-usuario]').forEach((s) => s.addEventListener('change', async () => {
     try { await dados.kanbanLigarUsuario(+s.dataset.usuario, s.value || null); toast('Ligação salva.'); render(el, ctx); } catch (e) { erro(e); }
   }));
+}
+
+// Fila "Em espera": a IA marca a etiqueta quando o contato precisa de uma pessoa. Quem espera agora e quanto cada consultora
+// demora para assumir (1ª ação dela no contato depois que entrou na fila), nos últimos 30 dias.
+function fila(e) {
+  if (!e) return '';
+  const tag = esc(e.tag || 'Em espera');
+  if (!e.aguardando && !e.atendidos) return `<div class="cartao"><h2>⏳ Fila "${tag}"</h2>${vazio(`Ainda não chegou nenhum contato com a etiqueta "${tag}". Quando a IA marcar, aparece aqui quanto tempo cada um esperou e quem assumiu.`)}</div>`;
+  return `<div class="cartao"><h2>⏳ Fila "${tag}" — a IA passou, quem assumiu e em quanto tempo</h2>
+    <div class="numeros" style="margin:10px 0">
+      <div class="numero ${e.aguardando ? 'vermelho' : 'verde'}"><small>Esperando agora</small><b>${e.aguardando}</b><span>${e.aguardando ? `o mais antigo há ${minTxt(e.mais_antigo_min)}` : 'ninguém na fila'}</span></div>
+      <div class="numero azul"><small>Assumidos (30 dias)</small><b>${e.atendidos}</b><span>${e.pela_ia} colocados na fila pela IA</span></div>
+      <div class="numero escuro"><small>Tempo típico até assumir</small><b>${minTxt(e.mediana_min)}</b><span>mediana · média ${minTxt(e.media_min)}</span></div>
+      <div class="numero"><small>Assumidos em até 15 min</small><b>${pctDe(e.ate_15, e.atendidos)}</b><span>em até 1 h: ${pctDe(e.ate_60, e.atendidos)}</span></div>
+    </div>
+    ${e.por_pessoa?.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Quem assumiu</th><th>Assumidos</th><th>Tempo típico</th><th>Média</th><th>Até 15 min</th><th>Até 1 h</th><th>Maior espera</th></tr></thead><tbody>
+      ${e.por_pessoa.map((p) => `<tr><td class="nome">${esc(p.nome || '—')}</td><td>${p.assumidos}</td><td><b>${minTxt(p.mediana_min)}</b></td><td>${minTxt(p.media_min)}</td>
+        <td>${pctDe(p.ate_15, p.assumidos)}</td><td>${pctDe(p.ate_60, p.assumidos)}</td><td>${minTxt(p.maior_min)}</td></tr>`).join('')}
+    </tbody></table></div>` : ''}
+    ${e.lista?.length ? `<h3 style="margin:16px 0 8px">Esperando agora</h3><div class="tabela-wrap"><table class="tabela"><thead><tr><th>Contato</th><th>Unidade</th><th>Esperando há</th><th>Quem colocou</th></tr></thead><tbody>
+      ${e.lista.map((x) => `<tr><td class="nome">${esc(x.contato || '—')}<span class="sub">${esc(x.numero || '')}</span></td><td>${esc(x.unidade || '—')}</td>
+        <td><b style="color:${x.minutos > 60 ? '#B42318' : 'inherit'}">${minTxt(x.minutos)}</b></td><td>${esc(x.colocou)}</td></tr>`).join('')}
+    </tbody></table></div>` : ''}
+    <p class="dica">Tempo até assumir = da hora em que o contato entrou em "${tag}" até a 1ª ação de uma pessoa nele (mudar etiqueta). "Tempo típico" é a mediana: metade dos contatos foi assumida mais rápido que isso. Conta o relógio corrido (inclusive à noite).</p></div>`;
 }
 
 // Regras do monitoramento: só o resumo aqui; o gestor muda em Configurações → Kanban
@@ -75,9 +103,10 @@ function quadroWebhooks(lista) {
   if (!lista?.length) return '';
   return `<div class="cartao"><h2>Webhook de cada unidade</h2>
     <p class="dica">Na WasFit, em cada etiqueta do kanban: cole o endereço da unidade, ligue "Disparar ao marcar" e "ao desmarcar". Não precisa de um por consultora:
-      cada aviso já diz quem mexeu. Não compartilhe estes endereços.</p>
+      cada aviso já diz quem mexeu. Unidades unidas em Configurações → Unidades e grupos contam como uma equipe só (a consultora de uma pode
+      assumir cliente da outra); cada unidade continua com o seu endereço. Unidade nova ganha o dela sozinha. Não compartilhe estes endereços.</p>
     <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Endereço</th><th></th></tr></thead><tbody>
-    ${lista.map((w, i) => `<tr><td class="nome">${esc(w.unidade)}</td><td><code style="font-size:12px;word-break:break-all">${esc(w.url)}</code></td>
+    ${lista.map((w, i) => `<tr><td class="nome">${esc(w.unidade)}${w.equipe ? `<span class="sub">equipe ${esc(w.equipe)}</span>` : ''}</td><td><code style="font-size:12px;word-break:break-all">${esc(w.url)}</code></td>
       <td><button class="btn peq sec" data-copiar="${i}">Copiar</button></td></tr>`).join('')}
     </tbody></table></div></div>`;
 }
