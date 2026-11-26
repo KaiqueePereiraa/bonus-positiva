@@ -1,23 +1,25 @@
-// Painel do gestor — a tela que o gestor abre todo dia. Mostra só o que acontece HOJE e pede ação (gestão por
-// exceção), em frases simples, cada uma com "o que fazer". Comparações de 30 dias ficam em Desempenho; o que cada
-// lista trouxe fica em Resultados; o retorno em R$, em Relatórios → Retorno do mês.
-import * as dados from '../dados.js?v=20261126181219';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126181219';
-import { somarDias, semanaDe } from '../regras.js?v=20261126181219';
+// Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
+// juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
+// do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
+import * as dados from '../dados.js?v=20261126182118';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126182118';
+import { somarDias, semanaDe } from '../regras.js?v=20261126182118';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261126181219';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261126181219';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261126182118';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261126182118';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe } from '../painel-comercial.js?v=20261126182118';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
   const seg = semanaDe(hojeIso).inicio;
-  const [p, cfg, tarefas, hojeContatos, semana, todasVitorias] = await Promise.all([dados.painelGestor(), dados.config().catch(() => ({})),
+  const [p, cfg, tarefas, hojeContatos, semana, todasVitorias, com, kb] = await Promise.all([dados.painelGestor(), dados.config().catch(() => ({})),
     dados.tarefas({ desde: somarDias(hojeIso, -21), unidade: ctx.unidade || undefined }).catch(() => []),
     dados.contatosHoje(hojeIso).catch(() => ({})),
     hojeIso > seg ? dados.desempenho(seg, somarDias(hojeIso, -1)).catch(() => []) : Promise.resolve([]),
-    dados.vitoriasEquipe(7).catch(() => [])]);
+    dados.vitoriasEquipe(7).catch(() => []),
+    dados.desempenhoComercial(`${hojeIso.slice(0, 8)}01`).catch(() => null), dados.kanbanWasfit().catch(() => null)]);
   const vitorias = ctx.unidade ? todasVitorias.filter((v) => v.unidade === ctx.unidade) : todasVitorias;
   const pendentes = pendentesPorConsultora(tarefas, hojeIso);
   const semanaDe_ = Object.fromEntries(semana.map((c) => [c.id, c]));
@@ -27,7 +29,11 @@ export async function render(el, ctx) {
   const ativas = unidades.filter((u) => u.consultoras.length);
   const hora = +new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hour12: false }).format(new Date());
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-  const lista = atencao(p, unidades, hora, desligadas, ctx.ehSuper);
+  const lista = [...atencao(p, unidades, hora, desligadas, ctx.ehSuper), ...itensComercial(com, kb, ctx.unidade)];
+  const mes = linhasMes(com, ctx.unidade);
+  const SIT = { atencao: ['vermelho', '⚠️ Precisa de atenção'], piorando: ['laranja', '▼ Piorando'], melhorando: ['verde', '▲ Melhorando'], estavel: ['azul', '= Estável'] };
+  const SEL = { acima: ['verde', 'acima'], dentro: ['azul', 'no padrão'], abaixo: ['vermelho', 'abaixo'], poucos: ['cinza', 'poucos'] };
+  const pc = (v) => (v == null ? '—' : `${String(v).replace('.', ',')}%`);
   const cards = sinais(unidades);
   const todas = ativas.flatMap((u) => u.consultoras.map((c) => ({ ...c, unidade: u.nome })));
 
@@ -41,8 +47,18 @@ export async function render(el, ctx) {
       ${lista.length ? `<ul class="lista-atencao">${lista.map((a) => `<li><b>${esc(a.texto)}</b>${a.acao ? `<span>${esc(a.acao)}</span>` : ''}${a.rota ? ` <a href="${a.rota}">Abrir →</a>` : ''}</li>`).join('')}</ul>`
         : '<p class="dica">Nada fora do normal agora. 🎉</p>'}</div>
 
+    ${mes.length ? `<div class="cartao"><h2>Como está o mês <span class="selo cinza">vs mês anterior até o mesmo dia</span></h2>
+      <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Oportunidades</th><th>Vendas</th><th>Conversão</th><th>Situação</th></tr></thead><tbody>
+      ${mes.map((u) => { const [cor, rot] = SIT[u.situacao]; return `<tr><td class="nome">${esc(u.nome)}</td>
+        <td>${u.atual?.oportunidades ?? 0}<span class="sub">antes ${u.anterior?.oportunidades ?? 0}</span></td>
+        <td>${u.atual?.vendas ?? 0}<span class="sub">antes ${u.anterior?.vendas ?? 0}</span></td>
+        <td><b>${pc(u.taxa)}</b><span class="sub">antes ${pc(u.taxaAnt)}</span></td>
+        <td><span class="selo ${cor}">${rot}</span><span class="sub">${esc(u.diagnostico)}</span></td></tr>`; }).join('')}
+      </tbody></table></div>
+      <p class="dica" style="margin-top:8px">Venda = cadastrou e virou cliente no mês. Detalhe por consultora, canais e funil da IA: <a href="#/analises/comercial">Análises → Comercial</a></p></div>` : ''}
+
     <div class="cartao"><h2>Equipe hoje</h2>
-      ${todas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Hoje</th><th>Pendentes</th><th>Atrasados</th><th>Último contato</th><th>Semana</th><th></th></tr></thead><tbody>
+      ${todas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Hoje</th><th>Pendentes</th><th>Atrasados</th><th>Último contato</th><th>Semana</th><th>Carteira do mês</th><th>Kanban</th><th></th></tr></thead><tbody>
         ${todas.map((c) => {
           const cor = !c.minimo ? 'cinza' : c.feitos_hoje >= c.minimo ? 'verde' : c.feitos_hoje * 2 >= c.minimo ? 'laranja' : 'vermelho';
           const pend = pendentes[c.id] || 0;
@@ -54,9 +70,12 @@ export async function render(el, ctx) {
             <td>${c.atrasados ? `<b style="color:var(--danger)">${c.atrasados}</b>` : '—'}</td>
             <td>${ult ? dataHora(ult).slice(-5) : '<span class="dica">nenhum hoje</span>'}</td>
             <td>${sem?.pct != null ? `${sem.pct}% <span class="sub">mínimo em ${sem.dias_bateu} de ${sem.dias} dia(s)</span>` : '<span class="dica">—</span>'}</td>
+            ${(() => { const ca = carteiraDe(com, c.nome); return `<td>${ca ? `<b>${pc(ca.taxa)}</b> <span class="selo ${SEL[ca.status][0]}">${SEL[ca.status][1]}</span><span class="sub">${ca.vendas} de ${ca.contatos} viraram cliente</span>` : '<span class="dica">—</span>'}</td>`; })()}
+            ${(() => { const k = kanbanDe(kb, c.nome); return `<td>${k ? `${k.critico ? `<span class="selo vermelho">${k.critico} crít.</span> ` : ''}${k.atrasado ? `<span class="selo laranja">${k.atrasado} atras.</span> ` : ''}<span class="sub">${k.contatos} no kanban</span>` : '<span class="dica">—</span>'}</td>`; })()}
             <td class="acoes"><button class="btn sec peq" data-ver-como="${c.id}" title="Ver a Central como ${esc(c.nome)} vê (só para olhar)">👁 Ver tela</button></td></tr>`;
         }).join('')}</tbody></table></div>
-        <p class="dica" style="margin-top:8px">Pendentes = contatos em aberto em todas as listas dela. "Livre" = zerou as listas: dá para passar uma Lista a fazer. Semana = mínimo cumprido nos dias já fechados desta semana. Comparação de 30 dias: <a href="#/desempenho">Desempenho →</a></p>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
+        <p class="dica" style="margin-top:8px">Pendentes = contatos em aberto em todas as listas dela. "Livre" = zerou as listas: dá para passar uma Lista a fazer. Semana = mínimo cumprido nos dias já fechados desta semana. Carteira do mês = o que ela cadastrou + o que assumiu da IA, quantos viraram cliente (comparado com a equipe). Kanban = contatos dela na WasFit, críticos e atrasados.
+          Mais detalhes: <a href="#/analises/equipe">Contatos da equipe</a> · <a href="#/analises/comercial">Comercial</a> · <a href="#/analises/kanban">Kanban</a></p>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
     </div>
 
     <div class="cartao" id="vitorias"><h2>🎉 Vitórias da equipe <span class="selo cinza">últimos 7 dias</span>${vitorias.length ? `<span class="selo verde">${vitorias.length} resultados</span>` : ''}${faltaAplaudir(vitorias, ctx.perfil.id) ? `<span class="selo laranja">${faltaAplaudir(vitorias, ctx.perfil.id)} para aplaudir</span>` : ''}</h2>
@@ -66,7 +85,7 @@ export async function render(el, ctx) {
     ${listasDaSemana(tarefas, hojeIso)}
 
     ${(() => { const t = somar(ativas, 'semana'); return `<p class="dica" style="text-align:center">Nesta semana: ${t.pagou} pagaram${t.valor ? ` (${reais(t.valor)})` : ''} · ${t.voltou} voltaram a treinar · ${t.matriculou} matrículas · ${t.renovou} renovações.
-      <a href="#/indicadores">Resultados →</a> · <a href="#/retorno">Retorno do mês →</a></p>`; })()}`;
+      <a href="#/analises/resultados">Resultados →</a> · <a href="#/retorno">Retorno do mês →</a></p>`; })()}`;
   const caixaVit = el.querySelector('#vitorias');
   if (caixaVit) ligarPalmas(caixaVit, vitorias, ctx.perfil.id);
   // "👁 Ver tela": entra no modo ver como consultora (mesma chave do app.js; só nesta aba)

@@ -1,10 +1,10 @@
 // Resultados — o que os contatos trouxeram (conferido na EVO), o que os números dizem (frases automáticas, antes na
 // tela "Insights"), cumprimento dos prazos e os motivos do "Por que não fechou?". O resultado de cada consultora e o ranking ficam em Desempenho.
-import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261126181219';
-import * as dados from '../dados.js?v=20261126181219';
-import { linha, barras } from '../graficos.js?v=20261126181219';
-import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261126181219';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261126181219';
+import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261126182118';
+import * as dados from '../dados.js?v=20261126182118';
+import { linha, barras } from '../graficos.js?v=20261126182118';
+import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261126182118';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261126182118';
 
 let filtros;
 
@@ -58,7 +58,7 @@ async function desenhar(el, ctx) {
         : vazio('Os resultados aparecem conforme a equipe faz contatos e a EVO confere o que aconteceu depois.')}
     </div>
 
-    <p class="dica" style="text-align:center">Resultado de cada consultora e ranking da equipe: <a href="#/desempenho">Desempenho →</a> · R$ por consultora: <a href="#/retorno">Retorno do mês →</a></p>
+    <p class="dica" style="text-align:center">Resultado de cada consultora e ranking da equipe: <a href="#/analises/equipe">Desempenho →</a> · R$ por consultora: <a href="#/retorno">Retorno do mês →</a></p>
 
     ${tarefas.length ? `<div class="numeros">
       ${numero('Listas no período', r.total, 'escuro')}

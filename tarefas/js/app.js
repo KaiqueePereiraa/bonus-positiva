@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126181219';
-import * as dados from './dados.js?v=20261126181219';
-import { hojeSP } from './regras.js?v=20261126181219';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126181219';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126181219';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126181219';
-import { resumoSemana } from './bonus-meta.js?v=20261126181219';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126181219';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126182118';
+import * as dados from './dados.js?v=20261126182118';
+import { hojeSP } from './regras.js?v=20261126182118';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126182118';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126182118';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126182118';
+import { resumoSemana } from './bonus-meta.js?v=20261126182118';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126182118';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -42,10 +42,11 @@ const ROTAS = {
   inadimplencia: { titulo: 'Inadimplência', modulo: 'inadimplencia', icone: 'inad', quem: 'todos', grupo: 'cobranca', frase: 'Quem está com a mensalidade atrasada. Mande a mensagem pelo botão do WhatsApp.' },
   'lista-fazer': { titulo: 'Lista a fazer', modulo: 'lista-fazer', icone: 'lista', quem: 'todos', grupo: 'extras', frase: 'Listas extras montadas pelo gestor.' },
   // Acompanhar: uma pergunta por tela. Desempenho = as pessoas; Resultados = o que funciona; Relatórios = baixar e o retorno em R$.
-  desempenho: { titulo: 'Desempenho', modulo: 'desempenho', icone: 'equipe', quem: 'todos', grupo: 'acompanhar', frase: 'Quem cumpriu o mínimo de contatos, quanto deu resultado e como cada uma está comparada com a equipe.' },
-  comercial: { titulo: 'Desempenho comercial', modulo: 'comercial', icone: 'alvo', quem: 'todos', grupo: 'acompanhar', frase: 'Conversão da carteira de cada consultora (o que ela cadastrou + o que assumiu da IA), comparada entre elas e com o mês anterior; e o funil da IA.' },
-  kanban: { titulo: 'Kanban da WasFit', modulo: 'kanban', icone: 'lista', quem: 'todos', grupo: 'acompanhar', frase: 'Os contatos do kanban da WasFit pelo tempo sem nenhuma ação: normal, atrasado e crítico.' },
-  indicadores: { titulo: 'Resultados', modulo: 'indicadores', icone: 'ind', quem: 'admin', grupo: 'acompanhar', frase: 'O que cada lista trouxe de verdade, os motivos e o que os números dizem.' },
+  analises: { titulo: 'Análises', modulo: 'analises', icone: 'ind', quem: 'todos', grupo: 'acompanhar', frase: 'Tudo num lugar, em abas: comercial (conversão, unidades, canais, IA), kanban da WasFit, contatos da equipe e resultados das listas.' },
+  desempenho: { titulo: 'Contatos da equipe', modulo: 'desempenho', icone: 'equipe', quem: 'todos', grupo: null, menu: 'analises', frase: 'Quem cumpriu o mínimo de contatos, quanto deu resultado e como cada uma está comparada com a equipe.' },
+  comercial: { titulo: 'Desempenho comercial', modulo: 'comercial', icone: 'alvo', quem: 'todos', grupo: null, menu: 'analises', frase: 'Conversão da carteira de cada consultora (o que ela cadastrou + o que assumiu da IA), comparada entre elas e com o mês anterior; e o funil da IA.' },
+  kanban: { titulo: 'Kanban da WasFit', modulo: 'kanban', icone: 'lista', quem: 'todos', grupo: null, menu: 'analises', frase: 'Os contatos do kanban da WasFit pelo tempo sem nenhuma ação: normal, atrasado e crítico.' },
+  indicadores: { titulo: 'Resultados', modulo: 'indicadores', icone: 'ind', quem: 'admin', grupo: null, menu: 'analises', frase: 'O que cada lista trouxe de verdade, os motivos e o que os números dizem.' },
   relatorios: { titulo: 'Relatórios', modulo: 'relatorios', icone: 'rel', quem: 'admin', grupo: 'acompanhar', frase: 'Escolha o período e baixe em PDF, Excel ou CSV.' },
   retorno: { titulo: 'Retorno do mês', modulo: 'retorno', icone: 'rel', quem: 'admin', grupo: null, menu: 'relatorios', frase: 'Quanto a equipe trouxe de volta em R$ com a Central.' },
   // EM PREPARAÇÃO (pedido do usuário, 16/11/2026): só o admin vê a Escala até ele dizer que está 100% pronta.
@@ -234,7 +235,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126181219`);
+    const tela = await import(`./telas/${modulo}.js?v=20261126182118`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

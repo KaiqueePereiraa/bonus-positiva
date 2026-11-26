@@ -131,3 +131,25 @@ export function avaliarUnidades(lista) {
   for (const u of us) u.situacao = u.atencao ? 'atencao' : u.tend?.tipo === 'melhorou' ? 'melhorando' : u.tend?.tipo === 'piorou' ? 'piorando' : 'estavel';
   return us;
 }
+
+// De onde vêm e o que converte mais (campo "Como conheceu" da EVO). Ranking pela conversão dos últimos 3 meses (amostra
+// maior), só com canais de pelo menos MIN_CANAL oportunidades; a linha dos cadastros da IA (que não registra "Como conheceu")
+// fica fora do ranking.
+export const MIN_CANAL = 10;
+export const ehLinhaIa = (c) => /^Cadastro da IA/.test(c.canal);
+export function avaliarCanais(lista) {
+  const total = (lista || []).reduce((a, c) => a + (c.oportunidades || 0), 0);
+  const cs = (lista || []).map((c) => ({ ...c, ia: ehLinhaIa(c),
+    taxa: pct(c.vendas || 0, c.oportunidades || 0), taxaAnt: pct(c.vendas_ant || 0, c.oportunidades_ant || 0),
+    taxa3: pct(c.vendas_3m || 0, c.oportunidades_3m || 0), parte: pct(c.oportunidades || 0, total) }));
+  const rank = cs.filter((c) => !c.ia && (c.oportunidades_3m || 0) >= MIN_CANAL && c.taxa3 != null).sort((a, b) => b.taxa3 - a.taxa3);
+  if (rank.length >= 2) { rank[0].selo = 'melhor'; rank[rank.length - 1].selo = 'pior'; }
+  let frase = null;
+  if (rank.length >= 2) {
+    const m = rank[0], p = rank[rank.length - 1];
+    frase = `Nos últimos 3 meses, quem chega por ${m.canal} converte mais (${br(m.taxa3)}% — ${m.vendas_3m} de ${m.oportunidades_3m}); por ${p.canal}, menos (${br(p.taxa3)}% — ${p.vendas_3m} de ${p.oportunidades_3m}).`;
+    const maior = [...cs].filter((c) => !c.ia).sort((a, b) => (b.oportunidades_3m || 0) - (a.oportunidades_3m || 0))[0];
+    if (maior && maior !== m) frase += ` O canal que mais traz gente é ${maior.canal} (${maior.oportunidades_3m} oportunidades).`;
+  }
+  return { canais: [...cs.filter((c) => !c.ia), ...cs.filter((c) => c.ia)], frase };
+}

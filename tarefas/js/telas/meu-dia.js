@@ -1,15 +1,15 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import { MOTIVOS } from './_ausencias.js?v=20261126181219';
-import * as dados from '../dados.js?v=20261126181219';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126181219';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261126181219';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261126181219';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261126181219';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261126181219';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261126181219';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261126181219';
+import { MOTIVOS } from './_ausencias.js?v=20261126182118';
+import * as dados from '../dados.js?v=20261126182118';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126182118';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261126182118';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261126182118';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261126182118';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261126182118';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261126182118';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261126182118';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -77,7 +77,7 @@ export async function render(el, ctx) {
     ${urgentes.map((a) => `<div class="faixa ${a.nivel === 'urgente' ? 'urgente' : ''}"><div>${esc(a.texto)} <a href="${a.rota}">Abrir →</a></div></div>`).join('')}
     ${kanban?.ligada && (kanban.niveis.critico || kanban.niveis.urgente) ? `<div class="faixa ${kanban.niveis.critico ? 'urgente' : ''}"><div>
       Kanban da WasFit: ${kanban.niveis.critico ? `🔴 <b>${kanban.niveis.critico} crítico${kanban.niveis.critico > 1 ? 's' : ''}</b>` : ''}${kanban.niveis.critico && kanban.niveis.urgente ? ' e ' : ''}${kanban.niveis.urgente ? `🟠 <b>${kanban.niveis.urgente} atrasado${kanban.niveis.urgente > 1 ? 's' : ''}</b>` : ''}
-      sem nenhuma ação há tempo demais. <a href="#/kanban">Ver quem →</a></div></div>` : ''}
+      sem nenhuma ação há tempo demais. <a href="#/analises/kanban">Ver quem →</a></div></div>` : ''}
 
     ${guiaVisto() ? '' : `<div class="cartao guia"><h2>Como funciona (30 segundos)</h2>
       <ol>

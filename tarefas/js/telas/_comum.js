@@ -1,9 +1,9 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261126181219';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261126181219';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261126181219';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261126181219';
-import { maisUm, celebrar } from '../jogo-visual.js?v=20261126181219';
+import * as dados from '../dados.js?v=20261126182118';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261126182118';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261126182118';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261126182118';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261126182118';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {

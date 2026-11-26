@@ -2,9 +2,9 @@
 // contatos da IA que ela assumiu; não importa quem fechou), comparada entre as consultoras e com o mês anterior; o funil da
 // IA à parte (a IA só cadastra e manda o pagamento — não é comparada com as meninas); números do time e as semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126181219';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126181219';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, MIN_CADASTROS } from '../comercial-regras.js?v=20261126181219';
+import * as dados from '../dados.js?v=20261126182118';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126182118';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261126182118';
 
 let escolhido = null;
 
@@ -70,6 +70,7 @@ function time(t, r, ctx, rotuloAnt, prof) {
     ${alerta ? `<div class="faixa urgente" style="display:block;margin:12px 0"><b>⚠️ Conversão muito diferente entre as consultoras</b><div style="margin-top:4px">${esc(alerta.texto)}</div></div>` : ''}
     ${eu ? quadroEu(eu, padrao) : ''}
     ${r.admin ? tabelaPessoas(pessoas, padrao) : ''}
+    ${r.admin && t.canais?.length ? quadroCanais(t.canais, rotuloAnt) : ''}
     ${quadroFunilIa(fi, rotuloAnt)}
     ${prof ? professores(prof) : ''}
     ${semanas(t)}
@@ -92,6 +93,25 @@ function quadroFunilIa(fi, rotuloAnt) {
       <div class="numero"><small>Tempo até alguém assumir</small><b>${x.dias == null ? '—' : `${num(x.dias)} d`}</b><span>${x.comData ? `${x.noDia} de ${x.comData} no mesmo dia ou no seguinte` : 'sem data ainda'}${y.dias == null ? '' : ` · antes ${num(y.dias)} d`}</span></div>
     </div>
     <p class="dica">"Antes" = ${esc(rotuloAnt)}. Dona do contato da IA: quem mexeu nele no kanban da WasFit perto do cadastro; se não houver, quem vendeu a experimental; depois, quem fechou a venda; por último, quem recebeu o contato nas listas da Central.${x.peloKanban ? ` ${x.peloKanban} assumido(s) pelo kanban.` : ''}${x.semDona ? ` Contatos sem dona não entram na carteira de ninguém — vale distribuir.` : ''}</p>`;
+}
+
+// De onde vêm e o que converte mais ("Como conheceu" da EVO), só o gestor. No mês e nos últimos 3 meses (amostra maior).
+function quadroCanais(lista, rotuloAnt) {
+  const { canais, frase } = avaliarCanais(lista);
+  const selo = (c) => (c.selo === 'melhor' ? '<span class="selo verde">▲ Converte mais</span>' : c.selo === 'pior' ? '<span class="selo laranja">▼ Converte menos</span>' : '');
+  return `<h3 style="margin:18px 0 8px">De onde vêm e o que converte mais ("Como conheceu")</h3>
+    ${frase ? `<p style="margin:0 0 8px">💡 ${esc(frase)}</p>` : ''}
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Como conheceu</th><th>Oportunidades no mês</th><th>Vendas no mês</th><th>Conversão no mês</th><th>Últimos 3 meses</th><th></th></tr></thead><tbody>
+    ${canais.map((c) => `<tr${c.ia ? ' style="opacity:.75"' : ''}><td class="nome">${esc(c.canal)}</td>
+      <td>${c.oportunidades}${c.parte != null ? `<span class="sub">${num(c.parte)}% do total</span>` : ''}</td>
+      <td>${c.vendas}</td>
+      <td><b>${pctTxt(c.taxa)}</b>${c.oportunidades_ant ? `<span class="sub">antes ${pctTxt(c.taxaAnt)}</span>` : ''}</td>
+      <td>${c.oportunidades_3m} oport. · ${c.vendas_3m} vendas · <b>${pctTxt(c.taxa3)}</b></td>
+      <td>${c.ia ? '<span class="dica">fora do ranking</span>' : selo(c)}</td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="dica">Grafias parecidas são juntadas (AMIGO, Amigo e AMIGO/FAMILIAR viram "Amigo / família"). Gympass, TotalPass e convênios não entram.
+      O ranking usa os últimos 3 meses (cadastrou nos 3 meses e virou cliente até hoje), só com canais de ${MIN_CANAL}+ oportunidades.
+      Os cadastros da IA ficam à parte: ela não registra o "Como conheceu". "Antes" = ${esc(rotuloAnt)}.</p>`;
 }
 
 // Unidades separadas (só o gestor): números da empresa de cada unidade, qual melhora, qual piora, qual precisa de atenção.
