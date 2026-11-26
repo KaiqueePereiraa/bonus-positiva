@@ -1,8 +1,8 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126190714';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126190714';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126190714';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126190714';
+import * as dados from '../dados.js?v=20261126192356';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126192356';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126192356';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126192356';
 
 const ABAS = [['conta', 'Conta e licença'], ['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -10,7 +10,8 @@ const ABAS = [['conta', 'Conta e licença'], ['usuarios', 'Usuários'], ['rodizi
 const ABAS_COORD = ['usuarios', 'rodizio', 'kanban'];
 
 export async function render(el, ctx, [aba = 'usuarios']) {
-  const abas = ctx.ehSuper ? ABAS : ABAS.filter(([id]) => ABAS_COORD.includes(id));
+  const abas = (ctx.ehSuper ? ABAS : ABAS.filter(([id]) => ABAS_COORD.includes(id)))
+    .filter(([id]) => id !== 'conta' || ctx.ehDonoWasfit);   // licença: só o dono da WasFit
   if (!abas.some(([id]) => id === aba)) aba = 'usuarios';
   el.innerHTML = `<div class="cartao"><div class="abas">${abas.map(([id, r]) => `<button data-aba="${id}" class="${id === aba ? 'ativo' : ''}">${r}</button>`).join('')}</div><div id="aba"></div></div>`;
   el.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/configuracoes/${b.dataset.aba}`; }));
