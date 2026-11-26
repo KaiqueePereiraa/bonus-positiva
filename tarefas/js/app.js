@@ -1,13 +1,13 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126185541';
-import * as dados from './dados.js?v=20261126185541';
-import { seloLicenca } from './conta-regras.js?v=20261126185541';
-import { hojeSP } from './regras.js?v=20261126185541';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126185541';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126185541';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126185541';
-import { resumoSemana } from './bonus-meta.js?v=20261126185541';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126185541';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126190714';
+import * as dados from './dados.js?v=20261126190714';
+import { seloLicenca } from './conta-regras.js?v=20261126190714';
+import { hojeSP } from './regras.js?v=20261126190714';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126190714';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126190714';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126190714';
+import { resumoSemana } from './bonus-meta.js?v=20261126190714';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126190714';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -268,12 +268,12 @@ async function navegar() {
   document.body.dataset.rota = rota;   // o placar do topo some no Meu dia (lá o placar é grande)
   $('titulo').textContent = titulo;
   $('subtitulo').textContent = def.frase || '';
-  document.title = `${titulo} — WasFit Gestão`;
+  document.title = `${titulo} — Wasfit gestão`;
   const el = $('conteudo');
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126185541`);
+    const tela = await import(`./telas/${modulo}.js?v=20261126190714`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
