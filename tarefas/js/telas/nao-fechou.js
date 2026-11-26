@@ -1,8 +1,8 @@
 // Por que não fechou? — lista DIÁRIA que chega sozinha da EVO de segunda a sexta (06:00), com duas etapas:
 // quem cadastrou há 5 dias e não fez aula experimental, e quem fez a experimental há 5 dias e não se matriculou.
 // Cada consultora registra o motivo (formulário em _motivos.js). O admin vê o progresso e o relatório da diretoria.
-import { criarTela } from './_grupo.js?v=20261126163211';
-import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261126163211';
+import { criarTela } from './_grupo.js?v=20261126165712';
+import { cartaoRelatorioDiretoria } from './_relatorio-nf.js?v=20261126165712';
 
 export const render = criarTela({
   rota: 'nao-fechou', titulo: 'Por que não fechou?',

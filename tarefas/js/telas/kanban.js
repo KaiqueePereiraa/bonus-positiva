@@ -3,8 +3,8 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com as horas que o gestor define (padrão e por coluna).
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261126163211';
-import { esc, vazio, toast, erro } from '../ui.js?v=20261126163211';
+import * as dados from '../dados.js?v=20261126165712';
+import { esc, vazio, toast, erro } from '../ui.js?v=20261126165712';
 
 const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], fora: ['cinza', 'Não monitorada'] };
 const tempo = (h) => (h == null ? '—' : h < 1 ? 'menos de 1 h' : h < 48 ? `${Math.floor(h)} h` : `${Math.floor(h / 24)} dias`);
