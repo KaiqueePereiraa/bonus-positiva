@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/marca.css?v=20261126200553">
+<link rel="stylesheet" href="../shared/marca.css?v=20261126201128">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--fonte);background:var(--bg);color:var(--dark);min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -962,6 +962,7 @@ async function bootApp() {
     const escuro = document.documentElement.dataset.tema !== 'escuro';
     if (escuro) document.documentElement.dataset.tema = 'escuro'; else delete document.documentElement.dataset.tema;
     try { localStorage.setItem('wasfit_tema', escuro ? 'escuro' : 'claro'); } catch (e) { /* sem armazenamento */ }
+    try { renderSection(activeSection); } catch (e) { /* ainda carregando */ }
   });
   // seletor de fechamento: troca o mês inteiro do Bônus (contestações, vendas manuais e descontos são por mês)
   if (PUBLICACOES.length > 1) {
@@ -1680,6 +1681,20 @@ function sectionAllowed(id) {
   return true;
 }
 
+
+// Cores dos gráficos no padrão WasFit (revisão de design 26/11), claras ou escuras conforme o tema na hora de desenhar
+function corGrafico() {
+  const esc = document.documentElement.dataset.tema === 'escuro';
+  return esc ? { a: '#2EE6A0', b: '#3B82F6', c: '#9A9A9A', tinta: '#EDEDED', grade: '#2E2E2E' }
+             : { a: '#16B981', b: '#2563EB', c: '#9AA3AE', tinta: '#1A1D23', grade: '#EBEBEB' };
+}
+function temaGraficos() {
+  if (!window.Chart) return;
+  const k = corGrafico();
+  Chart.defaults.font.family = "'Geist', system-ui, sans-serif";
+  Chart.defaults.color = k.tinta;
+  Chart.defaults.borderColor = k.grade;
+}
 function renderSection(id) {
   ['overview','weekly','sales','ranking','disputes','compare','admin'].forEach(p => {
     document.getElementById('panel-'+p).classList.toggle('active', p===id);
@@ -1694,6 +1709,7 @@ function renderSection(id) {
     return;
   }
 
+  temaGraficos();
   const raw = getFilteredSales();
   const sales = pricedSales(raw);
   if (id === 'overview')  renderOverview(sales);
@@ -1794,8 +1810,8 @@ function renderOverview(allSales) {
         data:{
           labels: chartData.map(d=>d.label.replace('Positiva ','').replace('Acqua ','')),
           datasets:[
-            {label:'Novos',     data:chartData.map(d=>d.new), backgroundColor:'#34425C',borderRadius:4},
-            {label:'Rematrícula',data:chartData.map(d=>d.ren), backgroundColor:'#BEF575',borderRadius:4},
+            {label:'Novos',     data:chartData.map(d=>d.new), backgroundColor:corGrafico().b,borderRadius:4},
+            {label:'Rematrícula',data:chartData.map(d=>d.ren), backgroundColor:corGrafico().a,borderRadius:4},
           ]
         },
         options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}
@@ -1893,7 +1909,7 @@ function renderOverview(allSales) {
     type:'bar',
     data:{
       labels: ranked.map(r=>r.name),
-      datasets:[{label:'Bônus (R$)',data:ranked.map(r=>r.comm),backgroundColor:'#BEF575',borderRadius:6}]
+      datasets:[{label:'Bônus (R$)',data:ranked.map(r=>r.comm),backgroundColor:corGrafico().a,borderRadius:6}]
     },
     options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}
   });
@@ -1911,8 +1927,8 @@ function renderOverview(allSales) {
       data:{
         labels: unitStats.map(u=>u.label),
         datasets:[
-          {label:'Novos',      data:unitStats.map(u=>u.new), backgroundColor:'#34425C',borderRadius:4},
-          {label:'Rematrícula',data:unitStats.map(u=>u.ren), backgroundColor:'#BEF575',borderRadius:4},
+          {label:'Novos',      data:unitStats.map(u=>u.new), backgroundColor:corGrafico().b,borderRadius:4},
+          {label:'Rematrícula',data:unitStats.map(u=>u.ren), backgroundColor:corGrafico().a,borderRadius:4},
         ]
       },
       options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}
@@ -1923,9 +1939,9 @@ function renderOverview(allSales) {
       data:{
         labels: ranked.map(r=>r.name),
         datasets:[
-          {label:'Cadastros',  data:ranked.map(r=>r.cad), backgroundColor:'#34425C',borderRadius:4},
-          {label:'Conversões', data:ranked.map(r=>r.conv),backgroundColor:'#7C9CBF',borderRadius:4},
-          {label:'Rematrícula',data:ranked.map(r=>r.ren), backgroundColor:'#BEF575',borderRadius:4},
+          {label:'Cadastros',  data:ranked.map(r=>r.cad), backgroundColor:corGrafico().b,borderRadius:4},
+          {label:'Conversões', data:ranked.map(r=>r.conv),backgroundColor:corGrafico().c,borderRadius:4},
+          {label:'Rematrícula',data:ranked.map(r=>r.ren), backgroundColor:corGrafico().a,borderRadius:4},
         ]
       },
       options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:false},y:{beginAtZero:true}}}
@@ -2803,8 +2819,8 @@ function updateCompare() {
     data: {
       labels: allConsultants.map(n=>n.split(' ')[0]),
       datasets: [
-        {label:mA, data:allConsultants.map(n=>{const r=stA.ranked.find(x=>x.name===n);return r?r.comm:0}), backgroundColor:'#34425C', borderRadius:4},
-        {label:mB, data:allConsultants.map(n=>{const r=stB.ranked.find(x=>x.name===n);return r?r.comm:0}), backgroundColor:'#BEF575', borderRadius:4},
+        {label:mA, data:allConsultants.map(n=>{const r=stA.ranked.find(x=>x.name===n);return r?r.comm:0}), backgroundColor:corGrafico().b, borderRadius:4},
+        {label:mB, data:allConsultants.map(n=>{const r=stB.ranked.find(x=>x.name===n);return r?r.comm:0}), backgroundColor:corGrafico().a, borderRadius:4},
       ]
     },
     options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}
@@ -2817,8 +2833,8 @@ function updateCompare() {
     data:{
       labels:[mA, mB],
       datasets:[
-        {label:'Novos',      data:[stA.newCount,stB.newCount], backgroundColor:'#34425C', borderRadius:4},
-        {label:'Rematrícula',data:[stA.renCount,stB.renCount], backgroundColor:'#BEF575', borderRadius:4},
+        {label:'Novos',      data:[stA.newCount,stB.newCount], backgroundColor:corGrafico().b, borderRadius:4},
+        {label:'Rematrícula',data:[stA.renCount,stB.renCount], backgroundColor:corGrafico().a, borderRadius:4},
       ]
     },
     options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true}}}

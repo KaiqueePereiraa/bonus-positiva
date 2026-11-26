@@ -203,3 +203,10 @@ details.todas-medalhas[open]>summary{margin-bottom:10px}
 .fvc-acoes button[data-a="sair"]{background:#2A2200;color:#fff}
 /* Quem é quem e webhooks dentro da aba Comercial e kanban (sem cartão dentro de cartão) */
 .config-wasfit .cartao{box-shadow:none;border:0;border-top:1px solid var(--borda);border-radius:0;padding:22px 0 0;margin-top:22px;background:transparent}
+/* Meu dia → Seu mês: carteira, conversão comparada com a equipe e kanban dela */
+.seu-mes-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px;margin-top:8px}
+.seu-mes-grade>div{display:flex;flex-direction:column;gap:3px;padding:14px;border-radius:12px;background:var(--muted)}
+.seu-mes-grade small{font-size:12px;font-weight:600;color:var(--suave)}
+.seu-mes-grade b{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.seu-mes-grade span{font-size:13px;color:var(--suave)}
+.seu-mes-grade .selo{align-self:flex-start;margin-top:4px}

@@ -1,15 +1,16 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import { MOTIVOS } from './_ausencias.js?v=20261126200553';
-import * as dados from '../dados.js?v=20261126200553';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126200553';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261126200553';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261126200553';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261126200553';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261126200553';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261126200553';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261126200553';
+import { MOTIVOS } from './_ausencias.js?v=20261126201128';
+import * as dados from '../dados.js?v=20261126201128';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126201128';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261126201128';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261126201128';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261126201128';
+import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261126201128';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261126201128';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261126201128';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261126201128';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -24,7 +25,8 @@ export async function render(el, ctx) {
   const [d, meta, tarefas, listasFazer, dias] = await Promise.all([dados.meuDia(), temBonus ? dados.minhaMetaSemana().catch(() => null) : null,
     dados.tarefas({ responsavel: ctx.perfil.id }).catch(() => []), dados.listasFazer().catch(() => []),
     dados.meusDias(ctx.perfil.id).catch(() => [])]);
-  const kanban = await dados.meuKanban().catch(() => null);   // kanban da WasFit: contatos dela parados (atrasado/crítico)
+  const [kanban, comercial] = await Promise.all([dados.meuKanban().catch(() => null),   // kanban da WasFit: contatos dela parados (atrasado/crítico)
+    dados.desempenhoComercial(`${d.hoje.slice(0, 8)}01`).catch(() => null)]);   // carteira do mês dela (Seu mês)
   // contatos dela hoje em cada lista (sem conexão/permissão: as missões mostram só o que falta)
   const [porLista, meusRes, vits, recordeItens] = await Promise.all([dados.meusFeitosHojePorLista(ctx.perfil.id, d.hoje).catch(() => null),
     dados.meusResultados(ctx.perfil.id).catch(() => null), dados.vitoriasEquipe(7).catch(() => []), dados.meuRecordeDia(ctx.perfil.id, d.hoje).catch(() => 0)]);
@@ -133,6 +135,8 @@ export async function render(el, ctx) {
 
     ${quadroResultados(res, vits, ctx.perfil.id)}
 
+    ${seuMes(comercial, kanban)}
+
     ${conquistasHtml(premios)}
 
     <p class="dica" style="text-align:center"><a href="#/minhas-tarefas">Ver todas as minhas tarefas (quadro) →</a></p>`;
@@ -233,4 +237,28 @@ export function cartaoMeta(meta, hoje, unidade) {
     <p class="ms-frase">${esc(p.frase)}</p>${equipe}
     <p class="ms-nota">Contam matrícula, rematrícula e venda completa. Atualiza de madrugada pela EVO: a venda de hoje aparece amanhã. <a href="../bonus/index.html">Ver detalhes no Bônus →</a></p>
   </div>`;
+}
+
+// Seu mês (revisão 26/11, item "Meu dia com os números dela"): a carteira do mês (o que ela cadastrou + o que assumiu da IA),
+// quantos viraram cliente comparado com a equipe, e o kanban dela. Os mesmos números que o gestor vê em Análises.
+function seuMes(com, kb) {
+  let eu = null, equipe = null;
+  for (const t of com?.times || []) {
+    const p = avaliarTime(t).find((x) => x.eu);
+    if (p) { eu = p; equipe = taxaConsultoras(t); break; }
+  }
+  const k = kb?.ligada ? kb.niveis || {} : null;
+  if (!eu && !k) return '';
+  const pc = (v) => (v == null ? '—' : `${String(v).replace('.', ',')}%`);
+  const carteira = eu ? eu.atual.cadastros : 0;
+  const SIT = { acima: ['verde', 'acima da equipe'], dentro: ['azul', 'no padrão da equipe'], abaixo: ['laranja', 'abaixo da equipe'], poucos: ['cinza', 'poucos contatos ainda'] };
+  const [cor, rot] = eu ? SIT[eu.status] || SIT.poucos : SIT.poucos;
+  return `<div class="cartao seu-mes"><h2>📈 Seu mês</h2>
+    <div class="seu-mes-grade">
+      ${eu ? `<div><small>Sua carteira</small><b>${carteira}</b><span>${carteira - (eu.atual.da_ia || 0)} que você cadastrou${eu.atual.da_ia ? ` + ${eu.atual.da_ia} da IA` : ''}</span></div>
+      <div><small>Viraram cliente</small><b>${pc(eu.taxa)}</b><span>${eu.atual.vendas} de ${carteira} · equipe ${pc(equipe)}</span><span class="selo ${cor}">${rot}</span></div>` : ''}
+      ${k ? `<div><small>Seu kanban</small><b>${(k.critico || 0) + (k.urgente || 0)}</b><span>${k.critico ? `${k.critico} crítico${k.critico > 1 ? 's' : ''} · ` : ''}${k.urgente || 0} atrasado${k.urgente === 1 ? '' : 's'} · ${k.normal || 0} em dia</span></div>` : ''}
+    </div>
+    ${eu?.diagnostico ? `<p class="dica" style="margin-top:10px">💡 ${esc(eu.diagnostico)}</p>` : ''}
+    <p class="dica" style="margin-top:6px"><a href="#/analises/comercial">Ver o detalhe →</a>${k ? ` · <a href="#/analises/kanban">Seu kanban →</a>` : ''}</p></div>`;
 }

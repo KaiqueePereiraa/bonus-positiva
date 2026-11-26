@@ -3,9 +3,9 @@
 //  • Nesse dia ela não tem mínimo: o que falta é dividido pelos outros dias úteis até o prazo.
 //  • O coordenador escolhe se o dia quebra ou não a sequência 🔥 (padrão: falta quebra; folga/atestado não).
 //  • A consultora só vê as próprias.
-import * as dados from '../dados.js?v=20261126200553';
-import { somarDias } from '../regras.js?v=20261126200553';
-import { esc, dataCurta, diaSemana, toast, erro, modal, confirmar } from '../ui.js?v=20261126200553';
+import * as dados from '../dados.js?v=20261126201128';
+import { somarDias } from '../regras.js?v=20261126201128';
+import { esc, dataCurta, diaSemana, toast, erro, modal, confirmar } from '../ui.js?v=20261126201128';
 
 export const MOTIVOS = { folga: '🏖️ Folga', atestado: '🩺 Atestado', falta: '❌ Falta', outro: '📌 Outro' };
 const seqTxt = (a) => (a.protege_sequencia === false ? '<span class="selo vermelho">quebra a sequência</span>' : '<span class="selo verde">não quebra a sequência</span>');
