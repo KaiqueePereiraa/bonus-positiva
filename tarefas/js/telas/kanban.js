@@ -3,9 +3,9 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com os dias que o gestor define em Configurações → Kanban.
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261126200214';
-import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126200214';
-import { texto as regraTexto } from '../kanban-regras.js?v=20261126200214';
+import * as dados from '../dados.js?v=20261126200329';
+import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126200329';
+import { texto as regraTexto } from '../kanban-regras.js?v=20261126200329';
 
 const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], espera: ['azul', '⏳ Em espera'], fora: ['cinza', 'Não monitorada'] };
 // minutos → "25 min", "2 h 10 min", "3 dias"
@@ -43,7 +43,7 @@ export async function render(el, ctx) {
     ${fila(r.espera)}
     <div class="cartao"><h2>Por consultora</h2>
       <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Dona</th><th>Contatos</th><th>🔴 Críticos</th><th>🟠 Atrasados</th><th>🟢 Normais</th>${pe.etapas.map((e) => `<th>${esc(e)}</th>`).join('')}</tr></thead><tbody>
-      ${r.pessoas.map((p) => `<tr><td class="nome">${esc(p.dona)}</td><td>${p.contatos}</td>
+      ${r.pessoas.map((p) => `<tr><td class="nome">${esc(/^sem dona/i.test(p.dona || '') ? `${p.dona} — agora no kanban` : p.dona)}</td><td>${p.contatos}</td>
         <td>${p.critico ? `<span class="selo vermelho">${p.critico}</span>` : '0'}</td><td>${p.urgente ? `<span class="selo laranja">${p.urgente}</span>` : '0'}</td><td>${p.normal}</td>
         ${(() => { const o = pe.pessoa(p); return pe.etapas.map((e) => `<td>${o[e] || '—'}</td>`).join(''); })()}</tr>`).join('')}
       </tbody></table></div></div>
