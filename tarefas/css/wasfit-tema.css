@@ -116,3 +116,7 @@ details.mais-filtros>summary{color:var(--primaria-forte)}
 :root[data-tema="escuro"] .adiante a:hover{background:var(--lateral-ativo)}
 :root[data-tema="escuro"] .medalha.trancada,:root[data-tema="escuro"] .medalha.nivel-0{background:var(--muted);box-shadow:0 0 0 3px var(--superficie),0 0 0 5px var(--borda)}
 :root[data-tema="escuro"] .degraus i{background:var(--muted)}
+
+/* ── Links e detalhes ── */
+.conteudo a:not(.btn):not(.cartao-tarefa):not(.aviso){color:var(--primaria-forte);text-underline-offset:2px}
+.lateral .marca .conta-box small{letter-spacing:0;font-weight:500;font-size:11px;color:var(--suave)}
