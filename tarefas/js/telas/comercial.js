@@ -2,9 +2,9 @@
 // contatos da IA que ela assumiu; não importa quem fechou), comparada entre as consultoras e com o mês anterior; o funil da
 // IA à parte (a IA só cadastra e manda o pagamento — não é comparada com as meninas); números do time e as semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126172941';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126172941';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, MIN_CADASTROS } from '../comercial-regras.js?v=20261126172941';
+import * as dados from '../dados.js?v=20261126173138';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126173138';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, MIN_CADASTROS } from '../comercial-regras.js?v=20261126173138';
 
 let escolhido = null;
 
@@ -66,6 +66,7 @@ function time(t, r, ctx, rotuloAnt, prof) {
       <div class="numero"><small>Tempo médio de fechamento</small><b>${a.tempo_medio == null ? '—' : `${num(a.tempo_medio)} d`}</b><span>${b.tempo_medio == null ? '' : `${seta(a.tempo_medio, b.tempo_medio, { pontos: true, invertido: true, unidade: ' d' })} vs ${num(b.tempo_medio)} d`}</span></div>
     </div>
     <p class="dica">Comparação com ${esc(rotuloAnt)}.${r.fechado && a.futuras ? ` ${a.futuras} cadastro(s) deste mês fecharam no mês seguinte (conversões futuras).` : ''}</p>
+    ${r.admin && t.por_unidade?.length > 1 ? porUnidade(t, rotuloAnt) : ''}
     ${alerta ? `<div class="faixa urgente" style="display:block;margin:12px 0"><b>⚠️ Conversão muito diferente entre as consultoras</b><div style="margin-top:4px">${esc(alerta.texto)}</div></div>` : ''}
     ${eu ? quadroEu(eu, padrao) : ''}
     ${r.admin ? tabelaPessoas(pessoas, padrao) : ''}
@@ -91,6 +92,30 @@ function quadroFunilIa(fi, rotuloAnt) {
       <div class="numero"><small>Tempo até alguém assumir</small><b>${x.dias == null ? '—' : `${num(x.dias)} d`}</b><span>${x.comData ? `${x.noDia} de ${x.comData} no mesmo dia ou no seguinte` : 'sem data ainda'}${y.dias == null ? '' : ` · antes ${num(y.dias)} d`}</span></div>
     </div>
     <p class="dica">"Antes" = ${esc(rotuloAnt)}. Dona do contato da IA: quem mexeu nele no kanban da WasFit perto do cadastro; se não houver, quem vendeu a experimental; depois, quem fechou a venda; por último, quem recebeu o contato nas listas da Central.${x.peloKanban ? ` ${x.peloKanban} assumido(s) pelo kanban.` : ''}${x.semDona ? ` Contatos sem dona não entram na carteira de ninguém — vale distribuir.` : ''}</p>`;
+}
+
+// Unidades separadas (só o gestor): números da empresa de cada unidade, qual melhora, qual piora, qual precisa de atenção.
+// A conversão das consultoras continua junta logo abaixo (elas atendem nas unidades unidas).
+const SIT = { atencao: ['vermelho', '⚠️ Precisa de atenção'], piorando: ['laranja', '▼ Piorando'], melhorando: ['verde', '▲ Melhorando'], estavel: ['azul', '= Estável'] };
+function porUnidade(t, rotuloAnt) {
+  const us = avaliarUnidades(t.por_unidade);
+  const linha = (u) => {
+    const a = u.atual || {}, b = u.anterior || {};
+    const [cor, rot] = SIT[u.situacao];
+    return `<tr><td class="nome">${esc(String(u.nome).replace('Positiva ', '').replace('Acqua ', ''))}</td>
+      <td>${a.oportunidades ?? 0}<span class="sub">${seta(a.oportunidades, b.oportunidades)} vs ${b.oportunidades ?? 0}</span></td>
+      <td>${a.vendas ?? 0}<span class="sub">${seta(a.vendas, b.vendas)} vs ${b.vendas ?? 0}</span></td>
+      <td><b>${pctTxt(u.taxa)}</b><span class="sub">${seta(u.taxa, u.taxaAnt, { pontos: true })} vs ${pctTxt(u.taxaAnt)}</span></td>
+      <td>${a.outro_mes ?? 0}</td>
+      <td>${u.entrada}<span class="sub">${seta(u.entrada, u.entradaAnt)} vs ${u.entradaAnt}</span></td>
+      <td><span class="selo ${cor}">${rot}</span></td></tr>
+      <tr><td colspan="7" class="dica" style="padding-top:0">💡 ${esc(u.diagnostico)}</td></tr>`;
+  };
+  return `<h3 style="margin:18px 0 8px">Por unidade — qual melhora, qual piora</h3>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Oportunidades</th><th>Vendas no mês</th><th>Conversão</th><th>Vendas de outro mês</th><th>Entrada</th><th>Situação</th></tr></thead><tbody>
+      ${us.map(linha).join('')}
+    </tbody></table></div>
+    <p class="dica">Cada unidade com os próprios cadastros (onde a oportunidade foi cadastrada na EVO), comparada com ${esc(rotuloAnt)}. Os cartões acima somam as unidades da equipe; a conversão das consultoras, abaixo, também é da equipe junta.</p>`;
 }
 
 function quadroEu(p, padrao) {

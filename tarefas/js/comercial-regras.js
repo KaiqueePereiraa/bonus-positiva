@@ -108,3 +108,26 @@ export function avaliarTime(t) {
   const media = mediaCadastros(pessoas);
   return pessoas.map((p) => ({ ...p, ...avaliar(p, padrao, media) }));
 }
+
+// Unidades do time separadas (o gestor vê qual melhora, qual piora e qual precisa de atenção; a conversão das consultoras
+// continua junta). A que mais caiu em conversão (ou, empatando, em vendas) recebe "Precisa de atenção".
+export function avaliarUnidades(lista) {
+  const us = (lista || []).map((u) => {
+    const a = u.atual || {}, b = u.anterior || {};
+    const taxa = pct(a.vendas || 0, a.oportunidades || 0), taxaAnt = pct(b.vendas || 0, b.oportunidades || 0);
+    const tend = (a.oportunidades || 0) >= MIN_CADASTROS && (b.oportunidades || 0) >= MIN_CADASTROS ? tendencia(taxa, taxaAnt) : null;
+    const varOport = variacao(a.oportunidades || 0, b.oportunidades || 0), varVendas = variacao(a.vendas || 0, b.vendas || 0);
+    const entrada = (a.vendas || 0) + (a.outro_mes || 0), entradaAnt = (b.vendas || 0) + (b.outro_mes || 0);
+    let diagnostico;
+    if (tend?.tipo === 'piorou' && varOport > 0) diagnostico = `Mais oportunidades (+${br(varOport)}%), mas converteu menos (${br(tend.pontos)} pts): o acompanhamento não acompanhou o volume.`;
+    else if (tend?.tipo === 'piorou') diagnostico = `Conversão caiu ${br(Math.abs(tend.pontos))} pts${varVendas < 0 ? ` e as vendas ${br(Math.abs(varVendas))}%` : ''}.`;
+    else if (tend?.tipo === 'melhorou') diagnostico = `Melhorando: conversão subiu ${br(tend.pontos)} pts${varVendas > 0 ? ` e as vendas ${br(varVendas)}%` : ''}.`;
+    else if (tend) diagnostico = varOport != null && varOport <= -20 ? `Conversão estável, mas com ${br(Math.abs(varOport))}% menos oportunidades.` : 'Estável em relação ao mês anterior.';
+    else diagnostico = 'Poucas oportunidades para comparar.';
+    return { ...u, taxa, taxaAnt, tend, varOport, varVendas, entrada, entradaAnt, varEntrada: variacao(entrada, entradaAnt), diagnostico };
+  });
+  const piores = us.filter((u) => u.tend?.tipo === 'piorou').sort((x, y) => x.tend.pontos - y.tend.pontos || (x.varVendas ?? 0) - (y.varVendas ?? 0));
+  if (piores.length) piores[0].atencao = true;
+  for (const u of us) u.situacao = u.atencao ? 'atencao' : u.tend?.tipo === 'melhorou' ? 'melhorando' : u.tend?.tipo === 'piorou' ? 'piorando' : 'estavel';
+  return us;
+}
