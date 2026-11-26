@@ -57,7 +57,10 @@
 .barra-num{color:var(--titulo)}
 .coluna{background:var(--muted)}
 .coluna h3{color:var(--titulo)}
-.cartao-tarefa{background:var(--superficie);color:var(--texto);border:1px solid var(--borda);border-left-width:4px}
+.cartao-tarefa{background:var(--superficie);color:var(--texto);border:1px solid var(--borda)}
+.cartao-tarefa b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px;background:var(--gray)}
+.cartao-tarefa.azul b::before{background:var(--info)}.cartao-tarefa.verde b::before,.cartao-tarefa.verde-aviso b::before{background:var(--primaria-forte)}
+.cartao-tarefa.vermelho b::before{background:var(--danger)}.cartao-tarefa.laranja b::before{background:var(--warning)}
 .cartao-tarefa .ir{color:var(--primaria-forte)}
 .tabela th{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px;border-bottom:1px solid var(--borda)}
 .tabela tr.feito td{background:color-mix(in oklch,var(--primaria) 7%,transparent)}
