@@ -1,8 +1,8 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126173503';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126173503';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126173503';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126173503';
+import * as dados from '../dados.js?v=20261126181219';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126181219';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126181219';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126181219';
 
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
@@ -26,9 +26,11 @@ async function kanban(el, ctx) {
   const padrao = r.regras.find((x) => x.coluna === '*');
   const porColuna = Object.fromEntries(r.regras.filter((x) => x.coluna !== '*').map((x) => [x.coluna, x]));
   const dp = diasDe(padrao);
-  const linha = (coluna, x) => {
+  // etapas do kanban (o nome da etiqueta sem a consultora): uma regra vale para todas as meninas
+  const etapas = (r.etapas || []).filter((e) => e.chave !== 'emespera');
+  const linha = (e, x) => {
     const d = x ? diasDe(x) : null;
-    return `<tr data-coluna="${esc(coluna)}"><td class="nome">${esc(coluna)}</td>
+    return `<tr data-coluna="${esc(e.chave)}"><td><input type="checkbox" data-sel></td><td class="nome">${esc(e.nome)}</td>
       <td><input class="ctrl" style="width:70px" type="number" min="0" data-n value="${d ? d.normalAte : ''}" placeholder="${dp.normalAte}"></td>
       <td><input class="ctrl" style="width:70px" type="number" min="1" data-a value="${d ? d.atrasadoAte : ''}" placeholder="${dp.atrasadoAte}"></td>
       <td><input type="checkbox" data-m ${(x ?? padrao).monitorar ? 'checked' : ''}></td></tr>`;
@@ -53,18 +55,45 @@ async function kanban(el, ctx) {
     </div>
     <p id="k-resumo" style="font-weight:700">${esc(regraTexto(padrao))}</p>
     <p class="dica">Sugestão de partida: Normal até ${REGRA_PADRAO.normalAte} dias, Atrasado até ${REGRA_PADRAO.atrasadoAte} — a partir de ${REGRA_PADRAO.atrasadoAte + 1} dias vira 🔴 Crítico.</p>
-    ${(r.colunas_vistas || []).length ? `<h3 style="margin:18px 0 6px">Por coluna (opcional)</h3>
-    <p class="dica">Deixe em branco para a coluna seguir a regra acima. Ex.: colunas do começo do funil (lead novo) costumam pedir menos dias;
-      desmarque "Monitorar" nas colunas finais (matriculado, perdido).</p>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Coluna</th><th>🟢 Normal até (dias)</th><th>🟠 Atrasado até (dias)</th><th>Monitorar</th></tr></thead><tbody>
-      ${r.colunas_vistas.map((c) => linha(c, porColuna[c])).join('')}
-    </tbody></table></div>` : '<p class="dica">As colunas do kanban aparecem aqui quando a WasFit mandar os primeiros movimentos — aí dá para ter regra por coluna.</p>'}
+    ${etapas.length ? `<h3 style="margin:18px 0 6px">Por etapa (opcional)</h3>
+    <p class="dica">Cada etapa vale para todas as consultoras (ex.: "Não respondeu 1" vale para a da Adrielly, da Rayny...). Em branco = segue a regra acima.
+      Marque várias e aplique os mesmos dias de uma vez. Perdido, Novo aluno e Disparo vêm sem monitorar.</p>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin:10px 0;padding:10px;border:1px dashed var(--line);border-radius:10px">
+      <b style="align-self:center">Nas marcadas:</b>
+      <label class="campo">🟢 Normal até<input class="ctrl" style="width:80px" type="number" min="0" id="k-lote-n" placeholder="${dp.normalAte}"></label>
+      <label class="campo">🟠 Atrasado até<input class="ctrl" style="width:80px" type="number" min="1" id="k-lote-a" placeholder="${dp.atrasadoAte}"></label>
+      <label class="campo">Monitorar<select class="ctrl" id="k-lote-m"><option value="">não mudar</option><option value="1">sim</option><option value="0">não</option></select></label>
+      <button class="btn peq sec" id="k-lote">Aplicar às marcadas</button>
+      <button class="btn peq sec" id="k-lote-limpar">Voltar à regra geral</button>
+    </div>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th><input type="checkbox" id="k-todas" title="Marcar todas"></th><th>Etapa</th><th>🟢 Normal até (dias)</th><th>🟠 Atrasado até (dias)</th><th>Monitorar</th></tr></thead><tbody>
+      ${etapas.map((e) => linha(e, porColuna[e.chave])).join('')}
+    </tbody></table></div>
+    <p class="dica">Depois de aplicar, clique em Salvar.</p>` : ''}
     <div class="linha-acoes" style="margin-top:12px"><button class="btn" id="k-salvar">Salvar</button></div>`;
   const resumo = () => {
     const h = horasDe(+el.querySelector('#k-normal').value, +el.querySelector('#k-atrasado').value);
     el.querySelector('#k-resumo').textContent = h.erro || regraTexto({ ...h, monitorar: true });
   };
   el.querySelectorAll('#k-normal, #k-atrasado').forEach((i) => i.addEventListener('input', resumo));
+  const marcadas = () => [...el.querySelectorAll('tr[data-coluna]')].filter((tr) => tr.querySelector('[data-sel]').checked);
+  el.querySelector('#k-todas')?.addEventListener('change', (ev) => el.querySelectorAll('[data-sel]').forEach((c) => { c.checked = ev.target.checked; }));
+  el.querySelector('#k-lote')?.addEventListener('click', () => {
+    const trs = marcadas();
+    if (!trs.length) { toast('Marque pelo menos uma etapa.'); return; }
+    const n = el.querySelector('#k-lote-n').value, a = el.querySelector('#k-lote-a').value, m = el.querySelector('#k-lote-m').value;
+    for (const tr of trs) {
+      if (n !== '') tr.querySelector('[data-n]').value = n;
+      if (a !== '') tr.querySelector('[data-a]').value = a;
+      if (m !== '') tr.querySelector('[data-m]').checked = m === '1';
+    }
+    toast(`Aplicado em ${trs.length} etapa(s). Clique em Salvar.`);
+  });
+  el.querySelector('#k-lote-limpar')?.addEventListener('click', () => {
+    const trs = marcadas();
+    for (const tr of trs) { tr.querySelector('[data-n]').value = ''; tr.querySelector('[data-a]').value = ''; tr.querySelector('[data-m]').checked = true; }
+    toast(`${trs.length} etapa(s) voltam à regra geral. Clique em Salvar.`);
+  });
   el.querySelector('#k-canais-salvar')?.addEventListener('click', async () => {
     const lista = el.querySelector('#k-canais').value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
     try { await dados.salvarConfig('oportunidade_canais_excluidos', lista); toast('Palavras salvas — a conta de oportunidades já usa a lista nova.'); } catch (e) { erro(e); }
@@ -81,7 +110,7 @@ async function kanban(el, ctx) {
       if (n === '' && a === '' && m) { regras.push({ coluna, apagar: true }); continue; }
       const dg = diasDe(g);
       const h = horasDe(n === '' ? dg.normalAte : +n, a === '' ? dg.atrasadoAte : +a);
-      if (h.erro) { erro(new Error(`Coluna "${coluna}": ${h.erro}`)); return; }
+      if (h.erro) { erro(new Error(`Etapa "${tr.querySelector('.nome').textContent}": ${h.erro}`)); return; }
       regras.push({ coluna, ...h, monitorar: m });
     }
     try { await dados.kanbanSalvarRegras(regras); toast('Regras do kanban salvas.'); kanban(el, ctx); } catch (e) { erro(e); }
