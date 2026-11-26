@@ -1,12 +1,13 @@
-// Configurações (só admin): usuários, unidades e grupos, feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126165942';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126165942';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126165942';
+// Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
+import * as dados from '../dados.js?v=20261126172117';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126172117';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126172117';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126172117';
 
-const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
+const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
 // coordenador de unidade: só a equipe e as unidades dele (o resto vale para todas e fica com o administrador geral)
-const ABAS_COORD = ['usuarios', 'rodizio'];
+const ABAS_COORD = ['usuarios', 'rodizio', 'kanban'];
 
 export async function render(el, ctx, [aba = 'usuarios']) {
   const abas = ctx.ehSuper ? ABAS : ABAS.filter(([id]) => ABAS_COORD.includes(id));
@@ -14,8 +15,57 @@ export async function render(el, ctx, [aba = 'usuarios']) {
   el.innerHTML = `<div class="cartao"><div class="abas">${abas.map(([id, r]) => `<button data-aba="${id}" class="${id === aba ? 'ativo' : ''}">${r}</button>`).join('')}</div><div id="aba"></div></div>`;
   el.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/configuracoes/${b.dataset.aba}`; }));
   const alvo = el.querySelector('#aba');
-  const fn = { usuarios, rodizio, feriados, motivos, mensagens, whatsapp, evo }[aba] || usuarios;
+  const fn = { usuarios, rodizio, kanban, feriados, motivos, mensagens, whatsapp, evo }[aba] || usuarios;
   await fn(alvo, ctx);
+}
+
+// ── Kanban: quanto tempo sem ação é Normal, Atrasado e Crítico (padrão e, se quiser, por coluna) ──
+async function kanban(el) {
+  const r = await dados.kanbanWasfit();
+  const padrao = r.regras.find((x) => x.coluna === '*');
+  const porColuna = Object.fromEntries(r.regras.filter((x) => x.coluna !== '*').map((x) => [x.coluna, x]));
+  const dp = diasDe(padrao);
+  const linha = (coluna, x) => {
+    const d = x ? diasDe(x) : null;
+    return `<tr data-coluna="${esc(coluna)}"><td class="nome">${esc(coluna)}</td>
+      <td><input class="ctrl" style="width:70px" type="number" min="0" data-n value="${d ? d.normalAte : ''}" placeholder="${dp.normalAte}"></td>
+      <td><input class="ctrl" style="width:70px" type="number" min="1" data-a value="${d ? d.atrasadoAte : ''}" placeholder="${dp.atrasadoAte}"></td>
+      <td><input type="checkbox" data-m ${(x ?? padrao).monitorar ? 'checked' : ''}></td></tr>`;
+  };
+  el.innerHTML = `<h2>Monitoramento do kanban da WasFit</h2>
+    <p class="dica">Conta o tempo sem nenhuma ação no contato (mudança de etiqueta na WasFit). Vale para o gestor e para a tela de cada consultora.</p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;max-width:560px;margin:12px 0">
+      <label class="campo">🟢 Normal até (dias sem ação)<input class="ctrl" id="k-normal" type="number" min="0" value="${dp.normalAte}"></label>
+      <label class="campo">🟠 Atrasado até (dias)<input class="ctrl" id="k-atrasado" type="number" min="1" value="${dp.atrasadoAte}"></label>
+    </div>
+    <p id="k-resumo" style="font-weight:700">${esc(regraTexto(padrao))}</p>
+    <p class="dica">Sugestão de partida: Normal até ${REGRA_PADRAO.normalAte} dias, Atrasado até ${REGRA_PADRAO.atrasadoAte} — a partir de ${REGRA_PADRAO.atrasadoAte + 1} dias vira 🔴 Crítico.</p>
+    ${(r.colunas_vistas || []).length ? `<h3 style="margin:18px 0 6px">Por coluna (opcional)</h3>
+    <p class="dica">Deixe em branco para a coluna seguir a regra acima. Ex.: colunas do começo do funil (lead novo) costumam pedir menos dias;
+      desmarque "Monitorar" nas colunas finais (matriculado, perdido).</p>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Coluna</th><th>🟢 Normal até (dias)</th><th>🟠 Atrasado até (dias)</th><th>Monitorar</th></tr></thead><tbody>
+      ${r.colunas_vistas.map((c) => linha(c, porColuna[c])).join('')}
+    </tbody></table></div>` : '<p class="dica">As colunas do kanban aparecem aqui quando a WasFit mandar os primeiros movimentos — aí dá para ter regra por coluna.</p>'}
+    <div class="linha-acoes" style="margin-top:12px"><button class="btn" id="k-salvar">Salvar</button></div>`;
+  const resumo = () => {
+    const h = horasDe(+el.querySelector('#k-normal').value, +el.querySelector('#k-atrasado').value);
+    el.querySelector('#k-resumo').textContent = h.erro || regraTexto({ ...h, monitorar: true });
+  };
+  el.querySelectorAll('#k-normal, #k-atrasado').forEach((i) => i.addEventListener('input', resumo));
+  el.querySelector('#k-salvar').addEventListener('click', async () => {
+    const g = horasDe(+el.querySelector('#k-normal').value, +el.querySelector('#k-atrasado').value);
+    if (g.erro) { erro(new Error(g.erro)); return; }
+    const regras = [{ coluna: '*', ...g, monitorar: true }];
+    for (const tr of el.querySelectorAll('tr[data-coluna]')) {
+      const coluna = tr.dataset.coluna, n = tr.querySelector('[data-n]').value, a = tr.querySelector('[data-a]').value, m = tr.querySelector('[data-m]').checked;
+      if (n === '' && a === '' && m) { regras.push({ coluna, apagar: true }); continue; }
+      const dg = diasDe(g);
+      const h = horasDe(n === '' ? dg.normalAte : +n, a === '' ? dg.atrasadoAte : +a);
+      if (h.erro) { erro(new Error(`Coluna "${coluna}": ${h.erro}`)); return; }
+      regras.push({ coluna, ...h, monitorar: m });
+    }
+    try { await dados.kanbanSalvarRegras(regras); toast('Regras do kanban salvas.'); kanban(el); } catch (e) { erro(e); }
+  });
 }
 
 // ── Usuários ──
