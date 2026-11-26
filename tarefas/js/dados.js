@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261126161713';
+import { sb } from '../../shared/sessao.js?v=20261126163211';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -8,7 +8,7 @@ let comoId = null;
 export const verComo = (id) => { comoId = id || null; };
 export const vendoComo = () => comoId;
 export const MSG_SO_OLHAR = 'Você está vendo como consultora: neste modo nada é salvo e o WhatsApp não abre.';
-const SO_LEITURA = new Set(['minhas_unidades_coord', 'vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como', 'desempenho_comercial']);
+const SO_LEITURA = new Set(['minhas_unidades_coord', 'vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como', 'desempenho_comercial', 'meu_kanban']);
 const travar = () => { if (comoId) throw new Error(MSG_SO_OLHAR); };
 const rpc = async (nome, args) => {
   if (comoId && !SO_LEITURA.has(nome)) travar();
@@ -226,7 +226,11 @@ export const meusDias = async (userId) => ok(await sb.from('dias_consultora').se
 // Desempenho comercial do mês (conversão de quem cadastrou, comparada com a equipe e com o mês anterior)
 export const desempenhoComercial = (mes) => rpc('desempenho_comercial', { p_mes: mes, p_como: comoId || null });
 // Kanban da WasFit espelhado e conversão por professor (gestor)
-export const kanbanWasfit = (paradoDias) => rpc('kanban_wasfit', { p_parado_dias: paradoDias });
+export const kanbanWasfit = () => rpc('kanban_wasfit', {});
+export const kanbanWebhooks = () => rpc('kanban_webhooks', {});
+export const meuKanban = () => rpc('meu_kanban', { p_como: comoId || null });
+export const kanbanSalvarRegras = (regras) => rpc('kanban_salvar_regras', { p_regras: regras });
+export const kanbanLigarUsuario = (usuario, profile) => rpc('kanban_ligar_usuario', { p_usuario: usuario, p_profile: profile || null });
 export const desempenhoProfessores = (mes) => rpc('desempenho_professores', { p_mes: mes });
 export const minhaMetaSemana = () => (comoId ? rpc('minha_meta_semana_como', { p_user: comoId }) : rpc('minha_meta_semana', {}));
 export const desempenho = (de, ate) => rpc('desempenho', { p_de: de, p_ate: ate });

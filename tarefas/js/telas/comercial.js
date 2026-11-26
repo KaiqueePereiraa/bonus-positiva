@@ -1,9 +1,9 @@
 // Desempenho comercial — o "coordenador comercial": conversão dos cadastros de cada consultora (crédito de quem cadastrou,
 // não importa quem fechou), comparada com a equipe e com o mês anterior; números do time e as 4 semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126161713';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126161713';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, placarIa, MIN_CADASTROS } from '../comercial-regras.js?v=20261126161713';
+import * as dados from '../dados.js?v=20261126163211';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126163211';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, placarIa, MIN_CADASTROS } from '../comercial-regras.js?v=20261126163211';
 
 let escolhido = null;
 
