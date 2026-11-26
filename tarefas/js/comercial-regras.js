@@ -65,10 +65,21 @@ export function resumoTime(t) {
   };
 }
 
-// Taxa das consultoras (sem os cadastros da IA / sem consultora): é o "padrão" contra o qual cada uma é comparada
+// Taxa das carteiras das consultoras (o que elas cadastraram + os cadastros da IA de que são donas; fica de fora só o que
+// a IA cadastrou e ninguém assumiu): é o "padrão" contra o qual cada uma é comparada
 export function taxaConsultoras(t, qual = 'atual') {
-  const a = t[qual] || {}, ia = t.ia?.[qual] || {};
-  return pct((a.vendas || 0) - (ia.vendas || 0), (a.oportunidades || 0) - (ia.oportunidades || 0));
+  const a = t[qual] || {}, sd = t.sem_dono?.[qual] || {};
+  return pct((a.vendas || 0) - (sd.vendas || 0), (a.oportunidades || 0) - (sd.oportunidades || 0));
+}
+
+// Placar IA × consultoras: o que cada lado CADASTROU e quanto virou cliente
+export function placarIa(t) {
+  const lado = (x) => ({ cadastros: x?.oportunidades || 0, vendas: x?.vendas || 0, taxa: pct(x?.vendas || 0, x?.oportunidades || 0) });
+  return {
+    ia: lado(t.ia?.atual), iaAnt: lado(t.ia?.anterior),
+    consultoras: lado(t.consultoras?.atual), consultorasAnt: lado(t.consultoras?.anterior),
+    semDono: t.sem_dono?.atual?.oportunidades || 0,
+  };
 }
 
 // Pessoas do time já avaliadas (some quem não cadastrou nada nem neste mês nem no anterior)
