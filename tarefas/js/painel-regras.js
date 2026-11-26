@@ -31,16 +31,16 @@ export function sinais(unidades) {
   return [
     { area: 'Cobrança', rota: '#/inadimplencia', cor: inad ? 'amarelo' : 'verde',
       titulo: sem('pagou') ? `${plural(sem('pagou'), 'pagou', 'pagaram')} nesta semana` : 'Cobrança da semana',
-      texto: `${sem('valor') ? `${reais(sem('valor'))} recebidos depois da cobrança. ` : ''}${inad ? `${plural(inad, 'inadimplente aguarda', 'inadimplentes aguardam')} contato.` : 'Nenhum inadimplente esperando contato.'}`,
-      acao: inad ? 'Garanta que a lista de hoje seja feita até o fim do dia.' : '' },
+      texto: `${sem('valor') ? `${reais(sem('valor'))} recebidos depois da cobrança. ` : ''}${inad ? `${plural(inad, 'inadimplente ainda sem contato', 'inadimplentes ainda sem contato')} da equipe.` : 'A equipe já falou com todos os inadimplentes.'}`,
+      acao: inad ? 'Cobre da equipe que a lista de hoje seja feita até o fim do dia.' : '' },
     { area: 'Retenção', rota: '#/risco', cor: risco || relac ? 'amarelo' : 'verde',
       titulo: sem('voltou') ? `${plural(sem('voltou'), 'aluno voltou', 'alunos voltaram')} a treinar` : 'Alunos em risco',
-      texto: `${risco ? `${plural(risco, 'aluno em risco ainda sem contato', 'alunos em risco ainda sem contato')}.` : 'Todos os alunos em risco já receberam contato.'}${relac ? ` ${plural(relac, 'contato', 'contatos')} de renovação e relacionamento ${relac === 1 ? 'pendente' : 'pendentes'}.` : ''}${efeito}`,
-      acao: risco ? 'Peça para perguntarem o motivo da falta, não só "sentimos sua falta".' : '' },
+      texto: `${risco ? `${plural(risco, 'aluno em risco ainda sem contato', 'alunos em risco ainda sem contato')} da equipe.` : 'A equipe já falou com todos os alunos em risco.'}${relac ? ` ${plural(relac, 'contato', 'contatos')} de renovação e relacionamento ${relac === 1 ? 'pendente' : 'pendentes'}.` : ''}${efeito}`,
+      acao: risco ? 'Oriente a equipe a perguntar o motivo da falta, não só "sentimos sua falta".' : '' },
     { area: 'Vendas', rota: '#/nao-fechou', cor: nf || novos ? 'amarelo' : 'verde',
       titulo: mes('matriculou') ? `${plural(mes('matriculou'), 'matrícula recuperada', 'matrículas recuperadas')} no mês` : 'Oportunidades não fechadas',
-      texto: `${novos ? `${plural(novos, 'contato de venda esperando (interessado, experimental ou ex-aluno)', 'contatos de venda esperando (interessados, experimentais e ex-alunos)')}. ` : ''}${nf ? `${plural(nf, 'interessado ainda sem motivo registrado', 'interessados ainda sem motivo registrado')}.` : 'Todos os interessados do mês já têm motivo registrado.'}`,
-      acao: novos ? 'Interessado esfria rápido: o contato precisa sair hoje.' : nf ? 'Ofereça um horário de experimental já na primeira mensagem.' : '' },
+      texto: `${novos ? `${plural(novos, 'contato de venda esperando a equipe (interessado, experimental ou ex-aluno)', 'contatos de venda esperando a equipe (interessados, experimentais e ex-alunos)')}. ` : ''}${nf ? `${plural(nf, 'interessado ainda sem motivo registrado pela equipe', 'interessados ainda sem motivo registrado pela equipe')}.` : 'Todos os interessados do mês já têm motivo registrado.'}`,
+      acao: novos ? 'Interessado esfria rápido: confira se a equipe faz o contato hoje.' : nf ? 'Oriente a equipe a oferecer um horário de experimental já na primeira mensagem.' : '' },
   ];
 }
 

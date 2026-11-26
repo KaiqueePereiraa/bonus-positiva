@@ -199,3 +199,5 @@ details.todas-medalhas[open]>summary{margin-bottom:10px}
 .voce-grade b{font-style:normal;font-weight:700}
 .voce-grade small{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
 .voce-grade .sobe{color:var(--texto-sucesso)}.voce-grade .desce{color:var(--texto-aviso)}
+/* faixa amarela do "Ver como": o botão escuro some no modo escuro (usava a cor de texto do tema) */
+.fvc-acoes button[data-a="sair"]{background:#2A2200;color:#fff}

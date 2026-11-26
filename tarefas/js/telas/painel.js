@@ -1,15 +1,15 @@
 // Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
 // juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
 // do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
-import * as dados from '../dados.js?v=20261126195951';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126195951';
-import { somarDias, semanaDe } from '../regras.js?v=20261126195951';
+import * as dados from '../dados.js?v=20261126200214';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126200214';
+import { somarDias, semanaDe } from '../regras.js?v=20261126200214';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261126195951';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261126195951';
-import { itensComercial, linhasMes, carteiraDe, kanbanDe } from '../painel-comercial.js?v=20261126195951';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261126200214';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261126200214';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe } from '../painel-comercial.js?v=20261126200214';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -41,7 +41,7 @@ export async function render(el, ctx) {
     <h2 style="font-size:18px;font-weight:800">${saudacao}, ${esc((ctx.perfil.nome || '').split(' ')[0])}! <span class="dica" style="font-weight:600">${esc(ctx.unidade ? ctx.nomeUnidade(ctx.unidade) : 'Todas as unidades')}</span></h2>
 
     <div class="sinais">${cards.map((s) => `<a class="sinal ${s.cor}" href="${s.rota}">
-      <small>${esc(s.area)}</small><b>${esc(s.titulo)}</b><p>${esc(s.texto)}</p>${s.acao ? `<span class="acao">O que fazer: ${esc(s.acao)}</span>` : ''}<span class="ir">Abrir a lista →</span></a>`).join('')}</div>
+      <small>${esc(s.area)}</small><b>${esc(s.titulo)}</b><p>${esc(s.texto)}</p>${s.acao ? `<span class="acao">O que fazer: ${esc(s.acao)}</span>` : ''}<span class="ir">Ver o andamento da equipe →</span></a>`).join('')}</div>
 
     <div class="cartao"><h2>Precisa da sua atenção ${lista.length ? `<span class="selo vermelho">${lista.length}</span>` : '<span class="selo verde">tudo em dia</span>'}</h2>
       ${lista.length ? `<ul class="lista-atencao">${lista.map((a) => `<li><b>${esc(a.texto)}</b>${a.acao ? `<span>${esc(a.acao)}</span>` : ''}${a.rota ? ` <a href="${a.rota}">Abrir →</a>` : ''}${a.verComo ? ` <button class="btn sec peq" data-ver-como="${a.verComo}">👁 Ver a tela dela</button>` : ''}</li>`).join('')}</ul>`

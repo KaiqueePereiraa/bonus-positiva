@@ -1,13 +1,13 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126195951';
-import * as dados from './dados.js?v=20261126195951';
-import { seloLicenca } from './conta-regras.js?v=20261126195951';
-import { hojeSP } from './regras.js?v=20261126195951';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126195951';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126195951';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126195951';
-import { resumoSemana } from './bonus-meta.js?v=20261126195951';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126195951';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126200214';
+import * as dados from './dados.js?v=20261126200214';
+import { seloLicenca } from './conta-regras.js?v=20261126200214';
+import { hojeSP } from './regras.js?v=20261126200214';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126200214';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126200214';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126200214';
+import { resumoSemana } from './bonus-meta.js?v=20261126200214';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126200214';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -33,7 +33,7 @@ const ICONES = {
 const GRUPOS = { inicio: '', vendas: 'Trazer alunos', retencao: 'Manter alunos', cobranca: 'Cobrança', extras: 'Extras', acompanhar: 'Acompanhar', ajustes: 'Ajustes' };
 const ROTAS = {
   painel: { titulo: 'Painel do gestor', modulo: 'painel', icone: 'visao', quem: 'admin', grupo: 'inicio', frase: 'O que pede sua atenção hoje e como a equipe está agora. Comece pela lista "Precisa da sua atenção".' },
-  'meu-dia': { titulo: 'Meu dia', modulo: 'meu-dia', icone: 'tarefas', quem: 'consultora', grupo: 'inicio', frase: 'O que fazer hoje, na ordem certa. Toque em "Começar" e siga a lista.' },
+  'meu-dia': { titulo: 'Meu dia', modulo: 'meu-dia', icone: 'tarefas', quem: 'consultora', grupo: 'inicio', frase: 'O que fazer hoje, na ordem certa. Toque no botão verde e siga a lista.' },
   'minhas-tarefas': { titulo: 'Todas as minhas tarefas', modulo: 'minhas-tarefas', icone: 'tarefas', quem: 'consultora', grupo: null, frase: 'Todas as suas listas, separadas por situação.' },
   vendas: { titulo: 'Vendas', modulo: 'vendas', icone: 'alvo', quem: 'todos', grupo: 'vendas', frase: 'Assinatura do contrato (todo dia útil) e ex-alunos que saíram há uns 3 ou 6 meses (toda segunda).' },
   'nao-fechou': { titulo: 'Por que não fechou?', modulo: 'nao-fechou', icone: 'nf', quem: 'todos', grupo: 'vendas', frase: 'Interessados parados há 5 dias (sem experimental ou fez e não fechou), todo dia útil. Fale com cada um e escolha o motivo.' },
@@ -274,7 +274,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126195951`);
+    const tela = await import(`./telas/${modulo}.js?v=20261126200214`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
