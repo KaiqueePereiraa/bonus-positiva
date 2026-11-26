@@ -201,3 +201,5 @@ details.todas-medalhas[open]>summary{margin-bottom:10px}
 .voce-grade .sobe{color:var(--texto-sucesso)}.voce-grade .desce{color:var(--texto-aviso)}
 /* faixa amarela do "Ver como": o botão escuro some no modo escuro (usava a cor de texto do tema) */
 .fvc-acoes button[data-a="sair"]{background:#2A2200;color:#fff}
+/* Quem é quem e webhooks dentro da aba Comercial e kanban (sem cartão dentro de cartão) */
+.config-wasfit .cartao{box-shadow:none;border:0;border-top:1px solid var(--borda);border-radius:0;padding:22px 0 0;margin-top:22px;background:transparent}

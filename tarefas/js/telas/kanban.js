@@ -3,9 +3,9 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com os dias que o gestor define em Configurações → Kanban.
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261126200329';
-import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126200329';
-import { texto as regraTexto } from '../kanban-regras.js?v=20261126200329';
+import * as dados from '../dados.js?v=20261126200438';
+import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126200438';
+import { texto as regraTexto } from '../kanban-regras.js?v=20261126200438';
 
 const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], espera: ['azul', '⏳ Em espera'], fora: ['cinza', 'Não monitorada'] };
 // minutos → "25 min", "2 h 10 min", "3 dias"
@@ -26,7 +26,6 @@ const selo = (n) => `<span class="selo ${NIVEL[n][0]}">${NIVEL[n][1]}</span>`;
 export async function render(el, ctx) {
   if (!ctx.ehAdmin || dados.vendoComo()) return consultora(el);
   const r = await dados.kanbanWasfit();
-  const ganchos = ctx.ehSuper ? await dados.kanbanWebhooks().catch(() => []) : [];
   const n = r.niveis || {};
   const pe = porEtapa(r);
   el.innerHTML = `
@@ -52,15 +51,21 @@ export async function render(el, ctx) {
         ${r.alertas.map((x) => `<tr><td>${selo(x.nivel)}</td><td class="nome">${esc(x.contato || '—')}<span class="sub">${esc(x.numero || '')}</span></td><td>${esc(x.coluna)}</td>
           <td><b>${tempo(x.horas_sem_acao)}</b></td><td>${tempo(x.horas_na_coluna)}</td><td>${esc(x.dona)}</td></tr>`).join('')}
       </tbody></table></div>` : vazio('Nada crítico nem atrasado agora. 👏')}</div>`}
-    ${resumoRegras(r)}
-    ${quadroUsuarios(r)}
-    ${quadroWebhooks(ganchos)}`;
+    ${resumoRegras(r)}`;
   el.querySelectorAll('[data-espera-lista]').forEach((b) => b.addEventListener('click', () => listaEspera(r.espera, b.dataset.campo, b.dataset.valor, b.dataset.rotulo)));
+}
+
+// "Quem é quem" e os webhooks são configuração: moraram aqui até 26/11 e foram para Configurações → Comercial e kanban
+// (revisão de design: endereços secretos não ficam numa aba de análise). Montados e ligados por lá com esta função.
+export function configWasfit(r, ganchos) {
+  return `${quadroUsuarios(r)}${quadroWebhooks(ganchos)}`;
+}
+export function ligarConfigWasfit(el, ganchos, recarregar) {
   el.querySelectorAll('[data-copiar]').forEach((b) => b.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(ganchos[+b.dataset.copiar].url); toast('Endereço copiado.'); } catch (e) { erro(e); }
   }));
   el.querySelectorAll('[data-usuario]').forEach((s) => s.addEventListener('change', async () => {
-    try { await dados.kanbanLigarUsuario(+s.dataset.usuario, s.value || null); toast('Ligação salva.'); render(el, ctx); } catch (e) { erro(e); }
+    try { await dados.kanbanLigarUsuario(+s.dataset.usuario, s.value || null); toast('Ligação salva.'); recarregar(); } catch (e) { erro(e); }
   }));
 }
 
@@ -162,7 +167,7 @@ function quadroWebhooks(lista) {
 // Consultora: os contatos dela no kanban, crítico e atrasado primeiro
 async function consultora(el) {
   const r = await dados.meuKanban();
-  if (!r.ligada) { el.innerHTML = `<div class="cartao">${vazio('Seu usuário da WasFit ainda não está ligado ao seu nome aqui. Peça ao gestor para ligar em "Kanban da WasFit" → "Quem é quem".')}</div>`; return; }
+  if (!r.ligada) { el.innerHTML = `<div class="cartao">${vazio('Seu usuário da WasFit ainda não está ligado ao seu nome aqui. Peça ao gestor para ligar em "Configurações" → "Comercial e kanban" → "Quem é quem".')}</div>`; return; }
   const n = r.niveis || {};
   const padrao = (r.regras || []).find((x) => x.coluna === '*');
   el.innerHTML = `

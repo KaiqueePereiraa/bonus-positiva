@@ -1,10 +1,11 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126200329';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126200329';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126200329';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126200329';
+import * as dados from '../dados.js?v=20261126200438';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126200438';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126200438';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126200438';
 
-const ABAS = [['conta', 'Conta e licença'], ['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
+// 26/11: abre na 1ª aba (Usuários); a licença (só o master admin) foi para o fim
+const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO'], ['conta', 'Conta e licença']];
 
 // coordenador de unidade: só a equipe e as unidades dele (o resto vale para todas e fica com o administrador geral)
 const ABAS_COORD = ['usuarios', 'rodizio', 'kanban'];
@@ -134,6 +135,14 @@ async function kanban(el, ctx) {
     }
     try { await dados.kanbanSalvarRegras(regras); toast('Regras do kanban salvas.'); kanban(el, ctx); } catch (e) { erro(e); }
   });
+  // Quem é quem (usuário da WasFit → pessoa) e webhooks de cada unidade (só o admin geral), vindos da aba Kanban de Análises
+  const ganchos = ctx?.ehSuper ? await dados.kanbanWebhooks().catch(() => []) : [];
+  const { configWasfit, ligarConfigWasfit } = await import('./kanban.js');
+  const extra = document.createElement('div');
+  extra.className = 'config-wasfit';
+  extra.innerHTML = configWasfit(r, ganchos);
+  el.appendChild(extra);
+  ligarConfigWasfit(extra, ganchos, () => kanban(el, ctx));
 }
 
 // ── Usuários ──
