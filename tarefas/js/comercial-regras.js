@@ -6,6 +6,7 @@ export const MIN_CADASTROS = 5;     // com menos que isso no mês, a % ainda nã
 export const MARGEM_PADRAO = 10;    // pontos percentuais acima/abaixo da taxa da equipe para sair do "dentro do padrão"
 export const MARGEM_TENDENCIA = 5;  // pontos percentuais para dizer que melhorou ou piorou
 
+const br = (n) => String(n).replace('.', ',');
 export const pct = (vendas, base) => (base > 0 ? Math.round((1000 * vendas) / base) / 10 : null);
 
 // Variação entre dois números (para "cresceu x%")
@@ -46,8 +47,8 @@ export function avaliar(p, taxaEquipe, media) {
   else if (status === 'acima') diagnostico = 'Converte muito bem, mas cadastra pouco: com mais oportunidades, vende mais.';
   else if (cadastraPouco) diagnostico = 'Conversão no padrão, mas cadastra pouco: o foco é gerar mais oportunidades.';
   else diagnostico = 'Dentro do padrão da equipe.';
-  if (tend?.tipo === 'piorou') diagnostico += ` Caiu ${Math.abs(tend.pontos)} pontos em relação ao mês anterior.`;
-  if (tend?.tipo === 'melhorou') diagnostico += ` Subiu ${tend.pontos} pontos em relação ao mês anterior.`;
+  if (tend?.tipo === 'piorou') diagnostico += ` Caiu ${br(Math.abs(tend.pontos))} pontos em relação ao mês anterior.`;
+  if (tend?.tipo === 'melhorou') diagnostico += ` Subiu ${br(tend.pontos)} pontos em relação ao mês anterior.`;
   return { taxa, taxaAnt, tend, status, diagnostico };
 }
 
@@ -64,9 +65,16 @@ export function resumoTime(t) {
   };
 }
 
-// Pessoas do time já avaliadas, da maior para a menor quantidade de cadastros
+// Taxa das consultoras (sem os cadastros da IA / sem consultora): é o "padrão" contra o qual cada uma é comparada
+export function taxaConsultoras(t, qual = 'atual') {
+  const a = t[qual] || {}, ia = t.ia?.[qual] || {};
+  return pct((a.vendas || 0) - (ia.vendas || 0), (a.oportunidades || 0) - (ia.oportunidades || 0));
+}
+
+// Pessoas do time já avaliadas (some quem não cadastrou nada nem neste mês nem no anterior)
 export function avaliarTime(t) {
-  const r = resumoTime(t);
-  const media = mediaCadastros(t.pessoas || []);
-  return (t.pessoas || []).map((p) => ({ ...p, ...avaliar(p, r.taxa, media) }));
+  const padrao = taxaConsultoras(t);
+  const pessoas = (t.pessoas || []).filter((p) => p.atual.cadastros > 0 || p.anterior.cadastros > 0);
+  const media = mediaCadastros(pessoas);
+  return pessoas.map((p) => ({ ...p, ...avaliar(p, padrao, media) }));
 }
