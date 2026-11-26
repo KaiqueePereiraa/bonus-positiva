@@ -1,7 +1,7 @@
 // Vendas — assinatura do contrato (de segunda a sexta: 10, 20 e 30 dias depois da compra + repescagem no começo do mês)
 // e ex-alunos (campanha de volta), que chegam toda segunda com prazo na sexta.
 // Os interessados (cadastro sem experimental e experimental sem matrícula) ficam no "Por que não fechou?" (lista diária).
-import { criarTela } from './_grupo.js?v=20261126165712';
+import { criarTela } from './_grupo.js?v=20261126165942';
 
 export const render = criarTela({
   rota: 'vendas', titulo: 'Vendas',

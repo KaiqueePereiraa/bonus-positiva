@@ -44,7 +44,7 @@ export function avaliar(p, taxaEquipe, media) {
   const cadastraPouco = media > 0 && c < 0.6 * media;
   const cadastraBem = media > 0 && c >= media;
   let diagnostico;
-  if (status === 'abaixo' && cadastraBem) diagnostico = 'Carteira cheia, mas converte pouco: revisar o acompanhamento no kanban (retorno rápido, agendar a experimental, proposta no dia).';
+  if (status === 'abaixo' && !cadastraPouco) diagnostico = 'Tem carteira, mas converte pouco: revisar o acompanhamento no kanban (retorno rápido, agendar a experimental, proposta no dia).';
   else if (status === 'abaixo') diagnostico = 'Carteira pequena e converte pouco: precisa de acompanhamento de perto nas duas pontas.';
   else if (status === 'acima' && cadastraBem) diagnostico = 'Referência da equipe: carteira cheia e converte acima do padrão.';
   else if (status === 'acima') diagnostico = 'Converte muito bem, mas a carteira é pequena: com mais contatos (cadastrar ou assumir da IA), vende mais.';

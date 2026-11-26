@@ -2,10 +2,10 @@
 // 7 dias (função vitorias_equipe), agrupados em UMA linha por colega por dia, com um 👏 só (aplaudir_dia). A dona vê quem
 // aplaudiu e ganha uma festa quando recebe palmas novas. Do aluno aparece só o primeiro nome (em "ver quem").
 // Usado no Meu dia (aba "Da equipe") e no Painel do gestor.
-import * as dados from '../dados.js?v=20261126165712';
-import { esc, toast, erro } from '../ui.js?v=20261126165712';
-import { TIPOS_RESULTADO } from '../jogo.js?v=20261126165712';
-import { maisUm, celebrar } from '../jogo-visual.js?v=20261126165712';
+import * as dados from '../dados.js?v=20261126165942';
+import { esc, toast, erro } from '../ui.js?v=20261126165942';
+import { TIPOS_RESULTADO } from '../jogo.js?v=20261126165942';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261126165942';
 
 const capitalizar = (s) => { const t = String(s || '').toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };
 const primeiroNome = (s) => String(s || '').trim().split(/\s+/)[0];
