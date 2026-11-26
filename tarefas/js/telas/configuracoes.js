@@ -1,8 +1,8 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126185448';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126185448';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126185448';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126185448';
+import * as dados from '../dados.js?v=20261126185541';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126185541';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126185541';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126185541';
 
 const ABAS = [['conta', 'Conta e licença'], ['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 

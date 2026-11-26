@@ -132,3 +132,5 @@ details.mais-filtros>summary{color:var(--primaria-forte)}
 .licenca.vermelho{background:color-mix(in oklch,var(--danger) 12%,transparent);border-color:color-mix(in oklch,var(--danger) 40%,transparent);color:var(--danger)}
 :root[data-tema="escuro"] .licenca.laranja{color:var(--warning)}
 @media (max-width:760px){.licenca{display:none!important}}
+
+.licenca[hidden],.conta-chip[hidden]{display:none!important}
