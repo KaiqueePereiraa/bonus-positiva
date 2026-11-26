@@ -4,13 +4,9 @@
 
 /* ── Menu lateral ── */
 .lateral{background:var(--lateral);color:var(--lateral-texto);border-right:1px solid var(--borda)}
-.lateral .marca{flex-direction:column;align-items:flex-start;gap:12px;padding:20px 18px 16px;border-bottom:1px solid var(--borda)}
+.lateral .marca{align-items:center;padding:22px 20px 18px;border-bottom:1px solid var(--borda)}
 .lateral .marca::after{display:none}
 .lateral .marca .wasfit-logo{height:32px;width:auto}
-.conta-box{display:flex;align-items:center;gap:10px;width:100%;background:var(--superficie);border:1px solid var(--borda);border-radius:12px;padding:8px 10px}
-.conta-box img{height:28px;width:28px;object-fit:contain;flex:none}
-.conta-box b{display:block;font-size:13px;font-weight:600;color:var(--texto);line-height:1.2}
-.conta-box small{display:block;font-size:11px;color:var(--suave);font-weight:500}
 .menu a{color:var(--lateral-texto);font-weight:500;border-radius:12px}
 .menu a svg{color:var(--primaria-forte);opacity:1}
 :root:not([data-tema="escuro"]) .menu a svg{color:oklch(.7 .17 160.5)}
@@ -119,4 +115,9 @@ details.mais-filtros>summary{color:var(--primaria-forte)}
 
 /* ── Links e detalhes ── */
 .conteudo a:not(.btn):not(.cartao-tarefa):not(.aviso){color:var(--primaria-forte);text-underline-offset:2px}
-.lateral .marca .conta-box small{letter-spacing:0;font-weight:500;font-size:11px;color:var(--suave)}
+
+/* ── Academia (conta) no topo: etiqueta com logo e nome, ao lado do seletor de unidade ── */
+.conta-chip{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 8px;border:1px solid var(--borda);border-radius:12px;background:var(--superficie);flex:none}
+.conta-chip img{height:26px;width:26px;object-fit:contain;border-radius:6px}
+.conta-chip b{font-size:14px;font-weight:600;color:var(--texto);white-space:nowrap}
+@media (max-width:760px){.conta-chip{height:36px;padding:0 6px}.conta-chip b{display:none}}
