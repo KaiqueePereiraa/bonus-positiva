@@ -2,9 +2,9 @@
 // contatos da IA que ela assumiu; não importa quem fechou), comparada entre as consultoras e com o mês anterior; o funil da
 // IA à parte (a IA só cadastra e manda o pagamento — não é comparada com as meninas); números do time e as semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126183333';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126183333';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261126183333';
+import * as dados from '../dados.js?v=20261126184817';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126184817';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261126184817';
 
 let escolhido = null;
 
@@ -183,11 +183,11 @@ function semanas(t) {
   if (!t.semanas?.length) return '';
   const ant = t.semanas_anterior || [];
   return `<h3 style="margin:18px 0 8px">Semanas do mês</h3>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Semana</th><th>Oportunidades</th><th>Vendas</th><th>Conversão</th><th>Mesma semana do mês anterior</th></tr></thead><tbody>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Semana</th><th>Oportunidades</th><th>Vendas</th><th>Conversão</th><th>Mesmos dias do mês anterior</th></tr></thead><tbody>
     ${t.semanas.map((w) => {
       const x = ant.find((y) => y.n === w.n);
       return `<tr><td>${w.n}ª · ${dataCurta(w.ini)} a ${dataCurta(w.fim)}</td><td>${w.oportunidades}</td><td>${w.vendas}</td><td><b>${pctTxt(pct(w.vendas, w.oportunidades))}</b></td>
-        <td>${x ? `${x.oportunidades} oport. · ${x.vendas} vendas · ${pctTxt(pct(x.vendas, x.oportunidades))}` : '—'}</td></tr>`;
+        <td>${x ? `${dataCurta(x.ini)} a ${dataCurta(x.fim)}: ${x.oportunidades} oport. · ${x.vendas} vendas · <b>${pctTxt(pct(x.vendas, x.oportunidades))}</b>` : '—'}</td></tr>`;
     }).join('')}
     </tbody></table></div>`;
 }

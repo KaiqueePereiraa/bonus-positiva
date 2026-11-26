@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126183333';
-import * as dados from './dados.js?v=20261126183333';
-import { hojeSP } from './regras.js?v=20261126183333';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126183333';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126183333';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126183333';
-import { resumoSemana } from './bonus-meta.js?v=20261126183333';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126183333';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126184817';
+import * as dados from './dados.js?v=20261126184817';
+import { hojeSP } from './regras.js?v=20261126184817';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126184817';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126184817';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126184817';
+import { resumoSemana } from './bonus-meta.js?v=20261126184817';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126184817';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -214,8 +214,43 @@ function montarMenu() {
     $('papel-usuario').textContent = `Consultora · ${ctx.nomeUnidade(perfil.unidade).replace('Positiva ', '')}`;
   }
   $('sair').addEventListener('click', sair);
+  ligarTema();
+  mostrarConta();
   $('btn-menu').addEventListener('click', () => $('app').classList.toggle('menu-aberto'));
   $('lateral').addEventListener('click', (e) => { if (e.target.closest('a')) $('app').classList.remove('menu-aberto'); });
+}
+
+// Modo claro/escuro (a escolha fica guardada neste navegador)
+function ligarTema() {
+  const b = $('tema');
+  if (!b) return;
+  const rotulo = () => { const escuro = document.documentElement.dataset.tema === 'escuro'; b.setAttribute('aria-label', escuro ? 'Mudar para o modo claro' : 'Mudar para o modo escuro'); };
+  rotulo();
+  b.addEventListener('click', () => {
+    const escuro = document.documentElement.dataset.tema !== 'escuro';
+    if (escuro) document.documentElement.dataset.tema = 'escuro'; else delete document.documentElement.dataset.tema;
+    try { localStorage.setItem('wasfit_tema', escuro ? 'escuro' : 'claro'); } catch { /* sem armazenamento */ }
+    rotulo();
+    window.dispatchEvent(new Event('wasfit-tema'));
+  });
+}
+
+// Nome e logo da academia no menu (a plataforma é da WasFit; a conta é da academia)
+async function mostrarConta() {
+  try {
+    const c = await dados.minhaConta();
+    if (!c?.nome) return;
+    $('conta-nome').textContent = c.nome;
+    const escuro = document.documentElement.dataset.tema === 'escuro';
+    const logo = escuro ? (c.logo_claro || c.logo_escuro) : (c.logo_escuro || c.logo_claro);
+    if (logo) $('conta-logo').src = /^https?:/.test(logo) ? logo : `../${logo}`; else $('conta-logo').hidden = true;
+    $('conta-box').hidden = false;
+    window.addEventListener('wasfit-tema', () => {
+      const e = document.documentElement.dataset.tema === 'escuro';
+      const l = e ? (c.logo_claro || c.logo_escuro) : (c.logo_escuro || c.logo_claro);
+      if (l) $('conta-logo').src = /^https?:/.test(l) ? l : `../${l}`;
+    });
+  } catch { /* sem conta: fica só a marca WasFit */ }
 }
 
 let renderAtual = 0;
@@ -230,12 +265,12 @@ async function navegar() {
   document.body.dataset.rota = rota;   // o placar do topo some no Meu dia (lá o placar é grande)
   $('titulo').textContent = titulo;
   $('subtitulo').textContent = def.frase || '';
-  document.title = `${titulo} — Central de Tarefas`;
+  document.title = `${titulo} — WasFit Gestão`;
   const el = $('conteudo');
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126183333`);
+    const tela = await import(`./telas/${modulo}.js?v=20261126184817`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

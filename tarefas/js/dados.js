@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261126183333';
+import { sb } from '../../shared/sessao.js?v=20261126184817';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -190,6 +190,8 @@ export async function evoAcao(acao, extra = {}) {
 export const testarEvo = () => evoAcao('ping');
 // Painel do gestor e Retorno do mês (números agregados, só admin)
 export const painelGestor = () => rpc('painel_gestor', {});
+// a academia de quem está logado (nome e logos para o topo da plataforma WasFit)
+export const minhaConta = () => rpc('minha_conta', {});
 // Plano do dia
 export const justificativaPendente = () => rpc('justificativa_pendente', {});
 export const justificarDia = (data, texto, naoTrabalhei) => rpc('justificar_dia', { p_data: data, p_texto: texto, p_nao_trabalhei: !!naoTrabalhei });

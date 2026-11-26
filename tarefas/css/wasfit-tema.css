@@ -1,0 +1,118 @@
+/* WasFit Gestão — visual do app.wasfit.com.br por cima do layout da Central (26/11/2026). Carregado depois de app.css e
+   jogo.css: menu lateral claro com ícones verde-água, títulos sem itálico/caixa alta, cartões com borda fina, botões
+   verde-água; e as cores claras que estavam fixas ganham versão para o modo escuro. */
+
+/* ── Menu lateral ── */
+.lateral{background:var(--lateral);color:var(--lateral-texto);border-right:1px solid var(--borda)}
+.lateral .marca{flex-direction:column;align-items:flex-start;gap:12px;padding:20px 18px 16px;border-bottom:1px solid var(--borda)}
+.lateral .marca::after{display:none}
+.lateral .marca .wasfit-logo{height:32px;width:auto}
+.conta-box{display:flex;align-items:center;gap:10px;width:100%;background:var(--superficie);border:1px solid var(--borda);border-radius:12px;padding:8px 10px}
+.conta-box img{height:28px;width:28px;object-fit:contain;flex:none}
+.conta-box b{display:block;font-size:13px;font-weight:600;color:var(--texto);line-height:1.2}
+.conta-box small{display:block;font-size:11px;color:var(--suave);font-weight:500}
+.menu a{color:var(--lateral-texto);font-weight:500;border-radius:12px}
+.menu a svg{color:var(--primaria-forte);opacity:1}
+:root:not([data-tema="escuro"]) .menu a svg{color:oklch(.7 .17 160.5)}
+.menu a:hover{background:var(--lateral-ativo);color:var(--texto)}
+.menu a.ativo{background:var(--lateral-ativo);color:var(--texto);font-weight:600}
+.menu .grupo{color:var(--suave);font-weight:500;letter-spacing:0;text-transform:none;font-size:12px}
+.menu .sep{background:var(--borda)}
+.menu a .cont{background:var(--muted);color:var(--texto)}
+.menu a.ativo .cont{background:var(--primaria);color:var(--primaria-texto)}
+.lateral .pe{border-top:1px solid var(--borda)}
+.lateral .pe .quem b{color:var(--texto)}
+.lateral .pe .quem span{color:var(--suave)}
+.lateral .pe .acoes a,.lateral .pe .acoes button{border:1px solid var(--borda);color:var(--texto);font-weight:500}
+.lateral .pe .acoes a:hover,.lateral .pe .acoes button:hover{background:var(--lateral-ativo)}
+.avatar{background:var(--primaria);color:var(--primaria-texto);font-weight:700}
+
+/* ── Topo e títulos ── */
+.topo{background:var(--fundo);border-bottom:1px solid var(--borda)}
+.topo h1{font-style:normal;text-transform:none;letter-spacing:-.5px;font-weight:700;font-size:22px}
+.btn-menu{color:var(--texto)}
+.sino{background:transparent;border:1px solid var(--borda);color:var(--texto)}
+.sino:hover{background:var(--lateral-ativo)}
+.tema-btn svg{width:20px;height:20px}
+.painel-sino{background:var(--superficie);border:1px solid var(--borda)}
+.aviso{color:var(--texto)}
+.cartao h2,.modal h2{text-transform:none;letter-spacing:-.2px;font-weight:700;font-size:16px}
+.cartao h2 .mais a{color:var(--primaria-forte)}
+
+/* ── Cartões e números ── */
+.cartao,.numero,.sinal,.esc-card{border:1px solid var(--borda);box-shadow:var(--shadow)}
+.numero{border-top-width:3px}
+.numero small,.sinal small{text-transform:none;letter-spacing:0;font-weight:500;font-size:13px}
+.numero b{font-weight:700;letter-spacing:-.5px}
+.sinal b{font-weight:700}
+
+/* ── Selos, faixas e outras cores que eram fixas ── */
+.selo{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
+.selo.cinza{background:var(--muted);color:var(--suave)}
+.selo.azul{background:color-mix(in oklch,var(--info) 14%,transparent);color:var(--info)}
+.selo.verde,.selo.verde-aviso{background:color-mix(in oklch,var(--primaria) 20%,transparent);color:var(--primaria-forte)}
+.selo.laranja{background:color-mix(in oklch,var(--warning) 18%,transparent);color:oklch(55% .15 58)}
+.selo.vermelho{background:color-mix(in oklch,var(--danger) 14%,transparent);color:var(--danger)}
+:root[data-tema="escuro"] .selo.laranja{color:var(--warning)}
+.etiqueta{background:var(--muted);color:var(--titulo)}
+.faixa{background:color-mix(in oklch,var(--warning) 12%,var(--superficie));border-color:color-mix(in oklch,var(--warning) 40%,transparent);color:var(--texto)}
+.faixa.urgente{background:color-mix(in oklch,var(--danger) 10%,var(--superficie));border-color:color-mix(in oklch,var(--danger) 35%,transparent);color:var(--texto)}
+.barra{background:var(--muted)}
+.barra-num{color:var(--titulo)}
+.coluna{background:var(--muted)}
+.coluna h3{color:var(--titulo)}
+.cartao-tarefa{background:var(--superficie);color:var(--texto);border:1px solid var(--borda);border-left-width:4px}
+.cartao-tarefa .ir{color:var(--primaria-forte)}
+.tabela th{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px;border-bottom:1px solid var(--borda)}
+.tabela tr.feito td{background:color-mix(in oklch,var(--primaria) 7%,transparent)}
+.tabela tr.proximo td{background:color-mix(in oklch,var(--primaria) 9%,transparent)}
+.guia,.como-marcar{background:color-mix(in oklch,var(--primaria) 9%,var(--superficie));border:1px solid color-mix(in oklch,var(--primaria) 35%,transparent);color:var(--texto)}
+.lista-completa{color:var(--primaria-forte)}
+.upload:hover,.upload.arrastando{background:var(--muted)}
+.upload b{color:var(--texto)}
+.aviso-lista{background:color-mix(in oklch,var(--warning) 12%,var(--superficie));color:var(--texto)}
+.esqueleto i{background:linear-gradient(90deg,var(--muted) 0,var(--superficie) 40%,var(--muted) 80%);background-size:200% 100%}
+.esc-card.feriado{background:linear-gradient(180deg,color-mix(in oklch,var(--warning) 10%,var(--superficie)) 0,var(--superficie) 55%)}
+.esc-num{color:var(--texto)}
+
+/* ── Botões e formulários ── */
+.btn{background:var(--primaria);color:var(--primaria-texto);font-weight:600;border-radius:10px}
+.btn:hover{background:oklch(.78 .18 160.5)}
+.btn.sec{background:var(--superficie);color:var(--texto);box-shadow:inset 0 0 0 1px var(--borda)}
+.btn.sec:hover{box-shadow:inset 0 0 0 1px var(--primaria-forte);background:var(--superficie)}
+.btn.verde{background:var(--primaria);color:var(--primaria-texto)}
+.btn.perigo{background:var(--superficie);color:var(--danger);box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--danger) 45%,transparent)}
+.periodos .btn.ativo,.esc-barra .btn.ativo{background:var(--texto);color:var(--superficie)}
+.campo{text-transform:none;letter-spacing:0;font-weight:600;color:var(--titulo);font-size:13px}
+.campo input,.campo select,.campo textarea,select.ctrl,input.ctrl,textarea.ctrl{border:1px solid var(--borda);background:var(--superficie);color:var(--texto)}
+.campo input:focus,.campo select:focus,.campo textarea:focus,.ctrl:focus{border-color:var(--primaria-forte);box-shadow:0 0 0 3px color-mix(in oklch,var(--primaria) 25%,transparent)}
+.abas{border-bottom:1px solid var(--borda)}
+.abas button{font-weight:500;font-size:14px}
+.abas button.ativo{color:var(--texto);font-weight:600;border-bottom-color:var(--primaria)}
+details.mais-filtros>summary{color:var(--primaria-forte)}
+
+/* ── Modal, toast e meta ── */
+.modal{background:var(--superficie);color:var(--texto);border:1px solid var(--borda)}
+.modal-fundo{background:rgba(0,0,0,.5)}
+.toast{background:var(--texto);color:var(--superficie)}
+.meta-semana,.meta-semana *{--white:#fff}
+.meta-semana{color:#fff}
+.ms-fill{background:var(--grad-brand)}
+
+/* ── Escuro: o que tinha cor fixa clara nos estilos dentro das telas ── */
+:root[data-tema="escuro"] [style*="background:#F4F7FB"],:root[data-tema="escuro"] [style*="background:#F4FAEC"]{background:var(--muted)!important;border-color:var(--borda)!important;color:var(--texto)!important}
+:root[data-tema="escuro"] [style*="color:var(--navy)"]{color:var(--texto)!important}
+
+/* ── Placar, missões e medalhas (jogo.css) no modo escuro ── */
+:root[data-tema="escuro"] .missao{background:var(--superficie);box-shadow:inset 0 0 0 1px var(--borda)}
+:root[data-tema="escuro"] .missao.atrasada{background:color-mix(in oklch,var(--danger) 10%,var(--superficie));box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--danger) 40%,transparent)}
+:root[data-tema="escuro"] .missao.cumprida{background:color-mix(in oklch,var(--primaria) 10%,var(--superficie));box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--primaria) 40%,transparent)}
+:root[data-tema="escuro"] .mini-barra{background:var(--muted)}
+:root[data-tema="escuro"] .estante .proxima,:root[data-tema="escuro"] .tabela tr.eu td{background:color-mix(in oklch,var(--primaria) 9%,var(--superficie))}
+:root[data-tema="escuro"] .resultados{background:color-mix(in oklch,var(--warning) 8%,var(--superficie));box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--warning) 35%,transparent)}
+:root[data-tema="escuro"] .res-tipo{background:var(--superficie);color:var(--texto)}
+:root[data-tema="escuro"] .aviso-so-olhar,:root[data-tema="escuro"] .estante .defesa{background:color-mix(in oklch,var(--warning) 12%,var(--superficie));border-color:color-mix(in oklch,var(--warning) 40%,transparent);color:var(--texto)}
+:root[data-tema="escuro"] .btn-topo-ver-como{background:color-mix(in oklch,var(--primaria) 12%,var(--superficie));color:var(--texto)}
+:root[data-tema="escuro"] .adiante a:hover{background:var(--lateral-ativo)}
+:root[data-tema="escuro"] .medalha.trancada,:root[data-tema="escuro"] .medalha.nivel-0{background:var(--muted);box-shadow:0 0 0 3px var(--superficie),0 0 0 5px var(--borda)}
+:root[data-tema="escuro"] .degraus i{background:var(--muted)}

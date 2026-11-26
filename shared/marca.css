@@ -1,16 +1,38 @@
-/* Identidade Positiva — mesmos tokens do dashboard de bônus. */
+/* Identidade WasFit (26/11/2026) — a plataforma é da WasFit; a academia (ex.: Positiva) aparece pelo nome/logo da conta.
+   Tokens iguais aos do app.wasfit.com.br (Geist, verde-água oklch(.828 .183 160.5), cinzas neutros), com modo claro e escuro:
+   o modo escuro vale quando <html data-tema="escuro">. Os nomes antigos (--dark, --white, --navy...) continuam existindo e
+   apontam para os novos, então as telas mudam de tema sozinhas. */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --dark:#212B37;--navy:#34425C;--green:#BEF575;--green-deep:#7FB85A;--gray:#BBC0C9;
-  --mid:#788192;--white:#fff;--bg:#EEF1F4;--card:#fff;--line:#E3E7EC;
-  --danger:#E74C3C;--warning:#F39C12;--success:#27AE60;--info:#3B82F6;
-  --grad-brand:linear-gradient(100deg,#34425C 0%,#7FB85A 55%,#BEF575 100%);
-  --grad-dark:linear-gradient(135deg,#212B37 0%,#34425C 100%);
-  --radius:14px;--shadow:0 1px 3px rgba(33,43,55,.06),0 6px 20px rgba(33,43,55,.08);
+  /* semânticos — modo claro */
+  --texto:oklch(14% .004 265);--superficie:#fff;--fundo:oklch(98.5% 0 0);--borda:oklch(90.5% 0 0);--suave:oklch(50% .01 260);
+  --muted:oklch(95.5% 0 0);--primaria:oklch(.828 .183 160.5);--primaria-forte:oklch(.6 .15 160.5);--primaria-texto:oklch(.218 0 0);
+  --lateral:oklch(97.8% 0 0);--lateral-texto:oklch(30% .008 265);--lateral-ativo:oklch(.93 .008 253.9);
+  --titulo:oklch(22% .01 265);
+  /* nomes antigos → novos */
+  --dark:var(--texto);--white:var(--superficie);--bg:var(--fundo);--card:var(--superficie);--line:var(--borda);--mid:var(--suave);
+  --navy:var(--titulo);--green:var(--primaria);--green-deep:var(--primaria-forte);--gray:oklch(80% 0 0);
+  --danger:oklch(57.7% .245 27.325);--warning:oklch(72% .17 58);--success:oklch(62% .155 155);--info:oklch(58% .19 258);
+  --grad-brand:linear-gradient(100deg,#15EA9E 0%,#9EEA4E 100%);
+  --grad-dark:linear-gradient(135deg,#0D1827 0%,#13283D 100%);
+  --radius:14px;--shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px -1px rgba(0,0,0,.07);
+  --fonte:'Geist',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
 }
-html,body{background:var(--bg)}
-body{font-family:'Avenir Next','Avenir','Montserrat',sans-serif;color:var(--dark);min-height:100vh;-webkit-font-smoothing:antialiased}
+:root[data-tema="escuro"]{
+  --texto:oklch(93.5% 0 0);--superficie:oklch(19% 0 0);--fundo:oklch(15% 0 0);--borda:oklch(27.5% 0 0);--suave:oklch(64% 0 0);
+  --muted:oklch(23% 0 0);--primaria-forte:oklch(.8 .17 160.5);
+  --lateral:oklch(15% 0 0);--lateral-texto:oklch(82% 0 0);--lateral-ativo:oklch(25.2% 0 0);
+  --titulo:oklch(90% 0 0);--gray:oklch(42% 0 0);
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+html,body{background:var(--fundo)}
+body{font-family:var(--fonte);color:var(--texto);min-height:100vh;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font-family:inherit}
 .logo-img{display:block;object-fit:contain}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-:focus-visible{outline:3px solid var(--green-deep);outline-offset:2px}
+:focus-visible{outline:3px solid var(--primaria);outline-offset:2px}
+/* logos que trocam com o tema */
+:root[data-tema="escuro"] .so-claro{display:none!important}
+:root:not([data-tema="escuro"]) .so-escuro{display:none!important}
