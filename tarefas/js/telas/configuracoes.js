@@ -1,10 +1,10 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126185342';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126185342';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126185342';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126185342';
+import * as dados from '../dados.js?v=20261126185448';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126185448';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126185448';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126185448';
 
-const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
+const ABAS = [['conta', 'Conta e licença'], ['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO']];
 
 // coordenador de unidade: só a equipe e as unidades dele (o resto vale para todas e fica com o administrador geral)
 const ABAS_COORD = ['usuarios', 'rodizio', 'kanban'];
@@ -15,8 +15,26 @@ export async function render(el, ctx, [aba = 'usuarios']) {
   el.innerHTML = `<div class="cartao"><div class="abas">${abas.map(([id, r]) => `<button data-aba="${id}" class="${id === aba ? 'ativo' : ''}">${r}</button>`).join('')}</div><div id="aba"></div></div>`;
   el.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/configuracoes/${b.dataset.aba}`; }));
   const alvo = el.querySelector('#aba');
-  const fn = { usuarios, rodizio, kanban, feriados, motivos, mensagens, whatsapp, evo }[aba] || usuarios;
+  const fn = { conta, usuarios, rodizio, kanban, feriados, motivos, mensagens, whatsapp, evo }[aba] || usuarios;
   await fn(alvo, ctx);
+}
+
+// ── Conta e licença (só o administrador da WasFit): academia, plano e vencimento da licença (aparece no topo para o gestor) ──
+async function conta(el) {
+  const c = await dados.minhaConta();
+  el.innerHTML = `<h2>Conta da academia</h2>
+    <p class="dica">A plataforma é da WasFit; cada academia é uma conta. O vencimento da licença aparece no topo para os gestores
+      (laranja faltando 15 dias, vermelho faltando 3 ou vencida). Depois virá sozinho da cobrança.</p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin:14px 0">
+      <label class="campo">Academia<input class="ctrl" value="${esc(c?.nome || '')}" disabled></label>
+      <label class="campo">Plano<input class="ctrl" id="c-plano" value="${esc(c?.plano || '')}" placeholder="ex.: Gestão 3 unidades"></label>
+      <label class="campo">Licença vence em<input class="ctrl" id="c-vence" type="date" value="${esc(c?.licenca_vence || '')}"></label>
+      <button class="btn" id="c-salvar">Salvar</button>
+    </div>
+    <p class="dica">Deixe a data em branco para não mostrar aviso de vencimento.</p>`;
+  el.querySelector('#c-salvar').addEventListener('click', async () => {
+    try { await dados.contaSalvarLicenca(el.querySelector('#c-vence').value, el.querySelector('#c-plano').value); toast('Conta salva. O aviso no topo atualiza ao recarregar a página.'); } catch (e) { erro(e); }
+  });
 }
 
 // ── Kanban: quanto tempo sem ação é Normal, Atrasado e Crítico (padrão e, se quiser, por coluna) ──

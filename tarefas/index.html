@@ -8,10 +8,10 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/marca.css?v=20261126185342">
-<link rel="stylesheet" href="css/app.css?v=20261126185342">
-<link rel="stylesheet" href="css/jogo.css?v=20261126185342">
-<link rel="stylesheet" href="css/wasfit-tema.css?v=20261126185342">
+<link rel="stylesheet" href="../shared/marca.css?v=20261126185448">
+<link rel="stylesheet" href="css/app.css?v=20261126185448">
+<link rel="stylesheet" href="css/jogo.css?v=20261126185448">
+<link rel="stylesheet" href="css/wasfit-tema.css?v=20261126185448">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" defer></script>
 </head>
@@ -32,6 +32,7 @@
     <header class="topo">
       <button class="btn-menu" id="btn-menu" aria-label="Abrir menu"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
       <div class="titulos"><h1 id="titulo">Central de Tarefas</h1><p id="subtitulo"></p></div>
+      <span class="licenca" id="licenca" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><b id="licenca-texto"></b></span>
       <div class="conta-chip" id="conta-box" hidden title="Academia"><img id="conta-logo" alt=""><b id="conta-nome"></b></div>
       <select class="ctrl sel-unidade" id="sel-unidade" aria-label="Unidade" hidden></select>
       <a class="hud" id="hud" href="#/meu-dia" hidden aria-label="Seu placar de hoje"></a>
@@ -48,6 +49,6 @@
     <main class="conteudo" id="conteudo"></main>
   </div>
 </div>
-<script type="module" src="js/app.js?v=20261126185342"></script>
+<script type="module" src="js/app.js?v=20261126185448"></script>
 </body>
 </html>
