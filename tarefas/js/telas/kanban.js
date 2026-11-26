@@ -3,9 +3,9 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com os dias que o gestor define em Configurações → Kanban.
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261126200438';
-import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126200438';
-import { texto as regraTexto } from '../kanban-regras.js?v=20261126200438';
+import * as dados from '../dados.js?v=20261126200553';
+import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126200553';
+import { texto as regraTexto } from '../kanban-regras.js?v=20261126200553';
 
 const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], espera: ['azul', '⏳ Em espera'], fora: ['cinza', 'Não monitorada'] };
 // minutos → "25 min", "2 h 10 min", "3 dias"
@@ -135,7 +135,7 @@ function resumoRegras(r) {
   const padrao = r.regras.find((x) => x.coluna === '*');
   const outras = r.regras.filter((x) => x.coluna !== '*');
   return `<div class="cartao"><h2>Regras do monitoramento</h2>
-    <p><b>${esc(regraTexto(padrao))}</b>${outras.length ? `<span class="dica"> · ${outras.length} etapa(s) com regra própria (ex.: Perdido, Novo aluno e Disparo sem monitorar)</span>` : ''}</p>
+    <p><b>${esc(regraTexto(padrao))}</b>${outras.length ? `<span class="dica"> · ${outras.length === 1 ? '1 etapa' : `${outras.length} etapas`} com regra própria (ex.: Perdido, Novo aluno e Disparo sem monitorar)</span>` : ''}</p>
     <p class="dica">Ação = mudança de etiqueta na WasFit. <a href="#/configuracoes/kanban">Mudar os dias em Configurações → Comercial e kanban →</a></p></div>`;
 }
 
