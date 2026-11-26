@@ -106,3 +106,6 @@ export const vazio = (texto) => `<div class="vazio">${esc(texto)}</div>`;
 export const carregando = () => '<div class="esqueleto" aria-busy="true" aria-label="Carregando"><i></i><i></i><i></i></div>';
 
 export const ehCelular = () => matchMedia('(max-width: 760px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+// "1 contato" / "3 contatos" (revisão 26/11: acabar com "1 matrículas" e "contato(s)")
+export const plural = (n, um, varios) => `${n} ${Number(n) === 1 ? um : varios}`;

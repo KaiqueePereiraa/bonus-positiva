@@ -1,7 +1,7 @@
 // Avisos do sino, calculados na hora a partir do estado das tarefas (nada fica "velho").
 // As mesmas regras alimentam o resumo diário do WhatsApp (supabase/migrations/008_whatsapp.sql).
-import { diaDaSemana, semanaDe } from './regras.js?v=20261126194450';
-import { dataCurta, ROTA_CONTROLE, NOMES_CONTROLE } from './ui.js?v=20261126194450';
+import { diaDaSemana, semanaDe } from './regras.js?v=20261126195951';
+import { dataCurta, ROTA_CONTROLE, NOMES_CONTROLE } from './ui.js?v=20261126195951';
 
 const ABERTA = (t) => t.status !== 'concluida' && t.status !== 'concluida_atraso';
 const faltam = (t) => t.total - t.feitos;
@@ -51,7 +51,7 @@ export function avisosAdmin({ tarefas, nomeDe, nomeUnidade, semResponsavel = 0, 
   const porPessoa = {};
   for (const t of atrasadas) porPessoa[t.responsavel_id] = { n: (porPessoa[t.responsavel_id]?.n || 0) + 1, unidade: t.unidade };
   for (const [id, { n, unidade }] of Object.entries(porPessoa)) {
-    lista.push(aviso(`adm-atr-${id}`, 'urgente', `${nomeDe(id)} (${nomeUnidade(unidade).replace('Positiva ', '')}) tem ${n} tarefa(s) atrasada(s).`, '#/painel', hoje));
+    lista.push(aviso(`adm-atr-${id}`, 'urgente', `${nomeDe(id)} (${nomeUnidade(unidade).replace('Positiva ', '')}) tem ${n} ${n === 1 ? 'tarefa atrasada' : 'tarefas atrasadas'}.`, '#/painel', hoje));
   }
   if (semResponsavel > 0) {
     lista.push(aviso('adm-pool', 'info', `${semResponsavel} interessado(s) sem responsável no "Por que não fechou?".`, '#/nao-fechou', hoje));

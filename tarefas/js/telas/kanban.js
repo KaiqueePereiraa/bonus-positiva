@@ -3,9 +3,9 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com os dias que o gestor define em Configurações → Kanban.
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261126194450';
-import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126194450';
-import { texto as regraTexto } from '../kanban-regras.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126195951';
+import { texto as regraTexto } from '../kanban-regras.js?v=20261126195951';
 
 const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], espera: ['azul', '⏳ Em espera'], fora: ['cinza', 'Não monitorada'] };
 // minutos → "25 min", "2 h 10 min", "3 dias"
@@ -32,7 +32,7 @@ export async function render(el, ctx) {
   el.innerHTML = `
     <div class="cartao"><p class="dica">Espelho do kanban da WasFit: cada etiqueta marcada ou desmarcada chega aqui na hora. A dona do contato é quem mexeu
       nas etiquetas dele por último. "Ação" = mudança de etiqueta — conversar sem mover o contato no kanban conta como sem ação.
-      ${r.eventos_7d} movimento(s) nos últimos 7 dias.</p></div>
+      ${r.eventos_7d === 1 ? '1 movimento' : `${r.eventos_7d} movimentos`} nos últimos 7 dias.</p></div>
     ${!r.contatos ? `<div class="cartao">${vazio('Ainda não chegou nenhum contato com etiqueta do kanban. Confira se as etiquetas da WasFit têm o webhook desta plataforma, com "Disparar ao marcar" e "ao desmarcar" ligados.')}</div>` : `
     <div class="numeros" style="margin:0 0 14px">
       <div class="numero vermelho"><small>🔴 Críticos</small><b>${n.critico || 0}</b><span>passaram do limite crítico</span></div>
@@ -79,7 +79,7 @@ function fila(e) {
     </div>
     ${e.atendidos ? `<div class="linha-acoes" style="margin:0 0 12px"><button class="btn sec peq" data-espera-lista data-campo="" data-valor="" data-rotulo="Todos">📋 Ver lista dos ${e.atendidos} atendimentos (de onde vêm as médias)</button></div>` : ''}
     ${e.por_unidade?.length ? `<div class="tabela-wrap" style="margin-bottom:12px"><table class="tabela"><thead><tr><th>Unidade</th><th>Esperando agora</th><th>Mais antigo</th><th>Assumidos (30 dias)</th><th>Tempo típico</th><th>Média</th><th>Até 1 h</th><th></th></tr></thead><tbody>
-      ${e.por_unidade.map((u) => `<tr><td class="nome">${esc(u.nome)}</td><td>${u.aguardando ? `<b style="color:#B42318">${u.aguardando}</b>` : '0'}</td><td>${minTxt(u.mais_antigo_min)}</td>
+      ${e.por_unidade.map((u) => `<tr><td class="nome">${esc(u.nome)}</td><td>${u.aguardando ? `<b style="color:var(--texto-perigo)">${u.aguardando}</b>` : '0'}</td><td>${minTxt(u.mais_antigo_min)}</td>
         <td>${u.atendidos}</td><td><b>${minTxt(u.mediana_min)}</b></td><td>${minTxt(u.media_min)}</td><td>${pctDe(u.ate_60, u.atendidos)}</td>
         <td>${u.atendidos ? `<button class="btn sec peq" data-espera-lista data-campo="unidade" data-valor="${esc(u.unidade)}" data-rotulo="${esc(u.nome)}">Ver lista</button>` : ''}</td></tr>`).join('')}
     </tbody></table></div>` : ''}
@@ -90,7 +90,7 @@ function fila(e) {
     </tbody></table></div>` : ''}
     ${e.lista?.length ? `<h3 style="margin:16px 0 8px">Esperando agora</h3><div class="tabela-wrap"><table class="tabela"><thead><tr><th>Contato</th><th>Unidade</th><th>Esperando há</th><th>Quem colocou</th></tr></thead><tbody>
       ${e.lista.map((x) => `<tr><td class="nome">${esc(x.contato || '—')}<span class="sub">${esc(x.numero || '')}</span></td><td>${esc(x.unidade === 'republica' ? 'República' : x.unidade === 'laranjeiras' ? 'Laranjeiras' : x.unidade === 'club' ? 'Club' : (x.unidade || '—'))}</td>
-        <td><b style="color:${x.minutos > 60 ? '#B42318' : 'inherit'}">${minTxt(x.minutos)}</b></td><td>${esc(x.colocou)}</td></tr>`).join('')}
+        <td><b style="color:${x.minutos > 60 ? 'var(--texto-perigo)' : 'inherit'}">${minTxt(x.minutos)}</b></td><td>${esc(x.colocou)}</td></tr>`).join('')}
     </tbody></table></div>` : ''}
     <p class="dica">Tempo até assumir = da hora em que o contato entrou em "${tag}" até a 1ª ação de uma pessoa nele (mudar etiqueta). "Tempo típico" é a mediana: metade dos contatos foi assumida mais rápido que isso. Conta o relógio corrido (inclusive à noite).</p></div>`;
 }
@@ -109,7 +109,7 @@ function listaEspera(e, campo, valor, rotulo) {
     <div class="tabela-wrap" style="max-height:60vh;overflow:auto"><table class="tabela"><thead><tr><th>Contato</th><th>Unidade</th><th>Entrou na fila</th><th>Assumiu</th><th>Quem</th><th>Tempo</th></tr></thead><tbody>
     ${lista.map((x) => `<tr><td class="nome">${esc(x.contato || '—')}<span class="sub">${esc(x.numero || '')}</span></td><td>${esc(NOME_UN[x.unidade] || x.unidade || '—')}</td>
       <td>${esc(dataHora(x.entrou_em))}</td><td>${esc(dataHora(x.assumiu_em))}</td><td>${esc(x.quem || '—')}</td>
-      <td><b style="color:${x.minutos > 60 ? '#B42318' : 'inherit'}">${minTxt(x.minutos)}</b></td></tr>`).join('') || '<tr><td colspan="6" class="dica">Nenhum atendimento.</td></tr>'}
+      <td><b style="color:${x.minutos > 60 ? 'var(--texto-perigo)' : 'inherit'}">${minTxt(x.minutos)}</b></td></tr>`).join('') || '<tr><td colspan="6" class="dica">Nenhum atendimento.</td></tr>'}
     </tbody></table></div>`;
   modal(`Fila "${e?.tag || 'Em espera'}" — ${rotulo}`, corpo, { acoes: [{ rotulo: 'Baixar planilha (CSV)', classe: 'sec', valor: 'csv' }, { rotulo: 'Fechar', valor: 'fechar' }] })
     .then((v) => {

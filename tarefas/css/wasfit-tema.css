@@ -45,11 +45,10 @@
 /* ── Selos, faixas e outras cores que eram fixas ── */
 .selo{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
 .selo.cinza{background:var(--muted);color:var(--suave)}
-.selo.azul{background:color-mix(in oklch,var(--info) 14%,transparent);color:var(--info)}
+.selo.azul{background:color-mix(in oklch,var(--info) 14%,transparent);color:var(--texto-info)}
 .selo.verde,.selo.verde-aviso{background:color-mix(in oklch,var(--primaria) 20%,transparent);color:var(--primaria-forte)}
-.selo.laranja{background:color-mix(in oklch,var(--warning) 18%,transparent);color:oklch(55% .15 58)}
-.selo.vermelho{background:color-mix(in oklch,var(--danger) 14%,transparent);color:var(--danger)}
-:root[data-tema="escuro"] .selo.laranja{color:var(--warning)}
+.selo.laranja{background:color-mix(in oklch,var(--warning) 18%,transparent);color:var(--texto-aviso)}
+.selo.vermelho{background:color-mix(in oklch,var(--danger) 14%,transparent);color:var(--texto-perigo)}
 .etiqueta{background:var(--muted);color:var(--titulo)}
 .faixa{background:color-mix(in oklch,var(--warning) 12%,var(--superficie));border-color:color-mix(in oklch,var(--warning) 40%,transparent);color:var(--texto)}
 .faixa.urgente{background:color-mix(in oklch,var(--danger) 10%,var(--superficie));border-color:color-mix(in oklch,var(--danger) 35%,transparent);color:var(--texto)}
@@ -80,7 +79,7 @@
 .btn.sec{background:var(--superficie);color:var(--texto);box-shadow:inset 0 0 0 1px var(--borda)}
 .btn.sec:hover{box-shadow:inset 0 0 0 1px var(--primaria-forte);background:var(--superficie)}
 .btn.verde{background:var(--primaria);color:var(--primaria-texto)}
-.btn.perigo{background:var(--superficie);color:var(--danger);box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--danger) 45%,transparent)}
+.btn.perigo{background:var(--superficie);color:var(--texto-perigo);box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--danger) 45%,transparent)}
 .periodos .btn.ativo,.esc-barra .btn.ativo{background:var(--texto);color:var(--superficie)}
 .campo{text-transform:none;letter-spacing:0;font-weight:600;color:var(--titulo);font-size:13px}
 .campo input,.campo select,.campo textarea,select.ctrl,input.ctrl,textarea.ctrl{border:1px solid var(--borda);background:var(--superficie);color:var(--texto)}
@@ -117,7 +116,7 @@ details.mais-filtros>summary{color:var(--primaria-forte)}
 :root[data-tema="escuro"] .degraus i{background:var(--muted)}
 
 /* ── Links e detalhes ── */
-.conteudo a:not(.btn):not(.cartao-tarefa):not(.aviso){color:var(--primaria-forte);text-underline-offset:2px}
+.conteudo a:not(.btn):not(.cartao-tarefa):not(.aviso):not(.sinal){color:var(--primaria-forte);text-underline-offset:2px}
 
 /* ── Academia (conta) no topo: etiqueta com logo e nome, ao lado do seletor de unidade ── */
 .conta-chip{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 8px;border:1px solid var(--borda);border-radius:12px;background:var(--superficie);flex:none}
@@ -128,9 +127,75 @@ details.mais-filtros>summary{color:var(--primaria-forte)}
 /* ── Licença da conta (como no app da WasFit) ── */
 .licenca{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;flex:none;border:1px solid var(--borda);color:var(--suave)}
 .licenca svg{width:15px;height:15px}
-.licenca.laranja{background:color-mix(in oklch,var(--warning) 14%,transparent);border-color:color-mix(in oklch,var(--warning) 45%,transparent);color:oklch(58% .16 58)}
-.licenca.vermelho{background:color-mix(in oklch,var(--danger) 12%,transparent);border-color:color-mix(in oklch,var(--danger) 40%,transparent);color:var(--danger)}
-:root[data-tema="escuro"] .licenca.laranja{color:var(--warning)}
+.licenca.laranja{background:color-mix(in oklch,var(--warning) 14%,transparent);border-color:color-mix(in oklch,var(--warning) 45%,transparent);color:var(--texto-aviso)}
+.licenca.vermelho{background:color-mix(in oklch,var(--danger) 12%,transparent);border-color:color-mix(in oklch,var(--danger) 40%,transparent);color:var(--texto-perigo)}
 @media (max-width:760px){.licenca{display:none!important}}
 
 .licenca[hidden],.conta-chip[hidden]{display:none!important}
+
+/* ── Revisão de design 26/11: contraste, toque e acabamento ── */
+/* textos cinza em painéis que são escuros nos dois temas (placar do Meu dia) */
+.placar-ola,.caminho small{color:var(--texto-sobre-escuro)}
+/* números coloridos e alertas inline usam o texto de perigo do tema */
+.conteudo b[style*="color:var(--danger)"]{color:var(--texto-perigo)!important}
+/* resposta ao toque/clique (antes nenhum botão reagia) */
+.btn,.cartao-tarefa,.abas button,.periodos .btn{transition:transform .12s cubic-bezier(.2,.8,.2,1),background-color .15s,box-shadow .15s}
+.btn:active,.abas button:active{transform:scale(.97)}
+.cartao-tarefa:active{transform:scale(.99)}
+@media (prefers-reduced-motion:reduce){.btn:active,.abas button:active,.cartao-tarefa:active{transform:none}}
+/* abas: rolagem só na horizontal, sem a barra vertical perdida */
+.abas{overflow-y:hidden;scrollbar-width:thin}
+/* faixa lateral colorida do "Próximo" sai: o fundo verde e a etiqueta já marcam a linha */
+.tabela tr.proximo td:first-child{box-shadow:none}
+@media (max-width:760px){.tabela.responsiva tr.proximo{box-shadow:none}}
+/* números do cabeçalho: cor só num filete de 3px (o tema já afinou); topo neutro na versão sem cor */
+.numeros .numero:not(.azul):not(.verde):not(.escuro):not(.vermelho){border-top-color:var(--borda)}
+/* tabelas: números alinhados */
+.tabela td,.numero b{font-variant-numeric:tabular-nums}
+/* Painel: os 3 cartões do topo são atalhos para a lista (antes pareciam botões e não eram); cor numa bolinha, sem faixa lateral */
+a.sinal{display:block;text-decoration:none;color:var(--texto);border:1px solid var(--borda);transition:border-color .15s,transform .12s cubic-bezier(.2,.8,.2,1)}
+a.sinal:hover{border-color:var(--primaria-forte)}
+a.sinal:active{transform:scale(.99)}
+a.sinal small::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px;background:var(--gray)}
+a.sinal.verde small::before{background:var(--primaria-forte)}a.sinal.amarelo small::before{background:var(--warning)}a.sinal.vermelho small::before{background:var(--danger)}
+a.sinal .ir{display:block;margin-top:10px;font-size:13px;font-weight:600;color:var(--primaria-forte)}
+.lista-atencao li .btn{margin-left:6px;vertical-align:middle}
+details.como-ler{margin-top:8px}
+details.como-ler>summary{cursor:pointer;font-size:13px;color:var(--primaria-forte);font-weight:500}
+details.como-ler>p{margin-top:6px}
+/* sobra de 1px colorido na borda esquerda (as variantes de cor do app.css ganhavam em especificidade) */
+.cartao-tarefa[class],.sinal[class]{border-left-color:var(--borda)}
+a.sinal:hover{border-left-color:var(--primaria-forte)}
+/* Medalhas recolhidas (revisão 26/11): fica à vista o total e a próxima; a estante inteira abre num toque */
+details.todas-medalhas{margin-top:14px}
+details.todas-medalhas>summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--primaria-forte);padding:6px 0}
+details.todas-medalhas[open]>summary{margin-bottom:10px}
+:root[data-tema="escuro"] .mini-barra{background:var(--muted)}
+.mini-barra{background:var(--muted)}
+/* Comercial com uma unidade escolhida: aviso do que é da unidade e do que é da equipe */
+.aviso-equipe{margin:6px 0 2px;padding:8px 12px;border-radius:10px;background:var(--muted);font-size:13px;color:var(--texto);line-height:1.45}
+.titulo-equipe{margin:22px 0 4px;padding-top:14px;border-top:1px solid var(--borda);font-size:15px}
+/* Motivo em botões (os mais usados) + "Outros motivos…" no select */
+.chips-motivo{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chip-motivo{font:inherit;font-size:13px;font-weight:500;padding:7px 12px;min-height:36px;border-radius:999px;border:1px solid var(--borda);background:var(--superficie);color:var(--texto);cursor:pointer;transition:background-color .15s,border-color .15s,transform .12s cubic-bezier(.2,.8,.2,1)}
+.chip-motivo:hover{border-color:var(--primaria-forte)}
+.chip-motivo:active{transform:scale(.97)}
+.chip-motivo.ativo{background:color-mix(in oklch,var(--primaria) 22%,var(--superficie));border-color:var(--primaria-forte);font-weight:600}
+/* Listas no celular (revisão 26/11): WhatsApp é a ação principal; "Marcar enviada" fica secundário (contorno) */
+@media (max-width:760px){
+  .tabela.responsiva td.acoes .btn.sec{flex:0 1 auto}
+  /* etiqueta "Próximo" numa linha própria: não corta o nome nem o ID */
+  .tabela tr.proximo td.nome::before{display:table;margin:0 0 6px}
+  /* título da tela pode ocupar 2 linhas em vez de cortar ("Risco de a…") */
+  .topo h1{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2}
+}
+/* Destaques do período (Contatos da equipe): cartões no padrão do tema, sem o painel escuro com itálico no meio da tela clara */
+.destaque{background:var(--superficie);color:var(--texto);border:1px solid var(--borda);box-shadow:var(--shadow)}
+.destaque small{color:var(--suave);text-transform:none;letter-spacing:0;font-size:12px;font-weight:600}
+.destaque b{font-style:normal;font-weight:700}
+.destaque b i{color:var(--primaria-forte)}
+.destaque>span:last-child{color:var(--suave)}
+.destaque.eu{box-shadow:0 0 0 2px var(--primaria-forte)}
+.voce-grade b{font-style:normal;font-weight:700}
+.voce-grade small{text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
+.voce-grade .sobe{color:var(--texto-sucesso)}.voce-grade .desce{color:var(--texto-aviso)}

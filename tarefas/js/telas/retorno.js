@@ -1,9 +1,9 @@
 // Retorno do mês — quanto a Central trouxe de volta: alunos que voltaram, cobranças recebidas, matrículas.
 // Conta só o que aconteceu DEPOIS do contato da equipe (quem resolveu sozinho fica à parte, como comparação).
-import * as dados from '../dados.js?v=20261126194450';
-import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261126194450';
-import { retornoTotais, reais } from '../painel-regras.js?v=20261126194450';
-import { abasRelatorios } from './_comum.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { esc, toast, erro, nomeMesCap } from '../ui.js?v=20261126195951';
+import { retornoTotais, reais } from '../painel-regras.js?v=20261126195951';
+import { abasRelatorios } from './_comum.js?v=20261126195951';
 
 let escolhido = null;
 
@@ -43,7 +43,7 @@ export async function render(el, ctx) {
       ${unidades.map((u) => {
         const x = u.resultados || {};
         return `<h3 style="margin:22px 0 8px">${esc(u.nome)}</h3>
-          <p style="margin:0 0 8px">🏊 ${x.voltou || 0} voltaram · 💳 ${x.pagou || 0} pagaram (${reais(x.valor)}) · ✍️ ${x.matriculou || 0} matrículas · ${u.contatos} contatos feitos</p>
+          <p style="margin:0 0 8px">🏊 ${(x.voltou || 0) === 1 ? '1 voltou' : `${x.voltou || 0} voltaram`} · 💳 ${(x.pagou || 0) === 1 ? '1 pagou' : `${x.pagou || 0} pagaram`} (${reais(x.valor)}) · ✍️ ${(x.matriculou || 0) === 1 ? '1 matrícula' : `${x.matriculou || 0} matrículas`} · ${u.contatos === 1 ? '1 contato feito' : `${u.contatos} contatos feitos`}</p>
           ${u.consultoras.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Contatos</th><th>Voltaram</th><th>Pagaram</th><th>R$ recebido</th><th>Matrículas</th></tr></thead><tbody>
             ${u.consultoras.map((c) => `<tr><td class="nome">${esc(c.nome)}</td><td>${c.contatos}</td><td>${c.voltou}</td><td>${c.pagou}</td><td>${reais(c.valor)}</td><td>${c.matriculou}</td></tr>`).join('')}
           </tbody></table></div>` : '<p class="dica">Sem consultoras cadastradas.</p>'}`;

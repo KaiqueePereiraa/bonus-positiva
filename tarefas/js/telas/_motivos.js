@@ -1,9 +1,9 @@
 // Formulário de motivos: "Por que não fechou?" (etapas "fez experimental" e "não fez experimental"), "Renovação: venceu
 // e não renovou" e "Cancelou". Usado pela tela do "Por que não fechou?" e pelas telas de grupo (_grupo.js).
-import * as dados from '../dados.js?v=20261126194450';
-import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261126194450';
-import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261126194450';
-import { atualizarCabecalho, organizarLista, pendentesPrimeiro } from './_comum.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { normalizarTelefone, montarMensagem, linkWhatsApp } from '../regras.js?v=20261126195951';
+import { esc, dataLonga, toast, erro, vazio, confirmar, ehCelular } from '../ui.js?v=20261126195951';
+import { atualizarCabecalho, organizarLista, pendentesPrimeiro } from './_comum.js?v=20261126195951';
 
 // Excluir interessado (só coordenador): para cadastro duplicado. Pede confirmação; o banco registra quem excluiu.
 async function confirmarExclusao(nome) {
@@ -22,6 +22,17 @@ const modeloDe = (ctx, i) => {
   return (i.dados?.etapa === 'sem_experimental' && cfg.mensagem_sem_experimental) || cfg.mensagem_whatsapp || '';
 };
 
+// Motivos mais usados viram botões grandes (revisão 26/11: com 13 opções num select, 66% caía em "Outro motivo").
+// O select continua sendo a fonte do valor salvo — os botões só escolhem nele; o resto fica em "Outros motivos…".
+let usoMotivos = new Map();
+const MAX_BOTOES = 4;
+function botoesMotivo(opcoes, atual) {
+  const top = opcoes.filter((m) => !m.exige_texto)
+    .map((m, k) => ({ m, k, n: usoMotivos.get(m.id) || 0 })).sort((a, b) => b.n - a.n || a.k - b.k).slice(0, MAX_BOTOES).map((x) => x.m);
+  if (top.length < 2) return '';
+  return `<div class="chips-motivo" role="group" aria-label="Motivos mais comuns">${top.map((m) => `<button type="button" class="chip-motivo${m.id === atual ? ' ativo' : ''}" data-motivo="${m.id}" aria-pressed="${m.id === atual}">${esc(m.nome)}</button>`).join('')}</div>`;
+}
+
 function linhaMotivo(i, ctx, editavel) {
   const d = i.dados || {};
   const info = d.info || [d.contrato, d.vencimento && `venceu/vence ${dataLonga(d.vencimento)}`, d.data_cadastro && `cadastro ${dataLonga(d.data_cadastro)}`, d.interesse, d.como_conheceu && `via ${d.como_conheceu}`, d.idade != null && `${d.idade} anos`].filter(Boolean).join(' · ');
@@ -37,7 +48,7 @@ function linhaMotivo(i, ctx, editavel) {
   }
   return `<tr data-id="${i.id}" class="${i.feito_em ? 'feito' : ''}">
     <td class="nome">${esc(i.nome)}<span class="sub">${esc(info || `ID ${i.evo_id}`)}</span>${alerta}</td>
-    <td style="min-width:220px">${editavel ? `<select class="ctrl" data-campo="motivo" style="width:100%"><option value="">${esc(ETAPAS[etapa]?.pergunta || 'Escolha o motivo…')}</option>
+    <td style="min-width:220px">${editavel ? `${botoesMotivo(opcoes, i.motivo_id)}<select class="ctrl" data-campo="motivo" style="width:100%"><option value="">${botoesMotivo(opcoes, i.motivo_id) ? 'Outros motivos…' : esc(ETAPAS[etapa]?.pergunta || 'Escolha o motivo…')}</option>
         ${opcoes.map((m) => `<option value="${m.id}" ${m.id === i.motivo_id ? 'selected' : ''}>${esc(m.nome)}</option>`).join('')}</select>
         <input class="ctrl" data-campo="texto" placeholder="Qual foi o motivo?" value="${esc(i.motivo_texto || '')}" style="width:100%;margin-top:6px" ${motivo?.exige_texto ? '' : 'hidden'}>`
       : `${motivo ? esc(motivo.nome) : '<span class="dica">—</span>'}${i.motivo_texto ? `<span class="sub">${esc(i.motivo_texto)}</span>` : ''}`}</td>
@@ -51,6 +62,8 @@ function linhaMotivo(i, ctx, editavel) {
 export async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }) {
   if (!itens.length) { el.innerHTML = vazio('Nenhum interessado aqui.'); return; }
   itens.sort(pendentesPrimeiro);
+  usoMotivos = new Map();
+  for (const i of itens) if (i.motivo_id) usoMotivos.set(i.motivo_id, (usoMotivos.get(i.motivo_id) || 0) + 1);
   const comEtapa = itens.some((i) => i.dados?.etapa);
   const corpo = !comEtapa ? itens.map((i) => linhaMotivo(i, ctx, editavel)).join('')
     : Object.entries(ETAPAS).map(([k, e]) => {
@@ -63,12 +76,20 @@ export async function formMotivos(el, ctx, tarefa, itens, { editavel, aoContar }
   el.onchange = (e) => {
     const s = e.target.closest('[data-campo="motivo"]');
     if (!s) return;
+    s.closest('td').querySelectorAll('.chip-motivo').forEach((c) => { const on = c.dataset.motivo === s.value; c.classList.toggle('ativo', on); c.setAttribute('aria-pressed', on); });
     const m = ctx.motivos.find((x) => x.id === +s.value);
     const texto = s.closest('td').querySelector('[data-campo="texto"]');
     texto.hidden = !m?.exige_texto;
     if (!texto.hidden) texto.focus();
   };
   el.onclick = async (e) => {
+    const chip = e.target.closest('.chip-motivo');
+    if (chip) {
+      const s = chip.closest('td').querySelector('[data-campo="motivo"]');
+      s.value = chip.dataset.motivo;
+      s.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
     const wa = e.target.closest('[data-acao="wa"]');
     if (wa) {
       if (dados.vendoComo()) { toast(dados.MSG_SO_OLHAR, 'erro'); return; }   // ver como consultora: não abre WhatsApp

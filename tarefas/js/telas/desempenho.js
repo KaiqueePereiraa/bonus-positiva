@@ -1,12 +1,12 @@
 // Desempenho — ranking aberto (todas veem todas): mínimo cumprido, dias com a meta batida, contatos e resultados.
 // O gestor também vê as justificativas, o diagnóstico (sobrecarga x individual) e o quadro esforço × resultado
 // dos últimos 30 dias (cada consultora comparada com a mediana da equipe).
-import * as dados from '../dados.js?v=20261126194450';
-import { esc, dataCurta, vazio, NOMES_CONTROLE } from '../ui.js?v=20261126194450';
-import { somarDias, semanaDe } from '../regras.js?v=20261126194450';
-import { diagnostico, quadrante, mediana, resumoAtividade } from '../painel-regras.js?v=20261126194450';
-import { destaques, voceVsVoce } from '../jogo.js?v=20261126194450';
-import { animar } from '../jogo-visual.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { esc, dataCurta, vazio, NOMES_CONTROLE } from '../ui.js?v=20261126195951';
+import { somarDias, semanaDe } from '../regras.js?v=20261126195951';
+import { diagnostico, quadrante, mediana, resumoAtividade } from '../painel-regras.js?v=20261126195951';
+import { destaques, voceVsVoce } from '../jogo.js?v=20261126195951';
+import { animar } from '../jogo-visual.js?v=20261126195951';
 
 let periodo = 'semana_passada';
 
@@ -38,7 +38,7 @@ export async function render(el, ctx) {
         <td>${c.pct == null ? '<span class="dica">—</span>' : `<b>${c.pct}%</b>`}</td>
         <td>${c.dias ? `${c.dias_bateu} de ${c.dias}` : '—'}</td><td>${c.contatos}</td><td>${c.resultados}</td></tr>
         ${ctx.ehAdmin && c.justificativas?.length ? `<tr><td></td><td colspan="5" class="dica">${c.justificativas.map((j) => { const a = resumoAtividade(j.atividade, NOMES_CONTROLE); return `<div style="margin-bottom:8px">📝 ${dataCurta(j.data)} (${j.feitos}/${j.minimo} do mínimo${j.trabalhou ? '' : ', não trabalhou'}): "${esc(j.texto)}"
-          ${j.atividade ? `<div style="margin-left:22px">🔎 O que fez nesse dia: ${esc(a.texto)}${a.alerta ? `<div style="color:#B42318;font-weight:700">⚠️ ${esc(a.alerta)}</div>` : ''}</div>` : ''}</div>`; }).join('')}</td></tr>` : ''}`).join('')}
+          ${j.atividade ? `<div style="margin-left:22px">🔎 O que fez nesse dia: ${esc(a.texto)}${a.alerta ? `<div style="color:var(--texto-perigo);font-weight:700">⚠️ ${esc(a.alerta)}</div>` : ''}</div>` : ''}</div>`; }).join('')}</td></tr>` : ''}`).join('')}
       </tbody></table></div>` : vazio('Ainda não há dias fechados neste período. O fechamento acontece todo dia útil às 23h55.')}</div>
     ${painel ? quadroEsforco(painel, unidade) : ''}`;
   animar(el);
@@ -62,7 +62,7 @@ function quadroDestaques(lista, antes, ctx) {
   return `<div class="cartao"><h2>✨ Destaques do período</h2>
     <div class="destaques">${ds.map((d, k) => `<div class="destaque ${d.quem.some((c) => c.id === ctx.perfil.id) ? 'eu' : ''}" style="--k:${k}">
       <span class="destaque-icone">${d.icone}</span><small>${esc(d.titulo)}</small>
-      <b>${d.quem.map(nome).join(' e ')}</b><span>${esc(d.texto)}</span></div>`).join('')}</div>
+      <b>${((n) => (n.length < 2 ? n.join('') : `${n.slice(0, -1).join(', ')} e ${n[n.length - 1]}`))(d.quem.map(nome))}</b><span>${esc(d.texto)}</span></div>`).join('')}</div>
     <p class="dica" style="margin-top:10px">Cada destaque mede uma coisa diferente: constância, evolução e resultado. A evolução compara com o período anterior de mesmo tamanho.</p></div>`;
 }
 

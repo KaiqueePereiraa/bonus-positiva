@@ -41,23 +41,23 @@ export async function excel(nome, abas) {
   baixar(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), nome);
 }
 
-// Abre o relatório numa janela própria (A4, marca Positiva) e chama a impressão — "Salvar como PDF".
+// Abre o relatório numa janela própria (A4, marca da conta) e chama a impressão — "Salvar como PDF".
 export function pdf(titulo, corpoHtml) {
   const w = window.open('', '_blank');
   if (!w) { alert('Permita pop-ups para gerar o PDF.'); return; }
   w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${titulo}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,800;0,900;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     @page{size:A4;margin:14mm}
     *{box-sizing:border-box}
-    body{font-family:'Montserrat',sans-serif;color:#212B37;font-size:11px;margin:0}
-    header{display:flex;align-items:center;gap:12px;border-bottom:4px solid #BEF575;padding-bottom:10px;margin-bottom:16px}
+    body{font-family:'Geist',system-ui,sans-serif;color:#212B37;font-size:11px;margin:0}
+    header{display:flex;align-items:center;gap:12px;border-bottom:2px solid #22C58B;padding-bottom:10px;margin-bottom:16px}
     header img{height:38px}
-    header h1{font-size:18px;font-weight:900;font-style:italic;text-transform:uppercase;margin:0}
+    header h1{font-size:18px;font-weight:700;margin:0}
     header p{margin:2px 0 0;color:#788192}
-    h2{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px;break-after:avoid}
+    h2{font-size:13px;font-weight:700;margin:18px 0 8px;break-after:avoid}
     .numeros{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-    .numero{border:1px solid #E3E7EC;border-top:3px solid #34425C;border-radius:8px;padding:8px}
+    .numero{border:1px solid #E3E7EC;border-radius:8px;padding:8px}
     .numero small{display:block;font-size:9px;text-transform:uppercase;color:#788192;font-weight:800}
     .numero b{font-size:18px}
     table{width:100%;border-collapse:collapse;margin-bottom:8px}
@@ -65,11 +65,11 @@ export function pdf(titulo, corpoHtml) {
     td{border-bottom:1px solid #E3E7EC;padding:5px 6px}
     tr{break-inside:avoid}
     img.grafico{width:100%;max-height:260px;object-fit:contain}
-    .insight{border-left:4px solid #7FB85A;padding:6px 10px;margin-bottom:6px;background:#F7F9FB}
+    .insight{border:1px solid #E3E7EC;border-radius:6px;padding:6px 10px;margin-bottom:6px;background:#F7F9FB}
     .insight small{display:block;color:#788192}
     footer{margin-top:20px;color:#788192;font-size:9px}
   </style></head><body>${corpoHtml}
-  <footer>Gerado pela Central de Tarefas Positiva em ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}.</footer>
+  <footer>Gerado pela Wasfit gestão em ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}.</footer>
   <script>document.fonts.ready.then(()=>setTimeout(()=>print(),300))<\/script></body></html>`);
   w.document.close();
 }

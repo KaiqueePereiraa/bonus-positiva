@@ -1,11 +1,12 @@
 // Análises — as telas de acompanhamento juntas, em abas (pedido de 26/11/2026: menos abas no menu, tudo num lugar só):
-// Comercial (conversão, unidades, canais, IA), Kanban (WasFit), Contatos da equipe (mínimo, ranking) e Resultados (gestor).
+// Comercial (conversão, unidades, canais, IA), Kanban (WasFit), Contatos da equipe (mínimo, ranking), Resultados e Retorno em R$ (gestor).
 // Cada aba é a tela de sempre, desenhada aqui dentro; os endereços antigos (#/comercial, #/kanban...) continuam valendo.
 const ABAS = [
   ['comercial', 'Comercial', 'comercial', 'todos'],
   ['kanban', 'Kanban da WasFit', 'kanban', 'todos'],
   ['equipe', 'Contatos da equipe', 'desempenho', 'todos'],
   ['resultados', 'Resultados das listas', 'indicadores', 'admin'],
+  ['retorno', 'Retorno em R$', 'retorno', 'admin'],
 ];
 
 export async function render(el, ctx, [aba = 'comercial']) {

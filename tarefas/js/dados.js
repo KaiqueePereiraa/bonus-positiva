@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261126194450';
+import { sb } from '../../shared/sessao.js?v=20261126195951';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -157,6 +157,8 @@ export const importarListaFazerPropria = (titulo, instrucoes, prazo, mensagem, c
     p_arquivo_path: caminho, p_arquivo_nome: nome, p_registros: registros });
 export const desfazerListaPropria = (id) => rpc('desfazer_lista_propria', { p_importacao: id });
 export const desfazerImportacao = (id) => rpc('desfazer_importacao', { p_importacao: id });
+// Gestor: muda o prazo da Lista a fazer (de uma consultora ou de todas com contatos em aberto). Devolve quantas mudaram.
+export const mudarPrazoLista = (importacao, prazo, tarefa = null) => rpc('lista_mudar_prazo', { p_importacao: importacao, p_prazo: prazo, p_tarefa: tarefa });
 
 // ── Ações do admin ──
 export const dividirSemResponsavel = (importacaoId) => rpc('dividir_sem_responsavel', { p_importacao: importacaoId });

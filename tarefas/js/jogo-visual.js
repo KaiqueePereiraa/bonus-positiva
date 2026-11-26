@@ -1,7 +1,7 @@
 // Peças visuais da gamificação: anel do dia, trilha da semana, estante de conquistas e os efeitos
 // (confete, "+1" flutuante, número contando). Sem biblioteca: SVG + CSS (css/jogo.css).
 // Quem prefere menos movimento (prefers-reduced-motion) não vê confete nem contagem animada.
-import { esc } from './ui.js?v=20261126194450';
+import { esc } from './ui.js?v=20261126195951';
 
 const calmo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -82,7 +82,7 @@ export function conquistasHtml(c) {
   const prox = c.proxima;
   const proxNome = prox ? prox.medalhas[prox.nivel] : null;
   const fileira = (f, k) => `<li class="familia ${f.emDefesa ? 'em-defesa' : ''}" style="--k:${k}">
-    <div class="fam-cab"><b>${f.icone} ${esc(f.nome)}</b><small>${esc(f.unid)}${f.soOuro ? '' : ` · <b>${f.valor}</b> até agora`}</small>
+    <div class="fam-cab"><b>${f.icone} ${esc(f.nome)}</b><small>${esc(f.unid)}${f.soOuro ? '' : f.id === 'seq' ? ` · melhor do mês: <b>${f.valor}</b>` : ` · <b>${f.valor}</b> até agora`}</small>
       ${f.emDefesa ? `<span class="selo laranja" title="${esc(f.defesa)}">⏳ defenda "${esc(f.medalhas[f.nivelAntes - 1][1])}"</span>` : ''}
       ${f.vezes ? `<span class="vezes" title="Meses em que ganhou alguma medalha deste tema">🏆 ${f.vezes} ${f.vezes === 1 ? 'mês' : 'meses'}</span>` : ''}</div>
     <ol class="fam-medalhas">${f.medalhas.map(([ic, nome], j) => {
@@ -95,12 +95,13 @@ export function conquistasHtml(c) {
     <small class="fam-falta">${esc(f.falta)}</small></li>`;
   return `<div class="cartao estante">
     <h2>🏆 Medalhas de ${esc(c.mes)} <span class="selo verde">${c.ganhas} de ${c.total}</span><span class="selo cinza">renovam todo mês</span></h2>
-    <p class="dica" style="margin:-6px 0 14px">Cada medalha vale só no mês. No mês seguinte, conquiste de novo para continuar com ela — senão ela se perde.</p>
+    <p class="dica" style="margin:-6px 0 14px">As medalhas renovam todo mês: no mês seguinte, conquiste de novo para manter.</p>
     ${c.emDefesa.length ? `<div class="defesa"><b>⏳ Defenda suas medalhas de ${esc(c.mesAntes)}</b>
       <ul>${c.emDefesa.map((m) => `<li>${m.icone} ${esc(m.defesa)}</li>`).join('')}</ul></div>` : ''}
     ${prox && proxNome ? `<div class="proxima"><span class="medalha grande alvo">${proxNome[0]}</span><div><small>Próxima medalha</small><b>${esc(proxNome[1])}</b>
       <span>${esc(prox.falta)}</span><div class="mini-barra"><i data-largura="${Math.round(100 * prox.progresso)}%"></i></div></div></div>` : ''}
-    <ul class="familias">${c.lista.map(fileira).join('')}</ul></div>`;
+    <details class="todas-medalhas"><summary>Ver todas as medalhas (${c.ganhas} de ${c.total})</summary>
+      <ul class="familias">${c.lista.map(fileira).join('')}</ul></details></div>`;
 }
 
 // Festa quando ela ganha uma medalha nova no mês (uma vez cada, por pessoa). Na 1ª vez do mês só registra o que já tem.

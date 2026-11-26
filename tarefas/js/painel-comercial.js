@@ -1,7 +1,7 @@
 // Painel do gestor — o resumo do comercial e do kanban já pronto para agir (testado em tests/painel-comercial.test.js).
 // Junta no "Precisa da sua atenção" o que antes estava espalhado em Desempenho comercial e Kanban; monta o quadro do mês
 // por unidade e acha a carteira e o kanban de cada consultora para a tabela da equipe.
-import { avaliarUnidades, avaliarTime, alertaCarteiras, pct } from './comercial-regras.js?v=20261126194450';
+import { avaliarUnidades, avaliarTime, alertaCarteiras, pct } from './comercial-regras.js?v=20261126195951';
 
 const br = (n) => String(n).replace('.', ',');
 const semAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -32,9 +32,9 @@ export function itensComercial(comercial, kanban, unidade) {
   }
   for (const t of timesDaUnidade(comercial, unidade)) {
     const a = alertaCarteiras(avaliarTime(t));
-    if (a) itens.push({ texto: `${a.pior.nome} converte ${br(a.pior.taxa)}% da carteira e ${a.melhor.nome} ${br(a.melhor.taxa)}% (${br(a.gap)} pontos de diferença).`, acao: `Acompanhe o kanban de ${a.pior.nome} e veja o que ${a.melhor.nome} faz diferente.`, rota: '#/analises/comercial' });
+    if (a) itens.push({ texto: `${a.pior.nome} converte ${br(a.pior.taxa)}% da carteira e ${a.melhor.nome} ${br(a.melhor.taxa)}% (${br(a.gap)} pontos de diferença${(t.unidades || []).length > 1 ? `; equipe ${t.nome}` : ''}).`, acao: `Acompanhe o kanban de ${a.pior.nome} e veja o que ${a.melhor.nome} faz diferente.`, rota: '#/analises/comercial' });
     const sd = t.funil_ia?.atual?.sem_dona || 0;
-    if (sd > 0) itens.push({ texto: `${sd} contato${sd > 1 ? 's' : ''} da IA deste mês sem dona (${t.nome}).`, acao: 'Distribua no kanban da WasFit: quem assumir o contato passa a ser a dona.', rota: '#/analises/comercial' });
+    if (sd > 0) itens.push({ texto: `${sd} cadastro${sd > 1 ? 's' : ''} da IA neste mês ainda sem dona — fora da carteira de todas (${t.nome}).`, acao: 'Distribua no kanban da WasFit: quem assumir o contato passa a ser a dona. (O kanban mostra só quem está sem dona agora.)', rota: '#/analises/comercial' });
   }
   const cr = kanban?.niveis?.critico || 0;
   if (cr > 0) {

@@ -3,7 +3,7 @@
 // nova: o mínimo continua sendo o piso do dia; depois dele vêm os círculos extras.
 // Puro: testado em tests/jogo.test.js.
 
-import { hojeSP } from './regras.js?v=20261126194450';
+import { hojeSP } from './regras.js?v=20261126195951';
 
 const DIA = 864e5;
 const t = (s) => Date.parse(`${s}T12:00:00Z`);
@@ -244,7 +244,7 @@ export function conquistasDoMes(dias, hoje, hojeInfo = null, resultados = []) {
     const prox = f.niveis[nivel];
     const n = prox != null ? prox - valor : 0;
     let falta = prox != null ? `${n === 1 ? 'Falta' : 'Faltam'} ${n} ${n === 1 ? f.medidaUm : f.medida} para ${rotuloNivel(f, nivel + 1)}` : 'Todas as deste tema! 🎉';
-    if (f.id === 'impecavel') falta = !agora.semFalhar ? 'Neste mês não dá mais: teve dia sem o mínimo' : `Em jogo: ${agora.diasValidos} dia(s) sem falhar — vale no fim do mês`;
+    if (f.id === 'impecavel') falta = !agora.semFalhar ? 'Neste mês não dá mais: teve dia sem o mínimo' : `Em jogo: ${agora.diasValidos === 1 ? '1 dia' : `${agora.diasValidos} dias`} sem falhar — vale no fim do mês`;
     return { ...f, valor, nivel, nivelAntes, rotulo: nivel ? rotuloNivel(f, nivel) : null, falta,
       progresso: prox != null ? Math.min(1, valor / prox) : 1,
       emDefesa: nivelAntes > nivel,   // ganhou mais no mês passado: precisa reconquistar até o fim do mês

@@ -1,15 +1,15 @@
 // Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
 // juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
 // do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
-import * as dados from '../dados.js?v=20261126194450';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126194450';
-import { somarDias, semanaDe } from '../regras.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126195951';
+import { somarDias, semanaDe } from '../regras.js?v=20261126195951';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261126194450';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261126194450';
-import { itensComercial, linhasMes, carteiraDe, kanbanDe } from '../painel-comercial.js?v=20261126194450';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261126195951';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261126195951';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe } from '../painel-comercial.js?v=20261126195951';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -40,11 +40,11 @@ export async function render(el, ctx) {
   el.innerHTML = `
     <h2 style="font-size:18px;font-weight:800">${saudacao}, ${esc((ctx.perfil.nome || '').split(' ')[0])}! <span class="dica" style="font-weight:600">${esc(ctx.unidade ? ctx.nomeUnidade(ctx.unidade) : 'Todas as unidades')}</span></h2>
 
-    <div class="sinais">${cards.map((s) => `<div class="sinal ${s.cor}">
-      <small>${esc(s.area)}</small><b>${esc(s.titulo)}</b><p>${esc(s.texto)}</p>${s.acao ? `<span class="acao">O que fazer: ${esc(s.acao)}</span>` : ''}</div>`).join('')}</div>
+    <div class="sinais">${cards.map((s) => `<a class="sinal ${s.cor}" href="${s.rota}">
+      <small>${esc(s.area)}</small><b>${esc(s.titulo)}</b><p>${esc(s.texto)}</p>${s.acao ? `<span class="acao">O que fazer: ${esc(s.acao)}</span>` : ''}<span class="ir">Abrir a lista →</span></a>`).join('')}</div>
 
     <div class="cartao"><h2>Precisa da sua atenção ${lista.length ? `<span class="selo vermelho">${lista.length}</span>` : '<span class="selo verde">tudo em dia</span>'}</h2>
-      ${lista.length ? `<ul class="lista-atencao">${lista.map((a) => `<li><b>${esc(a.texto)}</b>${a.acao ? `<span>${esc(a.acao)}</span>` : ''}${a.rota ? ` <a href="${a.rota}">Abrir →</a>` : ''}</li>`).join('')}</ul>`
+      ${lista.length ? `<ul class="lista-atencao">${lista.map((a) => `<li><b>${esc(a.texto)}</b>${a.acao ? `<span>${esc(a.acao)}</span>` : ''}${a.rota ? ` <a href="${a.rota}">Abrir →</a>` : ''}${a.verComo ? ` <button class="btn sec peq" data-ver-como="${a.verComo}">👁 Ver a tela dela</button>` : ''}</li>`).join('')}</ul>`
         : '<p class="dica">Nada fora do normal agora. 🎉</p>'}</div>
 
     ${mes.length ? `<div class="cartao"><h2>Como está o mês <span class="selo cinza">vs mês anterior até o mesmo dia</span></h2>
@@ -69,13 +69,13 @@ export async function render(el, ctx) {
             <td>${pend ? pend : '<span class="selo azul" title="Não tem nada pendente: tem tempo para uma lista extra">livre</span>'}</td>
             <td>${c.atrasados ? `<b style="color:var(--danger)">${c.atrasados}</b>` : '—'}</td>
             <td>${ult ? dataHora(ult).slice(-5) : '<span class="dica">nenhum hoje</span>'}</td>
-            <td>${sem?.pct != null ? `${sem.pct}% <span class="sub">mínimo em ${sem.dias_bateu} de ${sem.dias} dia(s)</span>` : '<span class="dica">—</span>'}</td>
+            <td>${sem?.pct != null ? `${sem.pct}% <span class="sub">mínimo em ${sem.dias_bateu} de ${sem.dias === 1 ? '1 dia' : `${sem.dias} dias`}</span>` : '<span class="dica">—</span>'}</td>
             ${(() => { const ca = carteiraDe(com, c.nome); return `<td>${ca ? `<b>${pc(ca.taxa)}</b> <span class="selo ${SEL[ca.status][0]}">${SEL[ca.status][1]}</span><span class="sub">${ca.vendas} de ${ca.contatos} viraram cliente</span>` : '<span class="dica">—</span>'}</td>`; })()}
             ${(() => { const k = kanbanDe(kb, c.nome); return `<td>${k ? `${k.critico ? `<span class="selo vermelho">${k.critico} crít.</span> ` : ''}${k.atrasado ? `<span class="selo laranja">${k.atrasado} atras.</span> ` : ''}<span class="sub">${k.contatos} no kanban</span>` : '<span class="dica">—</span>'}</td>`; })()}
             <td class="acoes"><button class="btn sec peq" data-ver-como="${c.id}" title="Ver a Central como ${esc(c.nome)} vê (só para olhar)">👁 Ver tela</button></td></tr>`;
         }).join('')}</tbody></table></div>
-        <p class="dica" style="margin-top:8px">Pendentes = contatos em aberto em todas as listas dela. "Livre" = zerou as listas: dá para passar uma Lista a fazer. Semana = mínimo cumprido nos dias já fechados desta semana. Carteira do mês = o que ela cadastrou + o que assumiu da IA, quantos viraram cliente (comparado com a equipe). Kanban = contatos dela na WasFit, críticos e atrasados.
-          Mais detalhes: <a href="#/analises/equipe">Contatos da equipe</a> · <a href="#/analises/comercial">Comercial</a> · <a href="#/analises/kanban">Kanban</a></p>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
+        <details class="como-ler"><summary>Como ler esta tabela</summary><p class="dica">Pendentes = contatos em aberto em todas as listas dela. "Livre" = zerou as listas: dá para passar uma Lista a fazer. Semana = mínimo cumprido nos dias já fechados desta semana. Carteira do mês = o que ela cadastrou + o que assumiu da IA, quantos viraram cliente (comparado com a equipe). Kanban = contatos dela na WasFit, críticos e atrasados.</p></details>
+          <p class="dica" style="margin-top:8px">Mais detalhes: <a href="#/analises/equipe">Contatos da equipe</a> · <a href="#/analises/comercial">Comercial</a> · <a href="#/analises/kanban">Kanban</a></p>` : vazio('Nenhuma consultora cadastrada nas unidades escolhidas.')}
     </div>
 
     <div class="cartao" id="vitorias"><h2>🎉 Vitórias da equipe <span class="selo cinza">últimos 7 dias</span>${vitorias.length ? `<span class="selo verde">${vitorias.length} resultados</span>` : ''}${faltaAplaudir(vitorias, ctx.perfil.id) ? `<span class="selo laranja">${faltaAplaudir(vitorias, ctx.perfil.id)} para aplaudir</span>` : ''}</h2>
@@ -84,8 +84,8 @@ export async function render(el, ctx) {
 
     ${listasDaSemana(tarefas, hojeIso)}
 
-    ${(() => { const t = somar(ativas, 'semana'); return `<p class="dica" style="text-align:center">Nesta semana: ${t.pagou} pagaram${t.valor ? ` (${reais(t.valor)})` : ''} · ${t.voltou} voltaram a treinar · ${t.matriculou} matrículas · ${t.renovou} renovações.
-      <a href="#/analises/resultados">Resultados →</a> · <a href="#/retorno">Retorno do mês →</a></p>`; })()}`;
+    ${(() => { const t = somar(ativas, 'semana'); return `<p class="dica" style="text-align:center">Nesta semana: ${plural(t.pagou, 'pagou', 'pagaram')}${t.valor ? ` (${reais(t.valor)})` : ''} · ${plural(t.voltou, 'voltou', 'voltaram')} a treinar · ${plural(t.matriculou, 'matrícula', 'matrículas')} · ${plural(t.renovou, 'renovação', 'renovações')}.
+      <a href="#/analises/resultados">Resultados →</a> · <a href="#/analises/retorno">Retorno em R$ →</a></p>`; })()}`;
   const caixaVit = el.querySelector('#vitorias');
   if (caixaVit) ligarPalmas(caixaVit, vitorias, ctx.perfil.id);
   // "👁 Ver tela": entra no modo ver como consultora (mesma chave do app.js; só nesta aba)
@@ -95,6 +95,8 @@ export async function render(el, ctx) {
     location.reload();
   }));
 }
+
+const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
 function somar(unidades, per) {
   const t = { pagou: 0, valor: 0, voltou: 0, matriculou: 0, renovou: 0, sozinhos: 0 };

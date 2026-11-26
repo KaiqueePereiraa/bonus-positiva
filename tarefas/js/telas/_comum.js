@@ -1,9 +1,9 @@
 // Peças reaproveitadas pelas telas dos controles.
-import * as dados from '../dados.js?v=20261126194450';
-import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261126194450';
-import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261126194450';
-import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261126194450';
-import { maisUm, celebrar } from '../jogo-visual.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { lerXlsx, lerCsv, matrizParaRegistros } from '../importar.js?v=20261126195951';
+import { normalizarTelefone, montarMensagem, linkWhatsApp, statusTarefa, CLASSES_RISCO } from '../regras.js?v=20261126195951';
+import { esc, dataCurta, dataLonga, dataHora, diaSemana, seloStatus, barra, toast, erro, confirmar, vazio, ehCelular, STATUS } from '../ui.js?v=20261126195951';
+import { maisUm, celebrar } from '../jogo-visual.js?v=20261126195951';
 
 // ── Leitura de planilha escolhida pelo usuário ──
 export async function lerPlanilha(arquivo, controle) {
@@ -161,7 +161,7 @@ export async function listaContatos(el, ctx, tarefa) {
       <td>${i.feito_em ? `<span class="selo verde">${classe ? 'Registrado' : 'Enviada'}</span><span class="sub">${dataHora(i.feito_em)}${ctx.ehAdmin && i.feito_por && i.feito_por !== tarefa.responsavel_id ? ` por ${esc(ctx.nomeDe(i.feito_por))}` : ''}</span>` : '<span class="selo cinza">Pendente</span>'}</td>
       <td class="acoes">${!podeMexer ? '' : i.feito_em
         ? `${ehRisco || ehInad ? '<button class="btn sec peq" data-acao="salvar">Salvar obs.</button> ' : ''}<button class="btn sec peq" data-acao="desmarcar">Desmarcar</button>`
-        : `${tel ? '<button class="btn wa peq" data-acao="wa">WhatsApp</button> ' : ''}<button class="btn peq" data-acao="marcar">Marcar enviada</button>`}
+        : `${tel ? '<button class="btn wa peq" data-acao="wa">WhatsApp</button> ' : ''}<button class="btn ${tel ? 'sec' : ''} peq" data-acao="marcar">Marcar enviada</button>`}
         ${ctx.ehAdmin && ehRisco && !i.feito_em && outras.length ? `<select class="ctrl" data-acao="mover" aria-label="Mover para"><option value="">Mover…</option>${outras.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select>` : ''}
       </td></tr>`;
   };
@@ -264,5 +264,5 @@ export function escolherUnidade(el, ctx, texto) {
 }
 
 // Abas da área Relatórios: baixar relatórios e o retorno do mês em R$ (o Retorno não tem item próprio no menu)
-export const abasRelatorios = (atual) => `<div class="abas nao-imprimir" style="margin-bottom:0">${[['relatorios', 'Baixar relatórios'], ['retorno', 'Retorno do mês (R$)']]
-  .map(([r, rotulo]) => `<button class="${r === atual ? 'ativo' : ''}" onclick="location.hash='#/${r}'">${rotulo}</button>`).join('')}</div>`;
+// 26/11/2026: o Retorno em R$ foi para Análises; Relatórios ficou só para baixar (sem abas)
+export const abasRelatorios = () => '';

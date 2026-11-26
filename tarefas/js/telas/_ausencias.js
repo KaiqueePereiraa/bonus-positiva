@@ -3,9 +3,9 @@
 //  • Nesse dia ela não tem mínimo: o que falta é dividido pelos outros dias úteis até o prazo.
 //  • O coordenador escolhe se o dia quebra ou não a sequência 🔥 (padrão: falta quebra; folga/atestado não).
 //  • A consultora só vê as próprias.
-import * as dados from '../dados.js?v=20261126194450';
-import { somarDias } from '../regras.js?v=20261126194450';
-import { esc, dataCurta, diaSemana, toast, erro, modal, confirmar } from '../ui.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { somarDias } from '../regras.js?v=20261126195951';
+import { esc, dataCurta, diaSemana, toast, erro, modal, confirmar } from '../ui.js?v=20261126195951';
 
 export const MOTIVOS = { folga: '🏖️ Folga', atestado: '🩺 Atestado', falta: '❌ Falta', outro: '📌 Outro' };
 const seqTxt = (a) => (a.protege_sequencia === false ? '<span class="selo vermelho">quebra a sequência</span>' : '<span class="selo verde">não quebra a sequência</span>');
@@ -54,7 +54,7 @@ export async function cartaoAusencias(alvo, ctx, aoMudar) {
     if (!de) { toast('Escolha a data.'); return; }
     try {
       const n = await dados.marcarAusencia(r.campos['aus-pessoa'], de, ate, r.campos['aus-motivo'], r.campos['aus-obs'], r.campos['aus-seq'] !== 'quebra');
-      toast(`Marcado: ${n} dia(s) útil(eis) de ${ctx.nomeDe(r.campos['aus-pessoa'])}.`);
+      toast(`Marcado: ${n === 1 ? '1 dia útil' : `${n} dias úteis`} de ${ctx.nomeDe(r.campos['aus-pessoa'])}.`);
       aoMudar?.();
     } catch (e) { erro(e); }
   });

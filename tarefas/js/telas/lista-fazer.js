@@ -1,10 +1,10 @@
 // Lista a fazer — o coordenador sobe uma lista de contatos com a explicação do que fazer; ela é dividida
 // igualmente entre as consultoras da unidade e cada uma marca o que já fez (com observação opcional).
 // A consultora também pode subir uma lista PRÓPRIA (só dela, sem divisão) para se organizar.
-import * as dados from '../dados.js?v=20261126194450';
-import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261126194450';
-import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261126194450';
-import { organizarLista, pendentesPrimeiro, lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { dividirLista, normalizarTelefone, montarMensagem, linkWhatsApp, somarDias } from '../regras.js?v=20261126195951';
+import { esc, dataCurta, dataHora, seloStatus, barra, toast, erro, vazio, ehCelular, modal } from '../ui.js?v=20261126195951';
+import { organizarLista, pendentesPrimeiro, lerPlanilha, areaUpload, listaAvisos, cabecalhoTarefa, atualizarCabecalho, linhaProgresso, baixarArquivo, confirmarDesfazer, escolherUnidade } from './_comum.js?v=20261126195951';
 
 const texto = (s) => esc(s).replaceAll('\n', '<br>');
 const FAIXA_VERDE = 'background:#F4FAEC;border-color:#D5EDB8;color:var(--dark)';
@@ -177,9 +177,10 @@ async function painelAdmin(el, ctx) {
     const propria = l?.criado_por && l.criado_por !== ctx.perfil.id;
     return `<div class="cartao" data-imp="${imp.id}"><h2>${esc(l?.titulo || imp.arquivo_nome || 'Lista a fazer')}${propria ? ` <span class="etiqueta">lista própria de ${esc(ctx.nomeDe(l.criado_por))}</span>` : ''} <span class="mais">prazo ${dataCurta(l?.prazo || imp.referencia_fim)}</span></h2>
       ${l ? `<p class="dica" style="margin-bottom:12px">${texto(l.instrucoes)}</p>` : ''}
-      ${ts.map((t) => `<a href="#/lista-fazer/${t.id}" style="text-decoration:none;color:inherit">${linhaProgresso(ctx.nomeDe(t.responsavel_id), t.feitos, t.total, t.status)}</a>`).join('')}
+      ${ts.map((t) => `<a href="#/lista-fazer/${t.id}" style="text-decoration:none;color:inherit">${linhaProgresso(`${ctx.nomeDe(t.responsavel_id)}${l && t.prazo !== l.prazo && t.feitos < t.total ? ` · prazo ${dataCurta(t.prazo)}` : ''}`, t.feitos, t.total, t.status)}</a>`).join('')}
       <p class="dica" style="margin-top:8px">Equipe: ${feitos}/${total} contatos feitos${ts.some((t) => t.status === 'atrasada') ? ' · há tarefas atrasadas' : ''}. Clique numa consultora para ver os contatos e mover algum.</p>
       <div class="linha-acoes" style="margin-top:12px">
+        ${ts.some((t) => t.feitos < t.total && !String(t.status).startsWith('concluida')) ? '<button class="btn sec peq" data-acao="prazo">Mudar prazo</button>' : ''}
         ${l ? '<button class="btn sec peq" data-acao="editar">Editar texto</button>' : ''}
         ${imp.arquivo_path ? '<button class="btn sec peq" data-acao="baixar">Baixar planilha original</button>' : ''}
         ${feitos === 0 ? '<button class="btn perigo peq" data-acao="desfazer">Desfazer importação</button>' : ''}
@@ -202,6 +203,19 @@ async function painelAdmin(el, ctx) {
     if (!b || !imp) return;
     const l = listas.find((x) => x.importacao_id === imp.id);
     if (b.dataset.acao === 'baixar') baixarArquivo(imp.arquivo_path);
+    else if (b.dataset.acao === 'prazo') {
+      const abertas = tarefas.filter((t) => t.importacao_id === imp.id && t.feitos < t.total && !String(t.status).startsWith('concluida'));
+      const r = await modal('Mudar prazo da lista', `<div style="display:flex;flex-direction:column;gap:12px">
+        <label class="campo">Para quem<select id="m-quem"><option value="">Todas com contatos em aberto (${abertas.length})</option>
+          ${abertas.map((t) => `<option value="${t.id}">${esc(ctx.nomeDe(t.responsavel_id))} — faltam ${t.total - t.feitos}, prazo ${dataCurta(t.prazo)}</option>`).join('')}</select></label>
+        <label class="campo">Novo prazo<input id="m-prazo" type="date" min="${hoje}" value="${somarDias(hoje, 5)}"></label>
+        <p class="dica">O mínimo do dia da consultora se ajusta sozinho: o que falta é dividido pelos dias úteis até o novo prazo.</p></div>`,
+        { ler: true, acoes: [{ rotulo: 'Cancelar', classe: 'sec', valor: false }, { rotulo: 'Mudar prazo', valor: true }] });
+      if (!r?.valor) return;
+      const { 'm-quem': quem, 'm-prazo': prazo } = r.campos;
+      if (!prazo || prazo < hoje) return toast('Escolha um prazo a partir de hoje.', 'erro');
+      try { const n = await dados.mudarPrazoLista(imp.id, prazo, quem || null); toast(n === 1 ? `Prazo mudado para ${dataCurta(prazo)}.` : `Prazo de ${n} consultoras mudado para ${dataCurta(prazo)}.`); painelAdmin(el, ctx); } catch (err) { erro(err); }
+    }
     else if (b.dataset.acao === 'desfazer') {
       if (!(await confirmarDesfazer(imp))) return;
       try { await dados.desfazerImportacao(imp.id); toast('Importação desfeita.'); ctx.atualizarSino(); painelAdmin(el, ctx); } catch (err) { erro(err); }
@@ -235,7 +249,7 @@ async function previa(el, ctx, arquivo, { unidade, daUnidade, offset, propria = 
   alvo.innerHTML = `<div style="margin-top:16px">
     <h2 style="font-size:14px;margin-bottom:10px">${propria ? `Prévia — ${registros.length} contatos, todos para você` : `Prévia da divisão — ${registros.length} contatos`}</h2>
     ${propria ? '' : daUnidade.map((c, k) => `<div class="linha-info"><b>${esc(c.nome)}</b><span>${contagem[k]} contatos</span></div>`).join('')}
-    ${semCelular ? `<p class="dica">${semCelular} contato(s) sem celular válido: a consultora vê o nome, mas sem o botão de WhatsApp.</p>` : ''}
+    ${semCelular ? `<p class="dica">${semCelular === 1 ? '1 contato' : `${semCelular} contatos`} sem celular válido: a consultora vê o nome, mas sem o botão de WhatsApp.</p>` : ''}
     ${listaAvisos(avisos)}
     <div class="linha-acoes" style="margin-top:16px"><button class="btn verde" id="confirmar">${propria ? 'Confirmar e criar minha lista' : 'Confirmar e distribuir'}</button><button class="btn sec" id="cancelar">Cancelar</button></div></div>`;
   alvo.querySelector('#cancelar').onclick = () => { alvo.innerHTML = ''; };

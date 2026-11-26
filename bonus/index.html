@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/marca.css?v=20261126194450">
+<link rel="stylesheet" href="../shared/marca.css?v=20261126195951">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--fonte);background:var(--bg);color:var(--dark);min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -423,6 +423,13 @@ input,select,textarea{background:var(--superficie);color:var(--texto);border-col
 :root[data-tema="escuro"] .toggle-switch{background:var(--borda)}
 :root[data-tema="escuro"] .toggle-switch.on{background:var(--primaria)}
 :root[data-tema="escuro"] [style*="background:#f8f9fa"],:root[data-tema="escuro"] [style*="background:#f0f2f5"],:root[data-tema="escuro"] [style*="background:#fff"]{background:var(--muted)!important;color:var(--texto)!important}
+/* Revisão de design 26/11: sem faixa colorida na lateral dos cartões (igual à Central), contraste e valores sem quebrar */
+.kpi-card::before,.kpi-card.highlight::before{display:none}
+.kpi-card.highlight .kpi-label,.kpi-card.highlight .kpi-sub,.my-highlight-bar .mh-lbl{color:var(--texto-sobre-escuro)}
+.tag-disputed,.btn-transfer{color:var(--texto-aviso)}
+.rank-pos{color:var(--suave)}
+.kpi-value{white-space:nowrap;font-size:clamp(24px,2.6vw,32px);font-variant-numeric:tabular-nums}
+.btn-primary:active,.btn-login:active,.sec-btn:active{transform:scale(.97)}
 </style>
 </head>
 <body>
@@ -1854,7 +1861,7 @@ function renderOverview(allSales) {
       <div class="kpi-card">
         <div class="kpi-label">Disputas Abertas</div>
         <div class="kpi-value">${openDisputes}</div>
-        <div class="kpi-sub" style="color:var(--warning)">${openDisputes>0?'Requer atenção':'Tudo ok'}</div>
+        <div class="kpi-sub" style="color:${openDisputes>0?'var(--texto-aviso)':'var(--texto-sucesso)'}">${openDisputes>0?'Requer atenção':'Tudo ok'}</div>
       </div>
     </div>
     ${unitCardsHtml}

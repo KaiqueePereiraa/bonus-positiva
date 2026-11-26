@@ -72,7 +72,7 @@ export function painelMeta(r, hoje, unidade) {
     const depois = dias - 1;
     const quando = depois === 0 ? 'hoje é o último dia da semana'
       : `a semana fecha domingo (${r.fim.slice(8, 10)}/${r.fim.slice(5, 7)}), ${depois === 1 ? 'amanhã' : `daqui a ${depois} dias`}`;
-    frase = `${r.feitos === 0 ? 'Bora começar!' : (r.abaixo ?? r.faixa === 'Abaixo do básico') ? 'Você está no caminho!' : `${r.faixa} garantid${r.faixa === 'Básico' ? 'o' : 'a'}!`} `
+    frase = `${r.feitos === 0 ? 'Bora começar!' : (r.abaixo ?? r.faixa === 'Abaixo do básico') ? `Já ${r.feitos === 1 ? 'tem 1 contrato' : `são ${r.feitos} contratos`} na semana.` : `${r.faixa} garantid${r.faixa === 'Básico' ? 'o' : 'a'}!`} `
       + `${r.proxima.faltam === 1 ? 'Falta' : 'Faltam'} ${plural(r.proxima.faltam, 'contrato', 'contratos')} para ${alvo} — ${quando}.`;
   }
   return { marcos, pct: Math.min(100, Math.round((100 * r.feitos) / topo)), dias, frase, topo };

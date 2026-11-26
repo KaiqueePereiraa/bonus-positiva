@@ -13,15 +13,12 @@ export function mediana(lista) {
 const soma = (unidades, f) => unidades.reduce((s, u) => s + (Number(f(u)) || 0), 0);
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
-// Os 4 sinais do topo: Cobrança, Retenção, Vendas, Equipe
+// Os 3 atalhos do topo: Cobrança, Retenção, Vendas (26/11: o de Equipe saiu — repetia a atenção e a tabela da equipe)
 export function sinais(unidades) {
   const ativas = unidades.filter((u) => u.consultoras?.length);
   const pend = (c) => soma(ativas, (u) => u.pendentes?.[c]);
   const sem = (k) => soma(ativas, (u) => u.semana?.[k]);
   const mes = (k) => soma(ativas, (u) => u.mes?.[k]);
-  const cons = ativas.flatMap((u) => u.consultoras);
-  const vermelhas = cons.filter((c) => c.minimo >= 3 && c.feitos_hoje * 2 < c.minimo);
-  const atrasadas = cons.filter((c) => c.atrasados > 0);
 
   const inad = pend('inadimplencia');
   const risco = pend('risco');
@@ -32,24 +29,18 @@ export function sinais(unidades) {
   const efeito = rc >= 10 && rs >= 10 ? ` Com contato, ${Math.round(100 * rcv / rc)}% voltaram; sem contato, ${Math.round(100 * rsv / rs)}%.` : '';
 
   return [
-    { area: 'Cobrança', cor: inad ? 'amarelo' : 'verde',
+    { area: 'Cobrança', rota: '#/inadimplencia', cor: inad ? 'amarelo' : 'verde',
       titulo: sem('pagou') ? `${plural(sem('pagou'), 'pagou', 'pagaram')} nesta semana` : 'Cobrança da semana',
       texto: `${sem('valor') ? `${reais(sem('valor'))} recebidos depois da cobrança. ` : ''}${inad ? `${plural(inad, 'inadimplente aguarda', 'inadimplentes aguardam')} contato.` : 'Nenhum inadimplente esperando contato.'}`,
       acao: inad ? 'Garanta que a lista de hoje seja feita até o fim do dia.' : '' },
-    { area: 'Retenção', cor: risco || relac ? 'amarelo' : 'verde',
+    { area: 'Retenção', rota: '#/risco', cor: risco || relac ? 'amarelo' : 'verde',
       titulo: sem('voltou') ? `${plural(sem('voltou'), 'aluno voltou', 'alunos voltaram')} a treinar` : 'Alunos em risco',
       texto: `${risco ? `${plural(risco, 'aluno em risco ainda sem contato', 'alunos em risco ainda sem contato')}.` : 'Todos os alunos em risco já receberam contato.'}${relac ? ` ${plural(relac, 'contato', 'contatos')} de renovação e relacionamento ${relac === 1 ? 'pendente' : 'pendentes'}.` : ''}${efeito}`,
       acao: risco ? 'Peça para perguntarem o motivo da falta, não só "sentimos sua falta".' : '' },
-    { area: 'Vendas', cor: nf || novos ? 'amarelo' : 'verde',
+    { area: 'Vendas', rota: '#/nao-fechou', cor: nf || novos ? 'amarelo' : 'verde',
       titulo: mes('matriculou') ? `${plural(mes('matriculou'), 'matrícula recuperada', 'matrículas recuperadas')} no mês` : 'Oportunidades não fechadas',
       texto: `${novos ? `${plural(novos, 'contato de venda esperando (interessado, experimental ou ex-aluno)', 'contatos de venda esperando (interessados, experimentais e ex-alunos)')}. ` : ''}${nf ? `${plural(nf, 'interessado ainda sem motivo registrado', 'interessados ainda sem motivo registrado')}.` : 'Todos os interessados do mês já têm motivo registrado.'}`,
       acao: novos ? 'Interessado esfria rápido: o contato precisa sair hoje.' : nf ? 'Ofereça um horário de experimental já na primeira mensagem.' : '' },
-    { area: 'Equipe', cor: atrasadas.length || vermelhas.length ? 'vermelho' : 'verde',
-      titulo: atrasadas.length ? `${plural(atrasadas.length, 'consultora com atraso', 'consultoras com atraso')}` : vermelhas.length ? 'Ritmo abaixo hoje' : 'Equipe em dia',
-      texto: atrasadas.length ? atrasadas.map((c) => `${c.nome.split(' ')[0]} (${c.atrasados})`).join(', ') + ' com contatos atrasados.'
-        : vermelhas.length ? vermelhas.map((c) => `${c.nome.split(' ')[0]} ${c.feitos_hoje}/${c.minimo}`).join(', ') + ' — abaixo da metade do mínimo de hoje.'
-        : 'Ninguém com lista atrasada.',
-      acao: atrasadas.length || vermelhas.length ? 'Converse hoje e veja se é falta de tempo (recepção, vendas) ou de organização.' : '' },
   ];
 }
 
@@ -71,8 +62,8 @@ export function atencao(p, unidades, hora = 12, desligadas = [], geral = true) {
     }
     for (const c of u.consultoras) {
       if (c.atrasados > 0) lista.push({ texto: `${c.nome} tem ${plural(c.atrasados, 'contato atrasado', 'contatos atrasados')}.`, acao: 'Converse e combine quando ela coloca em dia.', rota: '#/analises/equipe' });
-      else if (hora >= 14 && c.minimo >= 3 && c.feitos_hoje * 2 < c.minimo) lista.push({ texto: `${c.nome} fez ${c.feitos_hoje} de ${c.minimo} contatos do mínimo de hoje.`, acao: 'Veja se algo está travando o dia dela.' });
-      if (c.pct_semana_passada != null && c.pct_semana_passada < 80) lista.push({ texto: `${c.nome} fez ${c.pct_semana_passada}% das listas da semana passada.` });
+      else if (hora >= 14 && c.minimo >= 3 && c.feitos_hoje * 2 < c.minimo) lista.push({ texto: `${c.nome} fez ${c.feitos_hoje} de ${c.minimo} contatos do mínimo de hoje.`, acao: 'Veja se algo está travando o dia dela.', verComo: c.id });
+      if (c.pct_semana_passada != null && c.pct_semana_passada < 80) lista.push({ texto: `${c.nome} fez ${c.pct_semana_passada}% das listas da semana passada.`, rota: '#/analises/equipe' });
     }
     for (const t of u.erros_evo_hoje || []) lista.push({ texto: `A busca automática na EVO (${t}) falhou hoje em ${u.nome}.`, acao: geral ? 'Veja o histórico em Configurações → EVO.' : comGeral, rota: geral ? '#/configuracoes/evo' : undefined });
   }
@@ -82,14 +73,14 @@ export function atencao(p, unidades, hora = 12, desligadas = [], geral = true) {
   return lista;
 }
 
-// Quadrante esforço × resultado
+// Quadrante esforço × retorno (% dos contatos que deram resultado — não é a conversão da carteira do Comercial)
 export function quadrante(c, medContatos, medTaxa) {
   const muito = c.contatos_30d >= medContatos;
   const bom = c.decididos_30d ? c.positivos_30d / c.decididos_30d >= medTaxa : false;
   if (muito && bom) return { icone: '⭐', nome: 'Referência', acao: 'Peça para ela mostrar às colegas como aborda os alunos.' };
-  if (muito && !bom) return { icone: '🎯', nome: 'Faz bastante, converte pouco', acao: 'Treinar a abordagem: revisar a mensagem e o que ela oferece.' };
-  if (!muito && bom) return { icone: '⏰', nome: 'Converte bem, faz pouco', acao: 'Falta tempo ou organização: veja o que ocupa o dia dela.' };
-  return { icone: '🚨', nome: 'Faz pouco e converte pouco', acao: 'Conversa individual: entender o motivo e combinar metas diárias.' };
+  if (muito && !bom) return { icone: '🎯', nome: 'Faz bastante, pouco retorno', acao: 'Treinar a abordagem: revisar a mensagem e o que ela oferece.' };
+  if (!muito && bom) return { icone: '⏰', nome: 'Bom retorno, faz pouco', acao: 'Falta tempo ou organização: veja o que ocupa o dia dela.' };
+  return { icone: '🚨', nome: 'Faz pouco e pouco retorno', acao: 'Conversa individual: entender o motivo e combinar metas diárias.' };
 }
 
 // Retorno do mês: valor estimado e "cada R$ 1"

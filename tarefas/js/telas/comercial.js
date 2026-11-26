@@ -2,9 +2,9 @@
 // contatos da IA que ela assumiu; não importa quem fechou), comparada entre as consultoras e com o mês anterior; o funil da
 // IA à parte (a IA só cadastra e manda o pagamento — não é comparada com as meninas); números do time e as semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126194450';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126194450';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261126194450';
+import * as dados from '../dados.js?v=20261126195951';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126195951';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261126195951';
 
 let escolhido = null;
 
@@ -15,7 +15,7 @@ function seta(atual, anterior, { pontos = false, invertido = false, unidade = nu
   const d = pontos ? Math.round((atual - anterior) * 10) / 10 : variacao(atual, anterior);
   if (d == null || d === 0) return '<span class="dica">= igual</span>';
   const bom = invertido ? d < 0 : d > 0;
-  return `<span style="color:${bom ? '#3F7A1F' : '#B42318'};font-weight:800">${d > 0 ? '▲' : '▼'} ${num(Math.abs(d))}${unidade || (pontos ? ' pts' : '%')}</span>`;
+  return `<span style="color:${bom ? 'var(--texto-sucesso)' : 'var(--texto-perigo)'};font-weight:800">${d > 0 ? '▲' : '▼'} ${num(Math.abs(d))}${unidade || (pontos ? ' pts' : '%')}</span>`;
 }
 const SELO = { acima: ['verde', 'Acima do padrão'], dentro: ['azul', 'Dentro do padrão'], abaixo: ['vermelho', 'Abaixo do padrão'], poucos: ['cinza', 'Poucos cadastros'] };
 const TEND = { melhorou: '▲ melhorou', piorou: '▼ piorou', estavel: '= estável' };
@@ -48,15 +48,21 @@ export async function render(el, ctx) {
 }
 
 function time(t, r, ctx, rotuloAnt, prof) {
-  const a = t.atual || {}, b = t.anterior || {};
-  const s = resumoTime(t);
+  // Filtro de unidade (revisão 26/11, decisão do Kaique): os números da empresa obedecem à unidade escolhida; consultoras,
+  // canais, funil da IA e semanas continuam da equipe junta (as meninas atendem nas unidades unidas), com aviso na tela.
+  const daUnidade = ctx.unidade && t.por_unidade?.length > 1 ? t.por_unidade.find((u) => u.id === ctx.unidade) : null;
+  const base = daUnidade ? { ...t, atual: daUnidade.atual, anterior: daUnidade.anterior } : t;
+  const a = base.atual || {}, b = base.anterior || {};
+  const s = resumoTime(base);
   const pessoas = avaliarTime(t);
   const padrao = taxaConsultoras(t);
   const fi = funilIa(t);
   const alerta = r.admin ? alertaCarteiras(pessoas) : null;
   const eu = !r.admin ? pessoas.find((p) => p.eu) : null;
+  const curto = (n) => String(n).replace('Positiva ', '').replace('Acqua ', '');
   return `<div class="cartao">
-    <h2>${esc(t.nome)}</h2>
+    <h2>${esc(daUnidade ? curto(daUnidade.nome) : t.nome)}</h2>
+    ${daUnidade ? `<p class="aviso-equipe">Números da empresa: só ${esc(curto(daUnidade.nome))}. Consultoras, canais, funil da IA e semanas: <b>equipe ${esc(t.nome)}</b> — as consultoras atendem nas unidades unidas.</p>` : ''}
     <div class="numeros" style="margin:12px 0">
       <div class="numero azul"><small>Oportunidades</small><b>${a.oportunidades ?? 0}</b><span>${seta(a.oportunidades, b.oportunidades)} vs ${b.oportunidades ?? 0}</span></div>
       <div class="numero verde"><small>Vendas no mês</small><b>${a.vendas ?? 0}</b><span>${seta(a.vendas, b.vendas)} vs ${b.vendas ?? 0}</span></div>
@@ -65,8 +71,9 @@ function time(t, r, ctx, rotuloAnt, prof) {
       <div class="numero"><small>Entrada (vendas + outro mês)</small><b>${s.entrada}</b><span>${seta(s.entrada, s.entradaAnt)} vs ${s.entradaAnt}</span></div>
       <div class="numero"><small>Tempo médio de fechamento</small><b>${a.tempo_medio == null ? '—' : `${num(a.tempo_medio)} d`}</b><span>${b.tempo_medio == null ? '' : `${seta(a.tempo_medio, b.tempo_medio, { pontos: true, invertido: true, unidade: ' d' })} vs ${num(b.tempo_medio)} d`}</span></div>
     </div>
-    <p class="dica">Comparação com ${esc(rotuloAnt)}.${r.fechado && a.futuras ? ` ${a.futuras} cadastro(s) deste mês fecharam no mês seguinte (conversões futuras).` : ''}</p>
+    <p class="dica">Comparação com ${esc(rotuloAnt)}.${r.fechado && a.futuras ? ` ${a.futuras === 1 ? '1 cadastro deste mês fechou' : `${a.futuras} cadastros deste mês fecharam`} no mês seguinte (conversões futuras).` : ''}</p>
     ${r.admin && t.por_unidade?.length > 1 ? porUnidade(t, rotuloAnt) : ''}
+    ${daUnidade ? `<h3 class="titulo-equipe">Equipe ${esc(t.nome)}</h3>` : ''}
     ${alerta ? `<div class="faixa urgente" style="display:block;margin:12px 0"><b>⚠️ Conversão muito diferente entre as consultoras</b><div style="margin-top:4px">${esc(alerta.texto)}</div></div>` : ''}
     ${eu ? quadroEu(eu, padrao) : ''}
     ${r.admin ? tabelaPessoas(pessoas, padrao) : ''}
@@ -87,7 +94,7 @@ function quadroFunilIa(fi, rotuloAnt) {
       Por isso a IA não é comparada com elas: as vendas desses contatos contam na carteira de quem assumiu.</p>
     <div class="numeros" style="margin:0 0 8px">
       <div class="numero azul"><small>Cadastros da IA</small><b>${x.cadastros}</b><span>${seta(x.cadastros, y.cadastros)} vs ${y.cadastros}</span></div>
-      ${etapa('Assumidos por uma consultora', x.assumidos, x.pAssumidos, y.pAssumidos, x.semDona ? `<b style="color:#B42318">${x.semDona} sem dona</b>` : 'todos com dona')}
+      ${etapa('Assumidos por uma consultora', x.assumidos, x.pAssumidos, y.pAssumidos, x.semDona ? `<b style="color:var(--texto-perigo)">${x.semDona} sem dona</b>` : 'todos com dona')}
       ${etapa('Seguiram para a experimental', x.experimental, x.pExperimental, y.pExperimental)}
       ${etapa('Viraram cliente (pela equipe)', x.clientes, x.pClientes, y.pClientes)}
       <div class="numero"><small>Tempo até alguém assumir</small><b>${x.dias == null ? '—' : `${num(x.dias)} d`}</b><span>${x.comData ? `${x.noDia} de ${x.comData} no mesmo dia ou no seguinte` : 'sem data ainda'}${y.dias == null ? '' : ` · antes ${num(y.dias)} d`}</span></div>
@@ -135,22 +142,32 @@ function porUnidade(t, rotuloAnt) {
     <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Oportunidades</th><th>Vendas no mês</th><th>Conversão</th><th>Vendas de outro mês</th><th>Entrada</th><th>Situação</th></tr></thead><tbody>
       ${us.map(linha).join('')}
     </tbody></table></div>
-    <p class="dica">Cada unidade com os próprios cadastros (onde a oportunidade foi cadastrada na EVO), comparada com ${esc(rotuloAnt)}. Os cartões acima somam as unidades da equipe; a conversão das consultoras, abaixo, também é da equipe junta.</p>`;
+    <p class="dica">Cada unidade com os próprios cadastros (onde a oportunidade foi cadastrada na EVO), comparada com ${esc(rotuloAnt)}. A conversão das consultoras, abaixo, é da equipe junta.</p>`;
 }
 
 function quadroEu(p, padrao) {
   const [cor, rot] = SELO[p.status];
   return `<div class="faixa" style="display:block;margin:12px 0;background:#F4F7FB;border-color:#D8E1EC;color:var(--navy)">
-    <b>Sua carteira: ${p.atual.cadastros} contato(s) — ${p.atual.cadastros - (p.atual.da_ia || 0)} que você cadastrou${p.atual.da_ia ? ` + ${p.atual.da_ia} da IA que você assumiu` : ''} · ${p.atual.vendas} viraram cliente — ${pctTxt(p.taxa)}</b>
+    <b>Sua carteira: ${p.atual.cadastros === 1 ? '1 contato' : `${p.atual.cadastros} contatos`} — ${p.atual.cadastros - (p.atual.da_ia || 0)} que você cadastrou${p.atual.da_ia ? ` + ${p.atual.da_ia} da IA que você assumiu` : ''} · ${p.atual.vendas} viraram cliente — ${pctTxt(p.taxa)}</b>
     Consultoras da equipe: ${pctTxt(padrao)} · Seu mês anterior: ${pctTxt(p.taxaAnt)} ${p.tend ? `(${TEND[p.tend.tipo]})` : ''} · <span class="selo ${cor}">${rot}</span>
     <div style="margin-top:6px">${esc(p.diagnostico)}</div></div>`;
 }
 
-function tabelaPessoas(pessoas, padrao) {
-  if (!pessoas.length) return vazio('Nenhum cadastro na carteira das consultoras neste mês.');
+function tabelaPessoas(todas, padrao) {
+  if (!todas.length) return vazio('Nenhum cadastro na carteira das consultoras neste mês.');
+  // quem não tem carteira neste mês (ou saiu da equipe) fica recolhido embaixo — não some, só não disputa atenção
+  const pessoas = todas.filter((p) => p.ativa !== false && p.atual.cadastros > 0);
+  const outras = todas.filter((p) => !pessoas.includes(p));
+  const cab = '<thead><tr><th>Consultora</th><th>Cadastrou</th><th>Assumiu da IA</th><th>Carteira</th><th>Viraram cliente</th><th>Conversão da carteira</th><th>Mês anterior</th><th>Tempo médio</th><th>Situação</th></tr></thead>';
   return `<h3 style="margin:18px 0 8px">Consultoras — conversão da carteira de cada uma</h3>
-    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Cadastrou</th><th>Assumiu da IA</th><th>Carteira</th><th>Viraram cliente</th><th>Conversão da carteira</th><th>Mês anterior</th><th>Tempo médio</th><th>Situação</th></tr></thead><tbody>
-    ${pessoas.map((p) => {
+    <div class="tabela-wrap"><table class="tabela">${cab}<tbody>${linhasPessoas(pessoas)}</tbody></table></div>
+    ${outras.length ? `<details class="como-ler"><summary>Sem carteira neste mês ou fora da equipe (${outras.length})</summary>
+      <div class="tabela-wrap"><table class="tabela">${cab}<tbody>${linhasPessoas(outras)}</tbody></table></div></details>` : ''}
+    <p class="dica">Carteira = o que ela cadastrou + os contatos da IA que ela assumiu. Padrão = conversão das carteiras de todas juntas (${pctTxt(padrao)}), com 10 pontos de folga para cima ou para baixo. Com menos de ${MIN_CADASTROS} cadastros no mês a % ainda não é avaliada.</p>`;
+}
+
+function linhasPessoas(pessoas) {
+  return `${pessoas.map((p) => {
       const [cor, rot] = SELO[p.status];
       return `<tr><td class="nome">${esc(p.nome)}${p.ativa ? '' : '<span class="sub">fora da equipe</span>'}</td>
         <td>${p.atual.cadastros - (p.atual.da_ia || 0)}</td><td>${p.atual.da_ia || 0}${p.atual.da_ia ? `<span class="sub">${p.atual.da_ia_vendas} ${p.atual.da_ia_vendas === 1 ? 'virou' : 'viraram'} cliente</span>` : ''}</td>
@@ -160,9 +177,7 @@ function tabelaPessoas(pessoas, padrao) {
         <td>${p.atual.tempo_medio == null ? '—' : `${num(p.atual.tempo_medio)} d`}</td>
         <td><span class="selo ${cor}">${rot}</span></td></tr>
         <tr><td colspan="9" class="dica" style="padding-top:0">💡 ${esc(p.diagnostico)}</td></tr>`;
-    }).join('')}
-    </tbody></table></div>
-    <p class="dica">Carteira = o que ela cadastrou + os contatos da IA que ela assumiu. Padrão = conversão das carteiras de todas juntas (${pctTxt(padrao)}), com 10 pontos de folga para cima ou para baixo. Com menos de ${MIN_CADASTROS} cadastros no mês a % ainda não é avaliada.</p>`;
+    }).join('')}`;
 }
 
 // Aulas experimentais por professor: quantos interessados fizeram a experimental com ele e quantos viraram cliente (até 30 dias)
