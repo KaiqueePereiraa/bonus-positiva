@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/marca.css?v=20261126201128">
+<link rel="stylesheet" href="../shared/marca.css?v=20261126205825">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--fonte);background:var(--bg);color:var(--dark);min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -430,6 +430,8 @@ input,select,textarea{background:var(--superficie);color:var(--texto);border-col
 .rank-pos{color:var(--suave)}
 .kpi-value{white-space:nowrap;font-size:clamp(24px,2.6vw,32px);font-variant-numeric:tabular-nums}
 .btn-primary:active,.btn-login:active,.sec-btn:active{transform:scale(.97)}
+.chart-card h3{border-left:0;padding-left:0;border-image:none;font-weight:700}
+.data-table tr.mine td{border-left:0}
 </style>
 </head>
 <body>
@@ -976,7 +978,7 @@ async function bootApp() {
     sel.onchange = () => { location.search = '?mes=' + encodeURIComponent(sel.value); };
     document.getElementById('hdr-month').replaceWith(sel);
   }
-  document.getElementById('hdr-name').textContent  = session.name;
+  document.getElementById('hdr-name').textContent  = String(session.name || '').toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase()).replace(/ (De|Da|Do|Dos|Das|E) /g, (m) => m.toLowerCase());
   document.getElementById('hdr-role').textContent  = session.role === 'coordinator' ? 'Coordenador' : 'Consultor';
   document.getElementById('hdr-avatar').textContent = session.name[0];
 
