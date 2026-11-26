@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261126154150';
+import { sb } from '../../shared/sessao.js?v=20261126161713';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -225,6 +225,9 @@ export const meusDias = async (userId) => ok(await sb.from('dias_consultora').se
   .eq('consultora_id', userId).order('data', { ascending: false }).limit(800));
 // Desempenho comercial do mês (conversão de quem cadastrou, comparada com a equipe e com o mês anterior)
 export const desempenhoComercial = (mes) => rpc('desempenho_comercial', { p_mes: mes, p_como: comoId || null });
+// Kanban da WasFit espelhado e conversão por professor (gestor)
+export const kanbanWasfit = (paradoDias) => rpc('kanban_wasfit', { p_parado_dias: paradoDias });
+export const desempenhoProfessores = (mes) => rpc('desempenho_professores', { p_mes: mes });
 export const minhaMetaSemana = () => (comoId ? rpc('minha_meta_semana_como', { p_user: comoId }) : rpc('minha_meta_semana', {}));
 export const desempenho = (de, ate) => rpc('desempenho', { p_de: de, p_ate: ate });
 // folgas/atestados/faltas (coordenador marca; RLS: a consultora lê só as dela)

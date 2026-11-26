@@ -1,9 +1,9 @@
 // Desempenho comercial — o "coordenador comercial": conversão dos cadastros de cada consultora (crédito de quem cadastrou,
 // não importa quem fechou), comparada com a equipe e com o mês anterior; números do time e as 4 semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126154150';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126154150';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, placarIa, MIN_CADASTROS } from '../comercial-regras.js?v=20261126154150';
+import * as dados from '../dados.js?v=20261126161713';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126161713';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, placarIa, MIN_CADASTROS } from '../comercial-regras.js?v=20261126161713';
 
 let escolhido = null;
 
@@ -28,7 +28,7 @@ export async function render(el, ctx) {
     meses.push(d.toISOString().slice(0, 10));
   }
   escolhido ||= meses[0];
-  const r = await dados.desempenhoComercial(escolhido);
+  const [r, prof] = await Promise.all([dados.desempenhoComercial(escolhido), ctx.ehAdmin && !dados.vendoComo() ? dados.desempenhoProfessores(escolhido).catch(() => null) : null]);
   const [a, m] = [+r.mes.slice(0, 4), +r.mes.slice(5, 7)];
   const [aa, ma] = [+r.anterior.mes.slice(0, 4), +r.anterior.mes.slice(5, 7)];
   const rotuloAnt = r.fechado ? nomeMesCap(aa, ma) : `${nomeMesCap(aa, ma)} até o dia ${r.anterior.corte.slice(8, 10)}`;
@@ -41,12 +41,12 @@ export async function render(el, ctx) {
       Quem cadastrou no mês e fechou depois aparece como "conversão futura". Gympass, diária, convidado, permuta, Kids e VIP não contam.
       ${r.fechado ? '' : `Mês em andamento: a comparação é com ${esc(rotuloAnt)}.`}
       ${r.sincronizado_em ? `Dados da EVO atualizados em ${esc(dataHora(r.sincronizado_em))}.` : ''}</p></div>
-    ${times.length ? times.map((t) => time(t, r, ctx, rotuloAnt)).join('') : `<div class="cartao">${vazio('Ainda não há cadastros lidos da EVO para este mês.')}</div>`}`;
+    ${times.length ? times.map((t) => time(t, r, ctx, rotuloAnt, prof?.times?.find((x) => x.id === t.id))).join('') : `<div class="cartao">${vazio('Ainda não há cadastros lidos da EVO para este mês.')}</div>`}`;
 
   el.querySelector('#mes').onchange = (e) => { escolhido = e.target.value; render(el, ctx); };
 }
 
-function time(t, r, ctx, rotuloAnt) {
+function time(t, r, ctx, rotuloAnt, prof) {
   const a = t.atual || {}, b = t.anterior || {};
   const s = resumoTime(t);
   const pessoas = avaliarTime(t);
@@ -67,6 +67,7 @@ function time(t, r, ctx, rotuloAnt) {
     ${quadroIa(pl)}
     ${eu ? quadroEu(eu, padrao) : ''}
     ${r.admin ? tabelaPessoas(pessoas, padrao, pl) : ''}
+    ${prof ? professores(prof) : ''}
     ${semanas(t)}
   </div>`;
 }
@@ -108,6 +109,20 @@ function tabelaPessoas(pessoas, padrao, pl) {
     }).join('')}
     </tbody></table></div>
     <p class="dica">Carteira = o que ela cadastrou + os cadastros da IA de que ela é dona. Padrão = conversão das carteiras juntas (${pctTxt(padrao)}), com 10 pontos de folga para cima ou para baixo. Com menos de ${MIN_CADASTROS} cadastros no mês a % ainda não é avaliada.</p>`;
+}
+
+// Aulas experimentais por professor: quantos interessados fizeram a experimental com ele e quantos viraram cliente (até 30 dias)
+function professores(p) {
+  if (!p.professores?.length) return p.lido_desde ? '' : '<p class="dica">Experimentais por professor: carregando a agenda da EVO.</p>';
+  return `<h3 style="margin:18px 0 8px">Experimentais por professor</h3>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Professor</th><th>Experimentais</th><th>Viraram cliente</th><th>Conversão</th><th>Mês anterior</th><th>Dias até fechar</th></tr></thead><tbody>
+    ${p.professores.map((x) => {
+      const taxa = pct(x.convertidas, x.experimentais), ant = x.anterior ? pct(x.anterior.convertidas, x.anterior.experimentais) : null;
+      return `<tr><td class="nome">${esc(x.nome)}</td><td>${x.experimentais}</td><td>${x.convertidas}</td><td><b>${pctTxt(taxa)}</b></td>
+        <td>${x.anterior ? `${x.anterior.experimentais} exp. · ${pctTxt(ant)}` : '—'}</td><td>${x.dias_ate_fechar == null ? '—' : `${num(x.dias_ate_fechar)} d`}</td></tr>`;
+    }).join('')}
+    </tbody></table></div>
+    <p class="dica">Experimental = interessado inscrito numa aula experimental da agenda da EVO; virou cliente = matrícula em até 30 dias depois da aula. Agenda lida desde ${dataCurta(p.lido_desde)}.</p>`;
 }
 
 function semanas(t) {

@@ -1,12 +1,12 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126154150';
-import * as dados from './dados.js?v=20261126154150';
-import { hojeSP } from './regras.js?v=20261126154150';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126154150';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126154150';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126154150';
-import { resumoSemana } from './bonus-meta.js?v=20261126154150';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126154150';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126161713';
+import * as dados from './dados.js?v=20261126161713';
+import { hojeSP } from './regras.js?v=20261126161713';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126161713';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126161713';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126161713';
+import { resumoSemana } from './bonus-meta.js?v=20261126161713';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126161713';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -44,6 +44,7 @@ const ROTAS = {
   // Acompanhar: uma pergunta por tela. Desempenho = as pessoas; Resultados = o que funciona; Relatórios = baixar e o retorno em R$.
   desempenho: { titulo: 'Desempenho', modulo: 'desempenho', icone: 'equipe', quem: 'todos', grupo: 'acompanhar', frase: 'Quem cumpriu o mínimo de contatos, quanto deu resultado e como cada uma está comparada com a equipe.' },
   comercial: { titulo: 'Desempenho comercial', modulo: 'comercial', icone: 'alvo', quem: 'todos', grupo: 'acompanhar', frase: 'Dos cadastros que cada consultora fez, quantos viraram cliente — comparado com a equipe e com o mês anterior.' },
+  kanban: { titulo: 'Kanban da WasFit', modulo: 'kanban', icone: 'lista', quem: 'admin', grupo: 'acompanhar', frase: 'Espelho do kanban de cada consultora na WasFit: onde está cada contato, há quanto tempo, e quem está parado.' },
   indicadores: { titulo: 'Resultados', modulo: 'indicadores', icone: 'ind', quem: 'admin', grupo: 'acompanhar', frase: 'O que cada lista trouxe de verdade, os motivos e o que os números dizem.' },
   relatorios: { titulo: 'Relatórios', modulo: 'relatorios', icone: 'rel', quem: 'admin', grupo: 'acompanhar', frase: 'Escolha o período e baixe em PDF, Excel ou CSV.' },
   retorno: { titulo: 'Retorno do mês', modulo: 'retorno', icone: 'rel', quem: 'admin', grupo: null, menu: 'relatorios', frase: 'Quanto a equipe trouxe de volta em R$ com a Central.' },
@@ -233,7 +234,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126154150`);
+    const tela = await import(`./telas/${modulo}.js?v=20261126161713`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
