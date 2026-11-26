@@ -3,9 +3,9 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com os dias que o gestor define em Configurações → Kanban.
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261126182118';
-import { esc, vazio, toast, erro } from '../ui.js?v=20261126182118';
-import { texto as regraTexto } from '../kanban-regras.js?v=20261126182118';
+import * as dados from '../dados.js?v=20261126183333';
+import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261126183333';
+import { texto as regraTexto } from '../kanban-regras.js?v=20261126183333';
 
 const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], espera: ['azul', '⏳ Em espera'], fora: ['cinza', 'Não monitorada'] };
 // minutos → "25 min", "2 h 10 min", "3 dias"
@@ -55,6 +55,7 @@ export async function render(el, ctx) {
     ${resumoRegras(r)}
     ${quadroUsuarios(r)}
     ${quadroWebhooks(ganchos)}`;
+  el.querySelectorAll('[data-espera-lista]').forEach((b) => b.addEventListener('click', () => listaEspera(r.espera, b.dataset.campo, b.dataset.valor, b.dataset.rotulo)));
   el.querySelectorAll('[data-copiar]').forEach((b) => b.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(ganchos[+b.dataset.copiar].url); toast('Endereço copiado.'); } catch (e) { erro(e); }
   }));
@@ -76,19 +77,52 @@ function fila(e) {
       <div class="numero escuro"><small>Tempo típico até assumir</small><b>${minTxt(e.mediana_min)}</b><span>mediana · média ${minTxt(e.media_min)}</span></div>
       <div class="numero"><small>Assumidos em até 15 min</small><b>${pctDe(e.ate_15, e.atendidos)}</b><span>em até 1 h: ${pctDe(e.ate_60, e.atendidos)}</span></div>
     </div>
-    ${e.por_unidade?.length ? `<div class="tabela-wrap" style="margin-bottom:12px"><table class="tabela"><thead><tr><th>Unidade</th><th>Esperando agora</th><th>Mais antigo</th><th>Assumidos (30 dias)</th><th>Tempo típico</th><th>Média</th><th>Até 1 h</th></tr></thead><tbody>
+    ${e.atendidos ? `<div class="linha-acoes" style="margin:0 0 12px"><button class="btn sec peq" data-espera-lista data-campo="" data-valor="" data-rotulo="Todos">📋 Ver lista dos ${e.atendidos} atendimentos (de onde vêm as médias)</button></div>` : ''}
+    ${e.por_unidade?.length ? `<div class="tabela-wrap" style="margin-bottom:12px"><table class="tabela"><thead><tr><th>Unidade</th><th>Esperando agora</th><th>Mais antigo</th><th>Assumidos (30 dias)</th><th>Tempo típico</th><th>Média</th><th>Até 1 h</th><th></th></tr></thead><tbody>
       ${e.por_unidade.map((u) => `<tr><td class="nome">${esc(u.nome)}</td><td>${u.aguardando ? `<b style="color:#B42318">${u.aguardando}</b>` : '0'}</td><td>${minTxt(u.mais_antigo_min)}</td>
-        <td>${u.atendidos}</td><td><b>${minTxt(u.mediana_min)}</b></td><td>${minTxt(u.media_min)}</td><td>${pctDe(u.ate_60, u.atendidos)}</td></tr>`).join('')}
+        <td>${u.atendidos}</td><td><b>${minTxt(u.mediana_min)}</b></td><td>${minTxt(u.media_min)}</td><td>${pctDe(u.ate_60, u.atendidos)}</td>
+        <td>${u.atendidos ? `<button class="btn sec peq" data-espera-lista data-campo="unidade" data-valor="${esc(u.unidade)}" data-rotulo="${esc(u.nome)}">Ver lista</button>` : ''}</td></tr>`).join('')}
     </tbody></table></div>` : ''}
-    ${e.por_pessoa?.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Quem assumiu</th><th>Assumidos</th><th>Tempo típico</th><th>Média</th><th>Até 15 min</th><th>Até 1 h</th><th>Maior espera</th></tr></thead><tbody>
+    ${e.por_pessoa?.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Quem assumiu</th><th>Assumidos</th><th>Tempo típico</th><th>Média</th><th>Até 15 min</th><th>Até 1 h</th><th>Maior espera</th><th></th></tr></thead><tbody>
       ${e.por_pessoa.map((p) => `<tr><td class="nome">${esc(p.nome || '—')}</td><td>${p.assumidos}</td><td><b>${minTxt(p.mediana_min)}</b></td><td>${minTxt(p.media_min)}</td>
-        <td>${pctDe(p.ate_15, p.assumidos)}</td><td>${pctDe(p.ate_60, p.assumidos)}</td><td>${minTxt(p.maior_min)}</td></tr>`).join('')}
+        <td>${pctDe(p.ate_15, p.assumidos)}</td><td>${pctDe(p.ate_60, p.assumidos)}</td><td>${minTxt(p.maior_min)}</td>
+        <td><button class="btn sec peq" data-espera-lista data-campo="quem" data-valor="${esc(p.nome || '')}" data-rotulo="${esc(p.nome || '—')}">Ver lista</button></td></tr>`).join('')}
     </tbody></table></div>` : ''}
     ${e.lista?.length ? `<h3 style="margin:16px 0 8px">Esperando agora</h3><div class="tabela-wrap"><table class="tabela"><thead><tr><th>Contato</th><th>Unidade</th><th>Esperando há</th><th>Quem colocou</th></tr></thead><tbody>
       ${e.lista.map((x) => `<tr><td class="nome">${esc(x.contato || '—')}<span class="sub">${esc(x.numero || '')}</span></td><td>${esc(x.unidade === 'republica' ? 'República' : x.unidade === 'laranjeiras' ? 'Laranjeiras' : x.unidade === 'club' ? 'Club' : (x.unidade || '—'))}</td>
         <td><b style="color:${x.minutos > 60 ? '#B42318' : 'inherit'}">${minTxt(x.minutos)}</b></td><td>${esc(x.colocou)}</td></tr>`).join('')}
     </tbody></table></div>` : ''}
     <p class="dica">Tempo até assumir = da hora em que o contato entrou em "${tag}" até a 1ª ação de uma pessoa nele (mudar etiqueta). "Tempo típico" é a mediana: metade dos contatos foi assumida mais rápido que isso. Conta o relógio corrido (inclusive à noite).</p></div>`;
+}
+
+// Auditoria: cada atendimento da fila que entrou na conta (últimos 30 dias), filtrado por unidade ou por quem assumiu,
+// com a média e o tempo típico recalculados em cima da própria lista; dá para baixar em CSV (abre no Excel).
+const NOME_UN = { laranjeiras: 'Laranjeiras', republica: 'República', club: 'Club' };
+function listaEspera(e, campo, valor, rotulo) {
+  const todos = e?.atendidos_lista || [];
+  const lista = campo ? todos.filter((x) => String(x[campo] ?? '') === valor) : todos;
+  const mins = lista.map((x) => Number(x.minutos)).sort((a, b) => a - b);
+  const media = mins.length ? mins.reduce((a, b) => a + b, 0) / mins.length : null;
+  const mediana = mins.length ? (mins.length % 2 ? mins[(mins.length - 1) / 2] : (mins[mins.length / 2 - 1] + mins[mins.length / 2]) / 2) : null;
+  const corpo = `<p class="dica" style="margin-bottom:8px">${lista.length} atendimento(s) nos últimos 30 dias · tempo típico <b>${minTxt(mediana)}</b> · média <b>${minTxt(media)}</b>.
+      Conta do momento em que a IA pôs o contato na fila até a 1ª ação de uma pessoa nele.</p>
+    <div class="tabela-wrap" style="max-height:60vh;overflow:auto"><table class="tabela"><thead><tr><th>Contato</th><th>Unidade</th><th>Entrou na fila</th><th>Assumiu</th><th>Quem</th><th>Tempo</th></tr></thead><tbody>
+    ${lista.map((x) => `<tr><td class="nome">${esc(x.contato || '—')}<span class="sub">${esc(x.numero || '')}</span></td><td>${esc(NOME_UN[x.unidade] || x.unidade || '—')}</td>
+      <td>${esc(dataHora(x.entrou_em))}</td><td>${esc(dataHora(x.assumiu_em))}</td><td>${esc(x.quem || '—')}</td>
+      <td><b style="color:${x.minutos > 60 ? '#B42318' : 'inherit'}">${minTxt(x.minutos)}</b></td></tr>`).join('') || '<tr><td colspan="6" class="dica">Nenhum atendimento.</td></tr>'}
+    </tbody></table></div>`;
+  modal(`Fila "${e?.tag || 'Em espera'}" — ${rotulo}`, corpo, { acoes: [{ rotulo: 'Baixar planilha (CSV)', classe: 'sec', valor: 'csv' }, { rotulo: 'Fechar', valor: 'fechar' }] })
+    .then((v) => {
+      if (v !== 'csv') return;
+      const cel = (t) => `"${String(t ?? '').replace(/"/g, '""')}"`;
+      const linhas = [['Contato', 'Número', 'Unidade', 'Entrou na fila', 'Assumiu', 'Quem assumiu', 'Minutos'].map(cel).join(';'),
+        ...lista.map((x) => [x.contato, x.numero, NOME_UN[x.unidade] || x.unidade, dataHora(x.entrou_em), dataHora(x.assumiu_em), x.quem, String(x.minutos).replace('.', ',')].map(cel).join(';'))];
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['\ufeff' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' }));
+      a.download = `fila-espera-${String(rotulo).toLowerCase().replace(/[^a-z0-9]+/gi, '-')}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
 }
 
 // Regras do monitoramento: só o resumo aqui; o gestor muda em Configurações → Kanban

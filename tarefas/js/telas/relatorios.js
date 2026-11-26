@@ -1,11 +1,11 @@
 // Relatórios — escolhe período, controle e consultoras; mostra na tela e exporta PDF, Excel ou CSV.
-import * as dados from '../dados.js?v=20261126182118';
-import { resumo, porConsultora, contarMotivos, gerarInsights, comMotivoEfetivo } from '../analises.js?v=20261126182118';
-import { barras, imagem } from '../graficos.js?v=20261126182118';
-import { csv, excel, pdf } from '../exportar.js?v=20261126182118';
-import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261126182118';
-import { abasRelatorios } from './_comum.js?v=20261126182118';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto, ligarPeriodos } from './_analise.js?v=20261126182118';
+import * as dados from '../dados.js?v=20261126183333';
+import { resumo, porConsultora, contarMotivos, gerarInsights, comMotivoEfetivo } from '../analises.js?v=20261126183333';
+import { barras, imagem } from '../graficos.js?v=20261126183333';
+import { csv, excel, pdf } from '../exportar.js?v=20261126183333';
+import { esc, dataLonga, dataHora, STATUS, NOMES_CONTROLE, toast, erro } from '../ui.js?v=20261126183333';
+import { abasRelatorios } from './_comum.js?v=20261126183333';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, periodoTexto, ligarPeriodos } from './_analise.js?v=20261126183333';
 
 let filtros;
 const LOGO = new URL('../../../assets/logo-escuro.png', import.meta.url).href;
