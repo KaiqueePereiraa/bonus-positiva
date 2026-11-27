@@ -2,9 +2,9 @@
 // contatos da IA que ela assumiu; não importa quem fechou), comparada entre as consultoras e com o mês anterior; o funil da
 // IA à parte (a IA só cadastra e manda o pagamento — não é comparada com as meninas); números do time e as semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261127024402';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261127024402';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261127024402';
+import * as dados from '../dados.js?v=20261127132907';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261127132907';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261127132907';
 
 let escolhido = null;
 
@@ -29,7 +29,8 @@ export async function render(el, ctx) {
     meses.push(d.toISOString().slice(0, 10));
   }
   escolhido ||= meses[0];
-  const [r, prof] = await Promise.all([dados.desempenhoComercial(escolhido), ctx.ehAdmin && !dados.vendoComo() ? dados.desempenhoProfessores(escolhido).catch(() => null) : null]);
+  const r = await dados.desempenhoComercial(escolhido);
+  const prof = null;   // 27/11/2026: experimentais por professor foram para Análises → Professores
   const [a, m] = [+r.mes.slice(0, 4), +r.mes.slice(5, 7)];
   const [aa, ma] = [+r.anterior.mes.slice(0, 4), +r.anterior.mes.slice(5, 7)];
   const rotuloAnt = r.fechado ? nomeMesCap(aa, ma) : `${nomeMesCap(aa, ma)} até o dia ${r.anterior.corte.slice(8, 10)}`;
@@ -81,7 +82,7 @@ function time(t, r, ctx, rotuloAnt, prof) {
     ${eu ? quadroEu(eu, padrao) : ''}
     ${r.admin ? tabelaPessoas(pessoas, padrao) : ''}
     ${daUnidade ? '' : `${canaisHtml}${funilHtml}`}
-    ${prof ? professores(prof) : ''}
+    ${r.admin ? '<p class="dica" style="margin-top:14px">Aula experimental e retenção por professor: <a href="#/analises/professores">Análises → Professores →</a></p>' : ''}
     ${semanas(t)}
   </div>`;
 }

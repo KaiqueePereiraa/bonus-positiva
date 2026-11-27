@@ -6,6 +6,7 @@ const ABAS = [
   ['kanban', 'Kanban da WasFit', 'kanban', 'todos'],
   ['equipe', 'Contatos da equipe', 'desempenho', 'todos'],
   ['resultados', 'Resultados das listas', 'indicadores', 'admin'],
+  ['professores', 'Professores', 'professores', 'admin'],
   ['retorno', 'Retorno em R$', 'retorno', 'admin'],
 ];
 
