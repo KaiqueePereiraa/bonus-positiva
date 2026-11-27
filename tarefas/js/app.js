@@ -1,13 +1,13 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261127193317';
-import * as dados from './dados.js?v=20261127193317';
-import { seloLicenca } from './conta-regras.js?v=20261127193317';
-import { hojeSP } from './regras.js?v=20261127193317';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261127193317';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261127193317';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261127193317';
-import { resumoSemana, equipeDoDia } from './bonus-meta.js?v=20261127193317';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261127193317';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261127194357';
+import * as dados from './dados.js?v=20261127194357';
+import { seloLicenca } from './conta-regras.js?v=20261127194357';
+import { hojeSP } from './regras.js?v=20261127194357';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261127194357';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261127194357';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261127194357';
+import { resumoSemana, equipeDoDia } from './bonus-meta.js?v=20261127194357';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261127194357';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -295,7 +295,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261127193317`);
+    const tela = await import(`./telas/${modulo}.js?v=20261127194357`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -310,6 +310,7 @@ async function navegar() {
 // ── Sino ──
 let avisosAtuais = [];
 let tarefasDoMenu = [];
+let filaAguardando = 0;   // fila "Em espera" da unidade da consultora: número ao lado de "Meu dia" no menu (27/11/2026)
 
 // Número de contatos pendentes ao lado de cada lista no menu. A consultora só vê as listas em que tem algo.
 function atualizarMenu() {
@@ -323,6 +324,7 @@ function atualizarMenu() {
     if (String(t.status).startsWith('concluida') || (t.controle_id === 'experimental_confirmar' && t.prazo < hoje)) continue;
     pend[rota] = (pend[rota] || 0) + Math.max(0, (t.total || 0) - (t.feitos || 0));
   }
+  if (!ehAdmin && filaAguardando) pend['meu-dia'] = filaAguardando;
   document.querySelectorAll('#menu li[data-li]').forEach((li) => {
     const rota = li.dataset.li;
     const cont = li.querySelector('.cont');
@@ -344,10 +346,11 @@ export async function calcularAvisos() {
     tarefasDoMenu = tarefas;
     return avisosAdmin({ tarefas, nomeDe: ctx.nomeDe, nomeUnidade: ctx.nomeUnidade, hoje, semResponsavel: pool.length });
   }
-  const [tarefas, pool, listas, trocas] = await Promise.all([
+  const [tarefas, pool, listas, trocas, fila] = await Promise.all([
     dados.tarefas({ responsavel: perfil.id }), dados.semResponsavelVisiveis().catch(() => []), dados.listasFazer().catch(() => []),
-    dados.trocasEscala().catch(() => [])]);
+    dados.trocasEscala().catch(() => []), dados.minhaFilaEspera().catch(() => null)]);
   tarefasDoMenu = tarefas;
+  filaAguardando = fila?.aguardando || 0;
   const pedidosTroca = trocas.filter((p) => p.destino_id === perfil.id && p.status === 'pendente' && p.data_origem > hoje && (!p.data_troca || p.data_troca > hoje))
     .map((p) => ({ id: p.id, quem: ctx.nomeDe(p.solicitante_id), data: p.data_origem }));
   return avisosConsultora({ tarefas, semResponsavel: pool.length, hoje, titulos: Object.fromEntries(listas.map((l) => [l.importacao_id, l.titulo])), pedidosTroca });

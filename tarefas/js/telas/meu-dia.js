@@ -1,16 +1,17 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import { MOTIVOS } from './_ausencias.js?v=20261127193317';
-import * as dados from '../dados.js?v=20261127193317';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127193317';
-import { resumoSemana, painelMeta, equipeDoDia } from '../bonus-meta.js?v=20261127193317';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261127193317';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261127193317';
-import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261127193317';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261127193317';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261127193317';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261127193317';
+import { MOTIVOS } from './_ausencias.js?v=20261127194357';
+import * as dados from '../dados.js?v=20261127194357';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127194357';
+import { resumoSemana, painelMeta, equipeDoDia } from '../bonus-meta.js?v=20261127194357';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261127194357';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261127194357';
+import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261127194357';
+import { nivelEspera, tempoEspera, placarFila } from '../fila-espera-regras.js?v=20261127194357';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261127194357';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261127194357';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261127194357';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -25,8 +26,9 @@ export async function render(el, ctx) {
   const [d, meta, tarefas, listasFazer, dias] = await Promise.all([dados.meuDia(), temBonus ? dados.minhaMetaSemana().catch(() => null) : null,
     dados.tarefas({ responsavel: ctx.perfil.id }).catch(() => []), dados.listasFazer().catch(() => []),
     dados.meusDias(ctx.perfil.id).catch(() => [])]);
-  const [kanban, comercial] = await Promise.all([dados.meuKanban().catch(() => null),   // kanban da WasFit: contatos dela parados (atrasado/crítico)
-    dados.desempenhoComercial(`${d.hoje.slice(0, 8)}01`).catch(() => null)]);   // carteira do mês dela (Seu mês)
+  const [kanban, comercial, fila] = await Promise.all([dados.meuKanban().catch(() => null),   // kanban da WasFit: contatos dela parados (atrasado/crítico)
+    dados.desempenhoComercial(`${d.hoje.slice(0, 8)}01`).catch(() => null),   // carteira do mês dela (Seu mês)
+    dados.minhaFilaEspera().catch(() => null)]);   // fila "Em espera" da unidade dela (quem a IA passou para uma pessoa)
   // contatos dela hoje em cada lista (sem conexão/permissão: as missões mostram só o que falta)
   const [porLista, meusRes, vits, recordeItens] = await Promise.all([dados.meusFeitosHojePorLista(ctx.perfil.id, d.hoje).catch(() => null),
     dados.meusResultados(ctx.perfil.id).catch(() => null), dados.vitoriasEquipe(7).catch(() => []), dados.meuRecordeDia(ctx.perfil.id, d.hoje).catch(() => 0)]);
@@ -80,6 +82,8 @@ export async function render(el, ctx) {
     ${kanban?.ligada && (kanban.niveis.critico || kanban.niveis.urgente) ? `<div class="faixa ${kanban.niveis.critico ? 'urgente' : ''}"><div>
       Kanban da WasFit: ${kanban.niveis.critico ? `🔴 <b>${kanban.niveis.critico} crítico${kanban.niveis.critico > 1 ? 's' : ''}</b>` : ''}${kanban.niveis.critico && kanban.niveis.urgente ? ' e ' : ''}${kanban.niveis.urgente ? `🟠 <b>${kanban.niveis.urgente} atrasado${kanban.niveis.urgente > 1 ? 's' : ''}</b>` : ''}
       sem nenhuma ação há tempo demais. <a href="#/analises/kanban">Ver quem →</a></div></div>` : ''}
+
+    ${cartaoFila(fila)}
 
     ${guiaVisto() ? '' : `<div class="cartao guia"><h2>Como funciona (30 segundos)</h2>
       <ol>
@@ -135,7 +139,7 @@ export async function render(el, ctx) {
 
     ${quadroResultados(res, vits, ctx.perfil.id)}
 
-    ${seuMes(comercial, kanban)}
+    ${seuMes(comercial, kanban, fila)}
 
     ${conquistasHtml(premios)}
 
@@ -241,14 +245,28 @@ export function cartaoMeta(meta, hoje, unidade) {
 
 // Seu mês (revisão 26/11, item "Meu dia com os números dela"): a carteira do mês (o que ela cadastrou + o que assumiu da IA),
 // quantos viraram cliente comparado com a equipe, e o kanban dela. Os mesmos números que o gestor vê em Análises.
-function seuMes(com, kb) {
+// Fila "Em espera" (27/11/2026): contatos que a IA passou para uma pessoa e ninguém assumiu ainda, na unidade dela.
+// Quem assumir primeiro no WasFit (mudando a etiqueta) fica com o contato e ele sai daqui. Tempo corrido, inclusive à noite.
+function cartaoFila(f) {
+  if (!f?.aguardando) return '';
+  const n = f.aguardando, cor = nivelEspera(f.mais_antigo_min), mostrar = (f.lista || []).slice(0, 5);
+  return `<div class="cartao fila-espera ${cor}"><h2>⏳ ${n} ${n === 1 ? 'pessoa esperando' : 'pessoas esperando'} atendimento
+      <span class="selo ${cor}">${n === 1 ? 'há' : 'a mais antiga há'} ${tempoEspera(f.mais_antigo_min)}</span></h2>
+    <ul class="fila-lista">${mostrar.map((x) => `<li><span class="fila-ponto ${nivelEspera(x.minutos)}"></span><b>${esc(x.contato || 'Contato')}</b>
+      ${x.numero ? `<span class="dica">final ${esc(x.numero)}</span>` : ''}<span class="fila-tempo ${nivelEspera(x.minutos)}">há ${tempoEspera(x.minutos)}</span></li>`).join('')}</ul>
+    ${n > mostrar.length ? `<p class="dica">e mais ${n - mostrar.length} na fila.</p>` : ''}
+    <p class="dica">Estão com a etiqueta "${esc(f.tag || 'Em espera')}" no WasFit: a IA atendeu e agora precisa de uma pessoa. <b>Quem assumir primeiro no WasFit</b> (mudando a etiqueta) fica com o contato, e ele sai daqui.</p></div>`;
+}
+
+function seuMes(com, kb, fila) {
   let eu = null, equipe = null;
   for (const t of com?.times || []) {
     const p = avaliarTime(t).find((x) => x.eu);
     if (p) { eu = p; equipe = taxaConsultoras(t); break; }
   }
   const k = kb?.ligada ? kb.niveis || {} : null;
-  if (!eu && !k) return '';
+  const pf = placarFila(fila);
+  if (!eu && !k && !pf) return '';
   const pc = (v) => (v == null ? '—' : `${String(v).replace('.', ',')}%`);
   const carteira = eu ? eu.atual.cadastros : 0;
   const SIT = { acima: ['verde', 'acima da equipe'], dentro: ['azul', 'no padrão da equipe'], abaixo: ['laranja', 'abaixo da equipe'], poucos: ['cinza', 'poucos contatos ainda'] };
@@ -257,6 +275,7 @@ function seuMes(com, kb) {
     <div class="seu-mes-grade">
       ${eu ? `<div><small>Sua carteira</small><b>${carteira}</b><span>${carteira - (eu.atual.da_ia || 0)} que você cadastrou${eu.atual.da_ia ? ` + ${eu.atual.da_ia} da IA` : ''}</span></div>
       <div><small>Viraram cliente</small><b>${pc(eu.taxa)}</b><span>${eu.atual.vendas} de ${carteira} · equipe ${pc(equipe)}</span><span class="selo ${cor}">${rot}</span></div>` : ''}
+      ${pf ? `<div><small>Fila "${esc(fila.tag || 'Em espera')}"</small><b>${pf.numero}</b><span>${pf.numero === 1 ? 'assumido' : 'assumidos'} por você no mês</span><span>${esc(pf.texto)}</span></div>` : ''}
       ${k ? `<div><small>Seu kanban</small><b>${(k.critico || 0) + (k.urgente || 0)}</b><span>${k.critico ? `${k.critico} crítico${k.critico > 1 ? 's' : ''} · ` : ''}${k.urgente || 0} atrasado${k.urgente === 1 ? '' : 's'} · ${k.normal || 0} em dia</span></div>` : ''}
     </div>
     ${eu?.diagnostico ? `<p class="dica" style="margin-top:10px">💡 ${esc(eu.diagnostico)}</p>` : ''}

@@ -215,3 +215,13 @@ details.todas-medalhas[open]>summary{margin-bottom:10px}
 .conta-chip.trocavel::after{content:"";width:7px;height:7px;margin-left:2px;border-right:2px solid var(--suave);border-bottom:2px solid var(--suave);transform:rotate(45deg) translateY(-2px)}
 .conta-chip.trocavel:hover{border-color:var(--primaria-forte)}
 .conta-chip.outra{border-color:var(--warning);background:color-mix(in oklch,var(--warning) 10%,var(--superficie))}
+
+/* Fila "Em espera" no Meu dia (27/11/2026) */
+.cartao.fila-espera.vermelho{border-color:color-mix(in oklch,var(--texto-perigo) 45%,var(--borda))}
+.cartao.fila-espera.laranja{border-color:color-mix(in oklch,var(--texto-aviso) 45%,var(--borda))}
+.fila-lista{list-style:none;margin:10px 0 6px;padding:0;display:grid;gap:6px}
+.fila-lista li{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--muted);font-size:14px}
+.fila-ponto{width:9px;height:9px;border-radius:50%;flex:none;background:var(--primaria)}
+.fila-ponto.laranja{background:var(--texto-aviso)}.fila-ponto.vermelho{background:var(--texto-perigo)}
+.fila-tempo{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fila-tempo.laranja{color:var(--texto-aviso)}.fila-tempo.vermelho{color:var(--texto-perigo)}
