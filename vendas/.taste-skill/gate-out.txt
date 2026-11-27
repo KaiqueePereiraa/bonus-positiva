@@ -1,0 +1,9 @@
+gate: checking index.html (software); this takes a few minutes on a CPU Chrome
+gate: no open FAIL
+  WAIVED no-visual section#contato "Fale com a WasFit sobre a sua academia": this is the booking-form section, which sections.md allows without a picture (the form sits on the brand's mint frame)
+  WAIVED copy-headings h2#painel-h "Painel do gestor com o que pede atenção": the page is in Brazilian Portuguese: every heading names a product part (Painel, Listas, Meu dia, Kanban, Bônus); the noun list is English-only
+  WAIVED row-lines section#listas > div.wrap > div.grid.vd-fim > div.span-12.vd-marquee "Inadimplên: the dealt marquee-row moment is a moving row by design; the kit's own rail clips it and fades both edges
+  WAIVED row-lines div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail "Inadimplê: same kit marquee-row: its rail is the moment's own clipping window, not a carousel
+  WAIVED bleed-one-side #listas ul.mo-mq__track.mo-mq__clone "InadimplênciaRisco de abandonoRe": the kit marquee's clone track sits off-screen to loop the words; it is clipped by the moment's rail and never seen
+  25 WARN (not blocking), first: marquee div.grid.vd-fim > div.span-12.vd-marquee; no-visual section#integra "Liga a EVO e o app.wasf; copy-buttons header.nav.nav--centre > div.wrap.nav__b; section-gaps section#listas / section#meu-dia; nav-labels header.nav.nav--centre > div.wrap.nav__b
+GATE: PASS

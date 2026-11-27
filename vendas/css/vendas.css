@@ -32,9 +32,9 @@
 @media (max-width: 1023px) { .nav__actions .vd-tema { display: none; } }
 
 /* ── texto de apoio nas divisões ── */
-.vd-fatos { display: grid; gap: var(--s-3); }
-.vd-fatos li { position: relative; padding-left: var(--s-5); line-height: 1.5; }
-.vd-fatos li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 8px; height: 8px; border-radius: 50%; background: var(--action); }
+.vd-fatos { display: grid; }
+.vd-fatos li { padding: var(--s-3) 0; border-bottom: 1px solid var(--line); line-height: 1.5; }
+.vd-fatos li:first-child { border-top: 1px solid var(--line); }
 .vd-nomes { margin-top: var(--s-7); }
 .vd-nomes p { margin-top: var(--s-2); }
 .vd-fim { align-content: start; }
@@ -156,10 +156,9 @@
 /* anel do placar */
 .wg-anel { --tam: 112px; position: relative; flex: none; width: var(--tam); height: var(--tam); border-radius: 50%; display: grid; place-content: center; text-align: center;
   background: conic-gradient(var(--wg-neon) calc(var(--pct) * 1%), rgba(255,255,255,.12) 0); }
-.wg-anel::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: #1d2632; }
-.wg-anel > * { position: relative; }
+.wg-anel__in { position: absolute; inset: 9px; border-radius: 50%; background: #1d2632; display: grid; place-content: center; text-align: center; }
 .wg-anel b { font: 900 italic 38px/1 "Geist", sans-serif; letter-spacing: -1px; color: #fff; }
-.wg-anel small { margin-top: 4px; font: 800 9.5px/1.2 "Geist", sans-serif; letter-spacing: 1.2px; text-transform: uppercase; color: var(--wg-neon); }
+.wg-anel small { display: block;  margin-top: 4px; font: 800 9.5px/1.2 "Geist", sans-serif; letter-spacing: 1.2px; text-transform: uppercase; color: var(--wg-neon); }
 .wg-anel--g { --tam: 150px; }
 .wg-anel--g b { font-size: 50px; }
 
@@ -293,7 +292,6 @@
 #contato .form { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1fr); align-content: start; }
 
 /* ═══════════ ajustes por largura (checagem de uma seção por tela) ═══════════ */
-.vd-marquee { overflow: clip; }
 @media (min-width: 1024px) and (max-width: 1279px) {
   #analises .grid > .card.span-8:has(> .panel) { grid-column: 1 / span 7; }
   #analises .grid > .card.span-4:has(> .panel) { grid-column: 8 / span 5; }
@@ -304,7 +302,7 @@
 }
 @media (min-width: 640px) and (max-width: 1023px) {
   #meu-dia .frame--split, #bonus .frame--split { --ratio: 58%; }
-  #analises .panel { --p-h: 250px; }
+  #analises .panel { --p-h: 380px; }
   .vd-frame--dg { height: 560px; }
   .wg-kb { grid-template-columns: minmax(0, 1fr); }
   .wg-espera { grid-column: 1; grid-row: auto; margin-top: 12px; }
@@ -315,3 +313,39 @@
   .vd-marquee { margin-top: var(--s-6); font-size: 15px; }
   .hero--triptych h1 { font-size: 34px; }
 }
+
+/* perguntas: a segunda tela de #integra */
+.vd-perguntas__h { margin-bottom: var(--s-6); }
+/* o formulário sobre o chão verde-água */
+.vd-frame--form { display: block; padding: var(--s-7); }
+.vd-frame--form > .form { width: 100%; }
+@media (max-width: 1023px) { .vd-frame--form { padding: var(--s-6); } }
+@media (max-width: 639px) {
+  .vd-frame--form { padding: var(--s-5); }
+  .app.wg-app { height: auto; }
+  .app.wg-app::after { display: none; }
+  .wg-cartao:nth-of-type(3), .wg-cartao:nth-of-type(4) { display: none; }
+  .wg-cartao .wg-item:nth-of-type(n+4) { display: none; }
+}
+/* a palavra que corre: de ponta a ponta da tela, sumindo nas duas bordas */
+.vd-marquee { margin-inline: calc(50% - 50vw); width: 100vw; max-width: none; overflow: clip; }
+#integra .group, #integra .vd-perguntas, .vd-frame--dg, .vd-frame--dg > .dg { min-width: 0; }
+@media (max-width: 639px) {
+  .vd-frame--dg { height: 380px; }
+  #integra .faq__item p { font-size: 15px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) { .vd-frame--dg { height: 400px; } }
+
+/* o botão do formulário no mesmo tamanho do botão do hero */
+#contato .btn--primary { height: 64px; font-size: var(--t-lead); padding-inline: var(--s-6); }
+@media (max-width: 1023px) { #contato .btn--primary { height: 56px; font-size: var(--t-body); } }
+/* perguntas numa coluna larga em telas grandes (preenche a segunda tela de #integra) */
+@media (min-width: 1280px) { .vd-faq { grid-template-columns: minmax(0, 1fr); } .vd-faq > .faq__item:nth-child(2) { padding-top: var(--s-5); } .vd-faq > .faq__item { padding: var(--s-4) 0; } }
+@media (max-width: 639px) { .app.wg-app, .app.wg-app.fill { height: auto; min-height: 0; } .wg-app__main { overflow: visible; } }
+
+@media (max-width: 639px) {
+  #contato .btn--primary { height: 48px; }
+  .wg-sinais, .wg-cartao .wg-item:nth-of-type(n+4), .wg-item > .wg-btn { display: none; }
+  .wg-item { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 1024px) { #meu-dia .frame--split, #bonus .frame--split { --ratio: 98%; } }

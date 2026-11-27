@@ -1,6 +1,6 @@
 /*
   taste-skill system.js - the page behaviour every build shares. Load it once, at the end of <body>:
-    <script type="module" src="assets/system.js?v=20261126220127"></script>
+    <script type="module" src="assets/system.js?v=20261126221851"></script>
   Write no second script for any of this.
 
   - nav: hover menus are CSS; this adds the phone sheet, the accordion, Escape and aria-expanded, and

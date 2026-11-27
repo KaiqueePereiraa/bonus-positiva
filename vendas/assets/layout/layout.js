@@ -1,6 +1,6 @@
 /*
   taste-skill layout.js - the small moments of the layout v4 heroes (references/layout-v4.md, section 3).
-  Load it once, after system.js:  <script type="module" src="assets/layout/layout.js?v=20261126220127"></script>
+  Load it once, after system.js:  <script type="module" src="assets/layout/layout.js?v=20261126221851"></script>
   Every loop runs through ui.loop (it rests off screen, carries the kit's pause button and restarts
   when the pointer enters its box); on a phone (under 640px), on kind other and on a place, and under
   reduced motion each shows its finished picture and holds.
@@ -26,7 +26,7 @@
   - .ly-play[data-film="film.mp4"] (hero--film): plays the film in its frame with controls. Without
     data-film a <button> control is hidden; an <a class="ly-play" href> goes to the film's page.
 */
-import ui from '../ui/ui.js?v=20261126220127';
+import ui from '../ui/ui.js?v=20261126221851';
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const phone = () => innerWidth < 640;

@@ -3,10 +3,10 @@
   One ES module, no dependencies. diagram.css draws it from the palette tokens around it
   (--ink, --muted, --accent, --accent-ink, --card or --bg; --frag for the node fill if set).
 
-    <link rel="stylesheet" href="assets/diagrams/diagram.css?v=20261126220127">
+    <link rel="stylesheet" href="assets/diagrams/diagram.css?v=20261126221851">
     <div class="panel"><div class="dg" data-diagram="lanes-agent"></div></div>      a preset from presets.json
     <div class="dg" data-diagram='{"layout":"hub","center":{...},"spokes":[...]}'></div>   or a spec inline
-    <script type="module">import dg from './assets/diagrams/diagram.js?v=20261126220127'; dg.auto(document);</script>
+    <script type="module">import dg from './assets/diagrams/diagram.js?v=20261126221851'; dg.auto(document);</script>
 
     const d = dg.mount(el, spec);   d.play()  d.pause()  d.seek(seconds)  d.destroy()  d.T (loop length)
 

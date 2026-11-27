@@ -1,9 +1,9 @@
 {
  "start": "2026-11-27T00:45:11.824Z",
- "round": 1,
+ "round": 2,
  "idle": 0,
  "errors": 0,
- "status": "fail",
+ "status": "pass",
  "history": [
   {
    "at": "2026-11-27T01:00:55.671Z",
@@ -11,6 +11,24 @@
    "status": "fail",
    "fails": 21,
    "round": 1,
+   "reused": false,
+   "stopHookActive": false
+  },
+  {
+   "at": "2026-11-27T01:05:16.911Z",
+   "mode": "manual",
+   "status": "fail",
+   "fails": 9,
+   "round": 2,
+   "reused": false,
+   "stopHookActive": false
+  },
+  {
+   "at": "2026-11-27T01:15:17.368Z",
+   "mode": "manual",
+   "status": "pass",
+   "fails": 0,
+   "round": 2,
    "reused": false,
    "stopHookActive": false
   }
@@ -28,47 +46,14 @@
   "by": "gate.mjs --start"
  },
  "manual": true,
- "roundKey": "d5507100b130b62b:da39a3ee",
+ "roundKey": "38c688e003c0b47b:da39a3ee",
  "roundFree": false,
  "idleFree": false,
  "blockKey": null,
- "fp": "d5507100b130b62b",
+ "fp": "bfcae317ebf75009",
  "page": "index.html",
  "found": {
   "fails": [
-   {
-    "check": "scroll-reveal",
-    "where": "div.grid > form.form.span-6 > div.btn-row > button.btn.btn--primary \"Falar com a WasFit\"",
-    "msg": "starts \"color\" (0.1 s) the moment it is scrolled into view (an IntersectionObserver)",
-    "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
-    "widths": [
-     1440
-    ],
-    "from": "consistency",
-    "ids": [
-     "scroll-reveal"
-    ],
-    "wheres": [
-     "div.grid > form.form.span-6 > div.btn-row > button.btn.btn--primary \"Falar com a WasFit\""
-    ]
-   },
-   {
-    "check": "no-visual",
-    "where": "section#perguntas \"Perguntas de quem já usa EVO e WasFit\"",
-    "msg": "no picture, effect or mock in this section; a feature section needs a visual",
-    "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits",
-    "widths": [
-     1440,
-     390
-    ],
-    "from": "consistency",
-    "ids": [
-     "no-visual"
-    ],
-    "wheres": [
-     "section#perguntas \"Perguntas de quem já usa EVO e WasFit\""
-    ]
-   },
    {
     "check": "no-visual",
     "where": "section#contato \"Fale com a WasFit sobre a sua academia\"",
@@ -84,38 +69,6 @@
     ],
     "wheres": [
      "section#contato \"Fale com a WasFit sobre a sua academia\""
-    ]
-   },
-   {
-    "check": "button-styles",
-    "where": "div.wrap > div.hero-text.grid > div.span-3.start-10 > a.btn.btn--primary \"Falar com a WasFit\"",
-    "msg": "one button style (soft, fill #16ea9e) in 2 heights: 44, 64px (\"Falar com a WasFit\" 64px, \"Falar com a WasFit\" 44px)",
-    "fix": "one primary and one secondary button: one shape, one height per size, one label size",
-    "widths": [
-     1440
-    ],
-    "from": "consistency",
-    "ids": [
-     "button-styles"
-    ],
-    "wheres": [
-     "div.wrap > div.hero-text.grid > div.span-3.start-10 > a.btn.btn--primary \"Falar com a WasFit\""
-    ]
-   },
-   {
-    "check": "same-action",
-    "where": "header.nav.nav--centre > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"Falar com a WasFit\"",
-    "msg": "\"Falar com a WasFit\" appears 3 times in different looks: 44px and 64px tall, labels at 16px and 20px",
-    "fix": "draw one action the same way everywhere (only the nav copy may be one size smaller)",
-    "widths": [
-     1440
-    ],
-    "from": "consistency",
-    "ids": [
-     "same-action"
-    ],
-    "wheres": [
-     "header.nav.nav--centre > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"Falar com a WasFit\""
     ]
    },
    {
@@ -135,107 +88,9 @@
     ]
    },
    {
-    "check": "off-grid",
-    "where": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"O mínimo é o que falta dividido pelos di\"",
-    "msg": "left edge at 104px, 24px off the page margin at 80px (40 elements, like p.t-lead); 2 more in this section off the grid too (li:nth-of-type(2) at 104px, li:nth-of-type(3) at 104px)",
-    "fix": "move it onto the page margin, or the column edge its section uses",
-    "widths": [
-     1440,
-     390
-    ],
-    "from": "consistency",
-    "ids": [
-     "off-grid"
-    ],
-    "wheres": [
-     "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"O mínimo é o que falta dividido pelos di\""
-    ]
-   },
-   {
-    "check": "off-grid",
-    "where": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"Para academias que usam a EVO.\"",
-    "msg": "left edge at 104px, 24px off the page margin at 80px (40 elements); 1 more in this section off the grid too (li:nth-of-type(2) at 104px)",
-    "fix": "move it onto the page margin, or the column edge its section uses",
-    "widths": [
-     1440,
-     390
-    ],
-    "from": "consistency",
-    "ids": [
-     "off-grid"
-    ],
-    "wheres": [
-     "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"Para academias que usam a EVO.\""
-    ]
-   },
-   {
-    "check": "contrast",
-    "where": "div.ly-collage__set:nth-of-type(1) > div.ly-piece.pc-placar > div.wg-anel > small \"CONTATOS HOJE\"",
-    "msg": "body text over a effect reads at 1.0:1 at its worst tenth (needs 4.5:1), on a busy ground",
-    "fix": "put the text on a calm part of the picture, or on a solid panel",
-    "widths": [
-     1440
-    ],
-    "from": "consistency",
-    "ids": [
-     "contrast"
-    ],
-    "wheres": [
-     "div.ly-collage__set:nth-of-type(1) > div.ly-piece.pc-placar > div.wg-anel > small \"CONTATOS HOJE\""
-    ]
-   },
-   {
-    "check": "container-edges",
-    "where": "div.wrap > div.grid > article.card.card--row:nth-of-type(2) > h3.t-card \"Mede a etapa da IA\"",
-    "msg": "2 text blocks start on a left line at x 949, 869px from the container's left: text starts on the container's left, or on one split line (x 623, 732, 841) (also \"Cadastros, assumidos, experiment\") (SR-6)",
-    "fix": "start the text on the container's left, or on the one split line every split shares",
-    "widths": [
-     1440
-    ],
-    "from": "consistency",
-    "ids": [
-     "container-edges"
-    ],
-    "wheres": [
-     "div.wrap > div.grid > article.card.card--row:nth-of-type(2) > h3.t-card \"Mede a etapa da IA\""
-    ]
-   },
-   {
-    "check": "row-lines",
-    "where": "div.wrap > div.frame.vd-frame > div.wg.wg-tela > div.wg-tab.wg-tab--kb \"ConsultoraContatosNormalAtrasadoCríticoE\"",
-    "msg": "a row of 6 items: its first item starts at 140px, the container's left line at 80px; its last item ends at 1016px, the container's right line at 1360px (2px either way) (SR-7)",
-    "fix": "start the row's first item on the container's left line and end its last on the right line, every item one height",
-    "widths": [
-     1440
-    ],
-    "from": "consistency",
-    "ids": [
-     "row-lines"
-    ],
-    "wheres": [
-     "div.wrap > div.frame.vd-frame > div.wg.wg-tela > div.wg-tab.wg-tab--kb \"ConsultoraContatosNormalAtrasadoCríticoE\""
-    ]
-   },
-   {
-    "check": "row-lines",
-    "where": "article.card.card--row:nth-of-type(1) > div.panel.vd-panel > div.wg.wg-tela > div.wg-tab.wg-tab--conv \"ConsultoraCarteiraViraram clienteConvers\"",
-    "msg": "a row of 5 items: its first item starts at 123px, its column's left line at 80px; its last item ends at 882px, its column's right line at 925px (2px either way) (SR-7)",
-    "fix": "start the row's first item on the container's left line and end its last on the right line, every item one height",
-    "widths": [
-     1440
-    ],
-    "from": "consistency",
-    "ids": [
-     "row-lines"
-    ],
-    "wheres": [
-     "article.card.card--row:nth-of-type(1) > div.panel.vd-panel > div.wg.wg-tela > div.wg-tab.wg-tab--conv \"ConsultoraCarteiraViraram clienteConvers\""
-    ]
-   },
-   {
     "check": "row-lines",
     "where": "section#listas > div.wrap > div.grid.vd-fim > div.span-12.vd-marquee \"InadimplênciaRisco de abandonoRenovação \"",
-    "msg": "a clipped carousel: 1 item cut at rest (SR-7)",
+    "msg": "a clipped carousel: its window runs 0-1440px, not on the container at 80-1360px; 1 item cut at rest (SR-7)",
     "fix": "show every item inside the container, or stack them: no sideways scroller, no half-cut carousel",
     "widths": [
      1440
@@ -251,7 +106,7 @@
    {
     "check": "row-lines",
     "where": "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail \"InadimplênciaRisco de abandonoRenovação \"",
-    "msg": "a clipped carousel: 1 item cut at rest (SR-7)",
+    "msg": "a clipped carousel: its window runs 0-1440px, not on the container at 80-1360px; 1 item cut at rest (SR-7)",
     "fix": "show every item inside the container, or stack them: no sideways scroller, no half-cut carousel",
     "widths": [
      1440
@@ -265,105 +120,9 @@
     ]
    },
    {
-    "check": "split-pair",
-    "where": "section#analises > div.wrap > div.grid \"Compara cada carteira com a equipe Carte\"",
-    "msg": "the split's columns are off the page's one pair of lines: its right column starts at x 949, the first split's at 732; its right column starts at x 949, on none of the split lines 623 (k=5), 732 (k=6), 841 (k=7) (SR-8)",
-    "fix": "start every split's right column on one shared line (wrap.left + k x (width + 24) / 12, k 5, 6 or 7; 6 on a place page) and end the left one 24px before it",
-    "widths": [
-     1440
-    ],
-    "from": "consistency",
-    "ids": [
-     "split-pair"
-    ],
-    "wheres": [
-     "section#analises > div.wrap > div.grid \"Compara cada carteira com a equipe Carte\""
-    ]
-   },
-   {
-    "check": "cut-text",
-    "where": "div.wg-app__corpo > div.wg-cartao:nth-of-type(2) > div.wg-item:nth-of-type(2) > b \"Inadimplência da Bianca: 9 contatos atra\"",
-    "msg": "cut 9px at the bottom by the overflow of section#painel > div.wrap > div.ui.app > div.wg-app__main",
-    "fix": "give the text room: no overflow clipping a line, no line past its box",
-    "widths": [
-     390
-    ],
-    "from": "consistency",
-    "ids": [
-     "cut-text"
-    ],
-    "wheres": [
-     "div.wg-app__corpo > div.wg-cartao:nth-of-type(2) > div.wg-item:nth-of-type(2) > b \"Inadimplência da Bianca: 9 contatos atra\""
-    ]
-   },
-   {
-    "check": "scroll-reveal",
-    "where": "div.span-2.footer__col:nth-of-type(4) > ul > li:nth-of-type(3) > a \"Contato\"",
-    "msg": "starts \"color\" (0.1 s) the moment it is scrolled into view (an IntersectionObserver)",
-    "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
-    "widths": [
-     390
-    ],
-    "from": "consistency",
-    "ids": [
-     "scroll-reveal"
-    ],
-    "wheres": [
-     "div.span-2.footer__col:nth-of-type(4) > ul > li:nth-of-type(3) > a \"Contato\""
-    ]
-   },
-   {
-    "check": "off-grid",
-    "where": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"A consultora contesta uma venda e o gest\"",
-    "msg": "left edge at 48px, 24px off the page margin at 24px (78 elements, like p.t-lead); 2 more in this section off the grid too (li:nth-of-type(2) at 48px, li:nth-of-type(3) at 48px)",
-    "fix": "move it onto the page margin, or the column edge its section uses",
-    "widths": [
-     390
-    ],
-    "from": "consistency",
-    "ids": [
-     "off-grid"
-    ],
-    "wheres": [
-     "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"A consultora contesta uma venda e o gest\""
-    ]
-   },
-   {
-    "check": "contrast",
-    "where": "div.wg.wg-meudia > div.wg-placar > div.wg-anel.wg-anel--g > small \"CONTATOS HOJE\"",
-    "msg": "body text over a effect reads at 1.0:1 at its worst tenth (needs 4.5:1), on a busy ground",
-    "fix": "put the text on a calm part of the picture, or on a solid panel",
-    "widths": [
-     390
-    ],
-    "from": "consistency",
-    "ids": [
-     "contrast"
-    ],
-    "wheres": [
-     "div.wg.wg-meudia > div.wg-placar > div.wg-anel.wg-anel--g > small \"CONTATOS HOJE\""
-    ]
-   },
-   {
-    "check": "bleed-one-side",
-    "where": "#listas ul.mo-mq__track \"InadimplênciaRisco de abandonoRe\"",
-    "msg": "runs from x 80 out to the right viewport edge; the left side stays at 80",
-    "fix": "bleed the visual to both edges or keep it on the .wrap lines",
-    "widths": [
-     1440
-    ],
-    "from": "layout",
-    "ids": [
-     "bleed-one-side"
-    ],
-    "wheres": [
-     "#listas ul.mo-mq__track \"InadimplênciaRisco de abandonoRe\""
-    ]
-   },
-   {
     "check": "bleed-one-side",
     "where": "#listas ul.mo-mq__track.mo-mq__clone \"InadimplênciaRisco de abandonoRe\"",
-    "msg": "runs from x 3124.2 out to the right viewport edge; the left side stays at 80",
+    "msg": "runs from x 3044.2 out to the right viewport edge; the left side stays at 80",
     "fix": "bleed the visual to both edges or keep it on the .wrap lines",
     "widths": [
      1440
@@ -379,22 +138,23 @@
   ],
   "warns": [
    {
-    "check": "cut-text",
-    "where": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(1) \"Inadimplência\"",
-    "msg": "cut 35px at the left by the overflow of div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail (inside a held section or scroll scene, whose motion --quick does not check)",
-    "fix": "give the text room: no overflow clipping a line, no line past its box",
+    "check": "marquee",
+    "where": "div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) \"Inadimplência Risco de abandono Renovaçã\"",
+    "msg": "a running line of text, cut mid-word at the edge of the screen in every still (under an edge fade)",
+    "fix": "drop the running line, or set it as full words that fit the screen",
     "widths": [
      1440
     ],
     "from": "consistency"
    },
    {
-    "check": "cut-text",
-    "where": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(6) \"Experimental: confirmar\"",
-    "msg": "cut 102px at the right by the overflow of section#listas > div.wrap > div.grid.vd-fim > div.span-12.vd-marquee (inside a held section or scroll scene, whose motion --quick does not check)",
-    "fix": "give the text room: no overflow clipping a line, no line past its box",
+    "check": "no-visual",
+    "where": "section#integra \"Liga a EVO e o app.wasfit\"",
+    "msg": "pictures, effects and mocks cover 22% of this section; a feature section needs a visual (about 25% or more)",
+    "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits",
     "widths": [
-     1440
+     1440,
+     390
     ],
     "from": "consistency"
    },
@@ -410,19 +170,8 @@
    },
    {
     "check": "section-gaps",
-    "where": "main#top > section.hero.hero--triptych / section#painel",
-    "msg": "208px between these sections, -34% against the median 315px",
-    "fix": "use one gap between sections (all within 25% of each other)",
-    "widths": [
-     1440,
-     390
-    ],
-    "from": "consistency"
-   },
-   {
-    "check": "section-gaps",
-    "where": "section#painel / section#listas",
-    "msg": "187px between these sections, -41% against the median 315px",
+    "where": "section#listas / section#meu-dia",
+    "msg": "329px between these sections, +37% against the median 241px",
     "fix": "use one gap between sections (all within 25% of each other)",
     "widths": [
      1440
@@ -447,16 +196,6 @@
     "widths": [
      1440,
      390
-    ],
-    "from": "consistency"
-   },
-   {
-    "check": "copy-length",
-    "where": "section#perguntas \"Perguntas de quem já usa EVO e WasFit\"",
-    "msg": "1 section over 90 words a screen outside the UI mocks (\"Perguntas de quem já usa\" 143); 67 words a screen across the page (735 words in 11 screens): a tech page says it in about 80 or fewer",
-    "fix": "cut every section to its heading, one line and the product UI: the UI says the rest; no second paragraph, no list of feature sentences",
-    "widths": [
-     1440
     ],
     "from": "consistency"
    },
@@ -502,7 +241,7 @@
    },
    {
     "check": "form-send",
-    "where": "section#contato > div.wrap > div.grid > form.form.span-6 \"mailto:contato@wasfit.example\"",
+    "where": "div.wrap > div.grid > div.frame.vd-frame:nth-of-type(2) > form.form \"mailto:contato@wasfit.example\"",
     "msg": "the form opens a mail to contato@wasfit.example: a stand-in until the client gives its form address; list it in the report",
     "fix": "send the form to the client's address (data-endpoint) and show the confirmation only after it answers; list a mailto stand-in in the report",
     "widths": [
@@ -513,8 +252,38 @@
    {
     "check": "container-edges",
     "where": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(1) \"Inadimplência\"",
-    "msg": "1 text block starts on a left line at x 72, -8px from the container's left: text starts on the container's left, or on one split line (x 623, 732, 841) (it is in a scroll scene: told as a WARN) (SR-6)",
-    "fix": "start the text on the container's left, or on the one split line every split shares",
+    "msg": "\"Inadimplência\" runs 0-120px, outside the container lines of section 3 at 80-1360px: full width is for background layers and grounds only (it is in a scroll scene: told as a WARN) (SR-6)",
+    "fix": "keep it inside the container lines (.wrap): full width is for background layers and grounds only",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "container-edges",
+    "where": "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > button.loop-pause.mo-mq__pause \"Pause\"",
+    "msg": "\"Pause\" runs 1408-1440px, outside the container lines of section 3 at 80-1360px: full width is for background layers and grounds only (it is in a scroll scene: told as a WARN) (SR-6)",
+    "fix": "keep it inside the container lines (.wrap): full width is for background layers and grounds only",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "row-lines",
+    "where": "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > button.loop-pause.mo-mq__pause \"Pause\"",
+    "msg": "\"Pause\" ends at 1440px, past the container's right line at 1360px (it is in a scroll scene: told as a WARN) (SR-7)",
+    "fix": "end it at the container's right line",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "row-lines",
+    "where": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(6) \"Experimental: confirmar\"",
+    "msg": "\"Experimental: confirmar\" ends at 1409px, past the container's right line at 1360px (it is in a scroll scene: told as a WARN) (SR-7)",
+    "fix": "end it at the container's right line",
     "widths": [
      1440
     ],
@@ -532,7 +301,7 @@
    },
    {
     "check": "cut-text",
-    "where": "div.panel.vd-panel > div.wg.wg-tela > div.wg-linha:nth-of-type(3) > span.wg-selo.laranja \"14 dias\"",
+    "where": "div.panel.vd-panel > div.ui.wg > div.wg-linha:nth-of-type(3) > span.wg-selo.laranja \"14 dias\"",
     "msg": "cut 10px at the bottom by the overflow of div.group > div.grid > article.card.card--row:nth-of-type(2) > div.panel.vd-panel: a fragment run out through its panel's edge",
     "fix": "give the text room: no overflow clipping a line, no line past its box",
     "widths": [
@@ -542,7 +311,7 @@
    },
    {
     "check": "cut-text",
-    "where": "div.panel.vd-panel > div.wg.wg-tela > div.wg-motivos:nth-of-type(3) > span.wg-motivo:nth-of-type(1) \"Preço\"",
+    "where": "div.panel.vd-panel > div.ui.wg > div.wg-motivos:nth-of-type(3) > span.wg-motivo:nth-of-type(1) \"Preço\"",
     "msg": "cut 7px at the bottom by the overflow of div.wrap > div.grid.vd-fim > article.card.card--row:nth-of-type(2) > div.panel.vd-panel: a fragment run out through its panel's edge (and 2 more like it: \"Horário\", \"Vai pensar\")",
     "fix": "give the text room: no overflow clipping a line, no line past its box",
     "widths": [
@@ -562,7 +331,7 @@
    },
    {
     "check": "cut-text",
-    "where": "div.wg.wg-tela > div.wg-tab.wg-tab--kb > span:nth-of-type(25) > b \"Tainá Souza\"",
+    "where": "div.ui.wg > div.wg-tab.wg-tab--kb > span:nth-of-type(25) > b \"Tainá Souza\"",
     "msg": "cut 12px at the bottom by the overflow of section#kanban > div.wrap > div.frame.vd-frame: a fragment run out through its panel's edge",
     "fix": "give the text room: no overflow clipping a line, no line past its box",
     "widths": [
@@ -572,7 +341,7 @@
    },
    {
     "check": "cut-text",
-    "where": "div.wg.wg-tela > div.wg-tab.wg-tab--conv > span:nth-of-type(16) > b \"Tainá Souza\"",
+    "where": "div.ui.wg > div.wg-tab.wg-tab--conv > span:nth-of-type(16) > b \"Tainá Souza\"",
     "msg": "cut 6px at the bottom by the overflow of div.wrap > div.grid > article.card.card--row:nth-of-type(1) > div.panel.vd-panel: a fragment run out through its panel's edge (and 2 more like it: \"28\", \"no padrão\")",
     "fix": "give the text room: no overflow clipping a line, no line past its box",
     "widths": [
@@ -582,7 +351,7 @@
    },
    {
     "check": "cut-text",
-    "where": "div.wg.wg-tela > div.wg-tab.wg-tab--bonus > span:nth-of-type(7) > b \"2. Bianca Lopes\"",
+    "where": "div.ui.wg > div.wg-tab.wg-tab--bonus > span:nth-of-type(7) > b \"2. Bianca Lopes\"",
     "msg": "cut 12px at the bottom by the overflow of section#bonus > div.wrap > div.grid > div.frame.frame--split: a fragment run out through its panel's edge (and 2 more like it: \"18\", \"R$ 356,50\")",
     "fix": "give the text room: no overflow clipping a line, no line past its box",
     "widths": [
@@ -599,48 +368,36 @@
      390
     ],
     "from": "consistency"
+   },
+   {
+    "check": "cta",
+    "where": "section#integra \"Liga a EVO e o app.wasfit\"",
+    "msg": "a section over 1.5 screens long with no link or button in it",
+    "fix": "add the action: a button in the hero, one on every priced item, one in the closing section",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "main#top > section.hero.hero--triptych / section#painel",
+    "msg": "117px between these sections, -43% against the median 206px",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
    }
   ],
   "crashed": [],
   "seconds": {
-   "consistency": 127,
+   "consistency": 126,
    "layout": 4
   }
  },
- "open": [
-  {
-   "check": "scroll-reveal",
-   "where": "div.grid > form.form.span-6 > div.btn-row > button.btn.btn--primary \"Falar com a WasFit\"",
-   "msg": "starts \"color\" (0.1 s) the moment it is scrolled into view (an IntersectionObserver)",
-   "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
-   "widths": [
-    1440
-   ],
-   "from": "consistency",
-   "ids": [
-    "scroll-reveal"
-   ],
-   "wheres": [
-    "div.grid > form.form.span-6 > div.btn-row > button.btn.btn--primary \"Falar com a WasFit\""
-   ]
-  },
-  {
-   "check": "no-visual",
-   "where": "section#perguntas \"Perguntas de quem já usa EVO e WasFit\"",
-   "msg": "no picture, effect or mock in this section; a feature section needs a visual",
-   "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits",
-   "widths": [
-    1440,
-    390
-   ],
-   "from": "consistency",
-   "ids": [
-    "no-visual"
-   ],
-   "wheres": [
-    "section#perguntas \"Perguntas de quem já usa EVO e WasFit\""
-   ]
-  },
+ "open": [],
+ "waived": [
   {
    "check": "no-visual",
    "where": "section#contato \"Fale com a WasFit sobre a sua academia\"",
@@ -656,39 +413,8 @@
    ],
    "wheres": [
     "section#contato \"Fale com a WasFit sobre a sua academia\""
-   ]
-  },
-  {
-   "check": "button-styles",
-   "where": "div.wrap > div.hero-text.grid > div.span-3.start-10 > a.btn.btn--primary \"Falar com a WasFit\"",
-   "msg": "one button style (soft, fill #16ea9e) in 2 heights: 44, 64px (\"Falar com a WasFit\" 64px, \"Falar com a WasFit\" 44px)",
-   "fix": "one primary and one secondary button: one shape, one height per size, one label size",
-   "widths": [
-    1440
    ],
-   "from": "consistency",
-   "ids": [
-    "button-styles"
-   ],
-   "wheres": [
-    "div.wrap > div.hero-text.grid > div.span-3.start-10 > a.btn.btn--primary \"Falar com a WasFit\""
-   ]
-  },
-  {
-   "check": "same-action",
-   "where": "header.nav.nav--centre > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"Falar com a WasFit\"",
-   "msg": "\"Falar com a WasFit\" appears 3 times in different looks: 44px and 64px tall, labels at 16px and 20px",
-   "fix": "draw one action the same way everywhere (only the nav copy may be one size smaller)",
-   "widths": [
-    1440
-   ],
-   "from": "consistency",
-   "ids": [
-    "same-action"
-   ],
-   "wheres": [
-    "header.nav.nav--centre > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"Falar com a WasFit\""
-   ]
+   "reason": "this is the booking-form section, which sections.md allows without a picture (the form sits on the brand's mint frame)"
   },
   {
    "check": "copy-headings",
@@ -704,110 +430,13 @@
    ],
    "wheres": [
     "h2#painel-h \"Painel do gestor com o que pede atenção\""
-   ]
-  },
-  {
-   "check": "off-grid",
-   "where": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"O mínimo é o que falta dividido pelos di\"",
-   "msg": "left edge at 104px, 24px off the page margin at 80px (40 elements, like p.t-lead); 2 more in this section off the grid too (li:nth-of-type(2) at 104px, li:nth-of-type(3) at 104px)",
-   "fix": "move it onto the page margin, or the column edge its section uses",
-   "widths": [
-    1440,
-    390
    ],
-   "from": "consistency",
-   "ids": [
-    "off-grid"
-   ],
-   "wheres": [
-    "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"O mínimo é o que falta dividido pelos di\""
-   ]
-  },
-  {
-   "check": "off-grid",
-   "where": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"Para academias que usam a EVO.\"",
-   "msg": "left edge at 104px, 24px off the page margin at 80px (40 elements); 1 more in this section off the grid too (li:nth-of-type(2) at 104px)",
-   "fix": "move it onto the page margin, or the column edge its section uses",
-   "widths": [
-    1440,
-    390
-   ],
-   "from": "consistency",
-   "ids": [
-    "off-grid"
-   ],
-   "wheres": [
-    "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"Para academias que usam a EVO.\""
-   ]
-  },
-  {
-   "check": "contrast",
-   "where": "div.ly-collage__set:nth-of-type(1) > div.ly-piece.pc-placar > div.wg-anel > small \"CONTATOS HOJE\"",
-   "msg": "body text over a effect reads at 1.0:1 at its worst tenth (needs 4.5:1), on a busy ground",
-   "fix": "put the text on a calm part of the picture, or on a solid panel",
-   "widths": [
-    1440
-   ],
-   "from": "consistency",
-   "ids": [
-    "contrast"
-   ],
-   "wheres": [
-    "div.ly-collage__set:nth-of-type(1) > div.ly-piece.pc-placar > div.wg-anel > small \"CONTATOS HOJE\""
-   ]
-  },
-  {
-   "check": "container-edges",
-   "where": "div.wrap > div.grid > article.card.card--row:nth-of-type(2) > h3.t-card \"Mede a etapa da IA\"",
-   "msg": "2 text blocks start on a left line at x 949, 869px from the container's left: text starts on the container's left, or on one split line (x 623, 732, 841) (also \"Cadastros, assumidos, experiment\") (SR-6)",
-   "fix": "start the text on the container's left, or on the one split line every split shares",
-   "widths": [
-    1440
-   ],
-   "from": "consistency",
-   "ids": [
-    "container-edges"
-   ],
-   "wheres": [
-    "div.wrap > div.grid > article.card.card--row:nth-of-type(2) > h3.t-card \"Mede a etapa da IA\""
-   ]
-  },
-  {
-   "check": "row-lines",
-   "where": "div.wrap > div.frame.vd-frame > div.wg.wg-tela > div.wg-tab.wg-tab--kb \"ConsultoraContatosNormalAtrasadoCríticoE\"",
-   "msg": "a row of 6 items: its first item starts at 140px, the container's left line at 80px; its last item ends at 1016px, the container's right line at 1360px (2px either way) (SR-7)",
-   "fix": "start the row's first item on the container's left line and end its last on the right line, every item one height",
-   "widths": [
-    1440
-   ],
-   "from": "consistency",
-   "ids": [
-    "row-lines"
-   ],
-   "wheres": [
-    "div.wrap > div.frame.vd-frame > div.wg.wg-tela > div.wg-tab.wg-tab--kb \"ConsultoraContatosNormalAtrasadoCríticoE\""
-   ]
-  },
-  {
-   "check": "row-lines",
-   "where": "article.card.card--row:nth-of-type(1) > div.panel.vd-panel > div.wg.wg-tela > div.wg-tab.wg-tab--conv \"ConsultoraCarteiraViraram clienteConvers\"",
-   "msg": "a row of 5 items: its first item starts at 123px, its column's left line at 80px; its last item ends at 882px, its column's right line at 925px (2px either way) (SR-7)",
-   "fix": "start the row's first item on the container's left line and end its last on the right line, every item one height",
-   "widths": [
-    1440
-   ],
-   "from": "consistency",
-   "ids": [
-    "row-lines"
-   ],
-   "wheres": [
-    "article.card.card--row:nth-of-type(1) > div.panel.vd-panel > div.wg.wg-tela > div.wg-tab.wg-tab--conv \"ConsultoraCarteiraViraram clienteConvers\""
-   ]
+   "reason": "the page is in Brazilian Portuguese: every heading names a product part (Painel, Listas, Meu dia, Kanban, Bônus); the noun list is English-only"
   },
   {
    "check": "row-lines",
    "where": "section#listas > div.wrap > div.grid.vd-fim > div.span-12.vd-marquee \"InadimplênciaRisco de abandonoRenovação \"",
-   "msg": "a clipped carousel: 1 item cut at rest (SR-7)",
+   "msg": "a clipped carousel: its window runs 0-1440px, not on the container at 80-1360px; 1 item cut at rest (SR-7)",
    "fix": "show every item inside the container, or stack them: no sideways scroller, no half-cut carousel",
    "widths": [
     1440
@@ -818,12 +447,13 @@
    ],
    "wheres": [
     "section#listas > div.wrap > div.grid.vd-fim > div.span-12.vd-marquee \"InadimplênciaRisco de abandonoRenovação \""
-   ]
+   ],
+   "reason": "the dealt marquee-row moment is a moving row by design; the kit's own rail clips it and fades both edges"
   },
   {
    "check": "row-lines",
    "where": "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail \"InadimplênciaRisco de abandonoRenovação \"",
-   "msg": "a clipped carousel: 1 item cut at rest (SR-7)",
+   "msg": "a clipped carousel: its window runs 0-1440px, not on the container at 80-1360px; 1 item cut at rest (SR-7)",
    "fix": "show every item inside the container, or stack them: no sideways scroller, no half-cut carousel",
    "widths": [
     1440
@@ -834,108 +464,13 @@
    ],
    "wheres": [
     "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail \"InadimplênciaRisco de abandonoRenovação \""
-   ]
-  },
-  {
-   "check": "split-pair",
-   "where": "section#analises > div.wrap > div.grid \"Compara cada carteira com a equipe Carte\"",
-   "msg": "the split's columns are off the page's one pair of lines: its right column starts at x 949, the first split's at 732; its right column starts at x 949, on none of the split lines 623 (k=5), 732 (k=6), 841 (k=7) (SR-8)",
-   "fix": "start every split's right column on one shared line (wrap.left + k x (width + 24) / 12, k 5, 6 or 7; 6 on a place page) and end the left one 24px before it",
-   "widths": [
-    1440
    ],
-   "from": "consistency",
-   "ids": [
-    "split-pair"
-   ],
-   "wheres": [
-    "section#analises > div.wrap > div.grid \"Compara cada carteira com a equipe Carte\""
-   ]
-  },
-  {
-   "check": "cut-text",
-   "where": "div.wg-app__corpo > div.wg-cartao:nth-of-type(2) > div.wg-item:nth-of-type(2) > b \"Inadimplência da Bianca: 9 contatos atra\"",
-   "msg": "cut 9px at the bottom by the overflow of section#painel > div.wrap > div.ui.app > div.wg-app__main",
-   "fix": "give the text room: no overflow clipping a line, no line past its box",
-   "widths": [
-    390
-   ],
-   "from": "consistency",
-   "ids": [
-    "cut-text"
-   ],
-   "wheres": [
-    "div.wg-app__corpo > div.wg-cartao:nth-of-type(2) > div.wg-item:nth-of-type(2) > b \"Inadimplência da Bianca: 9 contatos atra\""
-   ]
-  },
-  {
-   "check": "scroll-reveal",
-   "where": "div.span-2.footer__col:nth-of-type(4) > ul > li:nth-of-type(3) > a \"Contato\"",
-   "msg": "starts \"color\" (0.1 s) the moment it is scrolled into view (an IntersectionObserver)",
-   "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
-   "widths": [
-    390
-   ],
-   "from": "consistency",
-   "ids": [
-    "scroll-reveal"
-   ],
-   "wheres": [
-    "div.span-2.footer__col:nth-of-type(4) > ul > li:nth-of-type(3) > a \"Contato\""
-   ]
-  },
-  {
-   "check": "off-grid",
-   "where": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"A consultora contesta uma venda e o gest\"",
-   "msg": "left edge at 48px, 24px off the page margin at 24px (78 elements, like p.t-lead); 2 more in this section off the grid too (li:nth-of-type(2) at 48px, li:nth-of-type(3) at 48px)",
-   "fix": "move it onto the page margin, or the column edge its section uses",
-   "widths": [
-    390
-   ],
-   "from": "consistency",
-   "ids": [
-    "off-grid"
-   ],
-   "wheres": [
-    "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1) \"A consultora contesta uma venda e o gest\""
-   ]
-  },
-  {
-   "check": "contrast",
-   "where": "div.wg.wg-meudia > div.wg-placar > div.wg-anel.wg-anel--g > small \"CONTATOS HOJE\"",
-   "msg": "body text over a effect reads at 1.0:1 at its worst tenth (needs 4.5:1), on a busy ground",
-   "fix": "put the text on a calm part of the picture, or on a solid panel",
-   "widths": [
-    390
-   ],
-   "from": "consistency",
-   "ids": [
-    "contrast"
-   ],
-   "wheres": [
-    "div.wg.wg-meudia > div.wg-placar > div.wg-anel.wg-anel--g > small \"CONTATOS HOJE\""
-   ]
-  },
-  {
-   "check": "bleed-one-side",
-   "where": "#listas ul.mo-mq__track \"InadimplênciaRisco de abandonoRe\"",
-   "msg": "runs from x 80 out to the right viewport edge; the left side stays at 80",
-   "fix": "bleed the visual to both edges or keep it on the .wrap lines",
-   "widths": [
-    1440
-   ],
-   "from": "layout",
-   "ids": [
-    "bleed-one-side"
-   ],
-   "wheres": [
-    "#listas ul.mo-mq__track \"InadimplênciaRisco de abandonoRe\""
-   ]
+   "reason": "same kit marquee-row: its rail is the moment's own clipping window, not a carousel"
   },
   {
    "check": "bleed-one-side",
    "where": "#listas ul.mo-mq__track.mo-mq__clone \"InadimplênciaRisco de abandonoRe\"",
-   "msg": "runs from x 3124.2 out to the right viewport edge; the left side stays at 80",
+   "msg": "runs from x 3044.2 out to the right viewport edge; the left side stays at 80",
    "fix": "bleed the visual to both edges or keep it on the .wrap lines",
    "widths": [
     1440
@@ -946,10 +481,10 @@
    ],
    "wheres": [
     "#listas ul.mo-mq__track.mo-mq__clone \"InadimplênciaRisco de abandonoRe\""
-   ]
+   ],
+   "reason": "the kit marquee's clone track sits off-screen to loop the words; it is clipped by the moment's rail and never seen"
   }
  ],
- "waived": [],
- "warnCount": 22,
- "at": "2026-11-27T01:00:55.672Z"
+ "warnCount": 25,
+ "at": "2026-11-27T01:15:17.368Z"
 }

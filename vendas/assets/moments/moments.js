@@ -4,7 +4,7 @@
     <section data-moment="pinned-chapters" data-moment-opts='{"hold": 2.4}'>…</section>
 
     in system.js:   const m = await import(new URL('moments/moments.js', HERE).href); await m.ready;
-    on its own:     <script type="module" src="assets/moments/moments.js?v=20261126220127"></script>
+    on its own:     <script type="module" src="assets/moments/moments.js?v=20261126221851"></script>
 
   It finds every [data-moment], links <id>/moment.css, imports <id>/moment.js and calls its default
   export mount(root, opts, lib) -> { destroy }. The page keeps scrolling natively; every moment shows
@@ -23,9 +23,9 @@
   element (its CSS shows the finished state at once). The 2.5 s timer and .mo-js can also be set
   earlier by one line in <head>, with modulepreload links for this file, lib.js and the dealt moment:
     <script>document.documentElement.classList.add('mo-js');setTimeout(()=>document.documentElement.classList.add('mo-safe'),2500)</script>
-    <link rel="modulepreload" href="assets/moments/moments.js?v=20261126220127"><link rel="modulepreload" href="assets/moments/lib.js?v=20261126220127">
+    <link rel="modulepreload" href="assets/moments/moments.js?v=20261126221851"><link rel="modulepreload" href="assets/moments/lib.js?v=20261126221851">
 */
-import * as lib from './lib.js?v=20261126220127';
+import * as lib from './lib.js?v=20261126221851';
 
 const BASE = new URL('./', import.meta.url);
 const html = document.documentElement;

@@ -1,12 +1,12 @@
 // Desempenho — ranking aberto (todas veem todas): mínimo cumprido, dias com a meta batida, contatos e resultados.
 // O gestor também vê as justificativas, o diagnóstico (sobrecarga x individual) e o quadro esforço × resultado
 // dos últimos 30 dias (cada consultora comparada com a mediana da equipe).
-import * as dados from '../dados.js?v=20261126220127';
-import { esc, dataCurta, vazio, NOMES_CONTROLE } from '../ui.js?v=20261126220127';
-import { somarDias, semanaDe } from '../regras.js?v=20261126220127';
-import { diagnostico, quadrante, mediana, resumoAtividade } from '../painel-regras.js?v=20261126220127';
-import { destaques, voceVsVoce } from '../jogo.js?v=20261126220127';
-import { animar } from '../jogo-visual.js?v=20261126220127';
+import * as dados from '../dados.js?v=20261126221851';
+import { esc, dataCurta, vazio, NOMES_CONTROLE } from '../ui.js?v=20261126221851';
+import { somarDias, semanaDe } from '../regras.js?v=20261126221851';
+import { diagnostico, quadrante, mediana, resumoAtividade } from '../painel-regras.js?v=20261126221851';
+import { destaques, voceVsVoce } from '../jogo.js?v=20261126221851';
+import { animar } from '../jogo-visual.js?v=20261126221851';
 
 let periodo = 'semana_passada';
 

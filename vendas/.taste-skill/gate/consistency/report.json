@@ -1,7 +1,7 @@
 {
  "page": "/Users/kaiquepereira/Claude/Bonus e Tarefas/site/vendas/index.html",
  "url": "http://127.0.0.1:5200/index.html",
- "at": "2026-11-27T00:58:45.059Z",
+ "at": "2026-11-27T01:13:08.107Z",
  "out": "/Users/kaiquepereira/Claude/Bonus e Tarefas/site/vendas/.taste-skill/gate/consistency",
  "widths": [
   {
@@ -12,54 +12,14 @@
    "errors": [],
    "findings": [
     {
-     "check": "scroll-reveal",
-     "sev": "FAIL",
-     "sel": "div.grid > form.form.span-6 > div.btn-row > button.btn.btn--primary",
-     "text": "Falar com a WasFit",
-     "msg": "starts \"color\" (0.1 s) the moment it is scrolled into view (an IntersectionObserver)",
-     "stop": 12,
-     "crop": "1440-16-scroll-reveal.jpg",
-     "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view"
-    },
-    {
-     "check": "no-visual",
-     "sev": "FAIL",
-     "sel": "section#perguntas",
-     "text": "Perguntas de quem já usa EVO e WasFit",
-     "msg": "no picture, effect or mock in this section; a feature section needs a visual",
-     "stop": 9,
-     "crop": "1440-14-no-visual.jpg",
-     "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits"
-    },
-    {
      "check": "no-visual",
      "sev": "FAIL",
      "sel": "section#contato",
      "text": "Fale com a WasFit sobre a sua academia",
      "msg": "no picture, effect or mock in this section; a feature section needs a visual",
      "stop": 12,
-     "crop": "1440-17-no-visual.jpg",
+     "crop": "1440-09-no-visual.jpg",
      "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits"
-    },
-    {
-     "check": "button-styles",
-     "sev": "FAIL",
-     "sel": "div.wrap > div.hero-text.grid > div.span-3.start-10 > a.btn.btn--primary",
-     "text": "Falar com a WasFit",
-     "stop": 0,
-     "msg": "one button style (soft, fill #16ea9e) in 2 heights: 44, 64px (\"Falar com a WasFit\" 64px, \"Falar com a WasFit\" 44px)",
-     "crop": "1440-01-button-styles.jpg",
-     "fix": "one primary and one secondary button: one shape, one height per size, one label size"
-    },
-    {
-     "check": "same-action",
-     "sev": "FAIL",
-     "sel": "header.nav.nav--centre > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary",
-     "text": "Falar com a WasFit",
-     "stop": 0,
-     "msg": "\"Falar com a WasFit\" appears 3 times in different looks: 44px and 64px tall, labels at 16px and 20px",
-     "crop": "1440-02-same-action.jpg",
-     "fix": "draw one action the same way everywhere (only the nav copy may be one size smaller)"
     },
     {
      "check": "copy-headings",
@@ -68,58 +28,28 @@
      "text": "Painel do gestor com o que pede atenção",
      "msg": "\"Painel do gestor com o que pede atenção\" names no product, part, place or section (17 headings like it; at most one brand line per page) (and 16 more like it: \"Cobra quem está inadimpl\", \"Chama quem parou de trei\", \"Avisa a renovação antes \", \"Pergunta por que não fec\", ...)",
      "stop": 1,
-     "crop": "1440-07-copy-headings.jpg",
+     "crop": "1440-04-copy-headings.jpg",
      "fix": "name the thing in every heading: the product, a part, the place or a section noun"
     },
     {
-     "check": "off-grid",
-     "sev": "FAIL",
-     "sel": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1)",
-     "text": "O mínimo é o que falta dividido pelos dias úteis",
-     "stop": 5,
-     "msg": "left edge at 104px, 24px off the page margin at 80px (40 elements, like p.t-lead); 2 more in this section off the grid too (li:nth-of-type(2) at 104px, li:nth-of-type(3) at 104px)",
-     "crop": "1440-13-off-grid.jpg",
-     "fix": "move it onto the page margin, or the column edge its section uses"
-    },
-    {
-     "check": "off-grid",
-     "sev": "FAIL",
-     "sel": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1)",
-     "text": "Para academias que usam a EVO.",
-     "stop": 12,
-     "msg": "left edge at 104px, 24px off the page margin at 80px (40 elements); 1 more in this section off the grid too (li:nth-of-type(2) at 104px)",
-     "crop": "1440-18-off-grid.jpg",
-     "fix": "move it onto the page margin, or the column edge its section uses"
-    },
-    {
-     "check": "contrast",
-     "sev": "FAIL",
-     "sel": "div.ly-collage__set:nth-of-type(1) > div.ly-piece.pc-placar > div.wg-anel > small",
-     "text": "CONTATOS HOJE",
-     "stop": 0,
-     "msg": "body text over a effect reads at 1.0:1 at its worst tenth (needs 4.5:1), on a busy ground",
-     "crop": "1440-03-contrast.jpg",
-     "fix": "put the text on a calm part of the picture, or on a solid panel"
-    },
-    {
-     "check": "cut-text",
+     "check": "marquee",
      "sev": "WARN",
-     "sel": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(1)",
-     "text": "Inadimplência",
-     "msg": "cut 35px at the left by the overflow of div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail (inside a held section or scroll scene, whose motion --quick does not check)",
+     "sel": "div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1)",
+     "text": "Inadimplência Risco de abandono Renovação a venc",
+     "msg": "a running line of text, cut mid-word at the edge of the screen in every still (under an edge fade)",
      "stop": 4,
-     "crop": "1440-11-cut-text.jpg",
-     "fix": "give the text room: no overflow clipping a line, no line past its box"
+     "crop": "1440-06-marquee.jpg",
+     "fix": "drop the running line, or set it as full words that fit the screen"
     },
     {
-     "check": "cut-text",
+     "check": "no-visual",
      "sev": "WARN",
-     "sel": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(6)",
-     "text": "Experimental: confirmar",
-     "msg": "cut 102px at the right by the overflow of section#listas > div.wrap > div.grid.vd-fim > div.span-12.vd-marquee (inside a held section or scroll scene, whose motion --quick does not check)",
-     "stop": 4,
-     "crop": "1440-12-cut-text.jpg",
-     "fix": "give the text room: no overflow clipping a line, no line past its box"
+     "sel": "section#integra",
+     "text": "Liga a EVO e o app.wasfit",
+     "msg": "pictures, effects and mocks cover 22% of this section; a feature section needs a visual (about 25% or more)",
+     "stop": 10,
+     "crop": "1440-08-no-visual.jpg",
+     "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits"
     },
     {
      "check": "copy-buttons",
@@ -128,27 +58,17 @@
      "text": "Falar com a WasFit",
      "msg": "\"Falar com a WasFit\" does not start with a verb (book, buy, try, start, get, see...)",
      "stop": 0,
-     "crop": "1440-04-copy-buttons.jpg",
+     "crop": "1440-01-copy-buttons.jpg",
      "fix": "label buttons with a verb and what the visitor gets (\"Book a room\", \"Start free trial\")"
     },
     {
      "check": "section-gaps",
      "sev": "WARN",
-     "sel": "main#top > section.hero.hero--triptych / section#painel",
+     "sel": "section#listas / section#meu-dia",
      "text": "",
-     "stop": 1,
-     "msg": "208px between these sections, -34% against the median 315px",
-     "crop": "1440-08-section-gaps.jpg",
-     "fix": "use one gap between sections (all within 25% of each other)"
-    },
-    {
-     "check": "section-gaps",
-     "sev": "WARN",
-     "sel": "section#painel / section#listas",
-     "text": "",
-     "stop": 2,
-     "msg": "187px between these sections, -41% against the median 315px",
-     "crop": "1440-10-section-gaps.jpg",
+     "stop": 4,
+     "msg": "329px between these sections, +37% against the median 241px",
+     "crop": "1440-07-section-gaps.jpg",
      "fix": "use one gap between sections (all within 25% of each other)"
     },
     {
@@ -158,7 +78,7 @@
      "text": "gestão",
      "msg": "\"gestão\" opens a section headed \"Coordenador comercial da academia\"",
      "stop": 0,
-     "crop": "1440-05-nav-labels.jpg",
+     "crop": "1440-02-nav-labels.jpg",
      "fix": "name each nav link after the heading of the section it opens"
     },
     {
@@ -168,18 +88,8 @@
      "text": "Falar com a WasFit",
      "msg": "stands 734px across from the nearest text of its block (\"Coordenador comercial da acade\")",
      "stop": 0,
-     "crop": "1440-06-stranded-action.jpg",
+     "crop": "1440-03-stranded-action.jpg",
      "fix": "put the button under or beside the text it belongs to"
-    },
-    {
-     "check": "copy-length",
-     "sev": "WARN",
-     "sel": "section#perguntas",
-     "text": "Perguntas de quem já usa EVO e WasFit",
-     "msg": "1 section over 90 words a screen outside the UI mocks (\"Perguntas de quem já usa\" 143); 67 words a screen across the page (735 words in 11 screens): a tech page says it in about 80 or fewer",
-     "fix": "cut every section to its heading, one line and the product UI: the UI says the rest; no second paragraph, no list of feature sentences",
-     "stop": 9,
-     "crop": "1440-15-copy-length.jpg"
     },
     {
      "check": "nav-current",
@@ -188,7 +98,7 @@
      "text": "",
      "stop": 1,
      "msg": "the nav stays on screen with 5 links to the page's sections, but never marks the one you are in (no link changes as the page scrolls)",
-     "crop": "1440-09-nav-current.jpg",
+     "crop": "1440-05-nav-current.jpg",
      "fix": "mark the link of the section on screen (a colour, a weight or a line under it) as the visitor scrolls"
     },
     {
@@ -207,7 +117,7 @@
      "text": "falar com a wasfit",
      "stop": 15,
      "msg": "\"falar com a wasfit\" shows 2 times on the first screen at 1440px (nav, hero): the nav's button and the hero's; nothing else on the screen may repeat it",
-     "crop": "1440-21-action-repeat.jpg",
+     "crop": "1440-12-action-repeat.jpg",
      "fix": "show the action once a screen besides the nav's button: the hero's, the close's or the phone bar's, never all at once"
     },
     {
@@ -217,84 +127,92 @@
      "text": "",
      "msg": "the email field lacks type=\"email\": the phone shows the wrong keyboard and nothing fills it in",
      "stop": 12,
-     "crop": "1440-19-form-fields.jpg",
+     "crop": "1440-10-form-fields.jpg",
      "fix": "give each field its type, autocomplete and inputmode, never block paste or disable the button before a submit, and add the status line (references/system.md, Forms)"
     },
     {
      "check": "form-send",
      "sev": "WARN",
-     "sel": "section#contato > div.wrap > div.grid > form.form.span-6",
+     "sel": "div.wrap > div.grid > div.frame.vd-frame:nth-of-type(2) > form.form",
      "text": "mailto:contato@wasfit.example",
      "msg": "the form opens a mail to contato@wasfit.example: a stand-in until the client gives its form address; list it in the report",
      "stop": 12,
-     "crop": "1440-20-form-send.jpg",
+     "crop": "1440-11-form-send.jpg",
      "fix": "send the form to the client's address (data-endpoint) and show the confirmation only after it answers; list a mailto stand-in in the report"
-    },
-    {
-     "check": "container-edges",
-     "sev": "FAIL",
-     "sel": "div.wrap > div.grid > article.card.card--row:nth-of-type(2) > h3.t-card",
-     "text": "Mede a etapa da IA",
-     "msg": "2 text blocks start on a left line at x 949, 869px from the container's left: text starts on the container's left, or on one split line (x 623, 732, 841) (also \"Cadastros, assumidos, experiment\") (SR-6)",
-     "fix": "start the text on the container's left, or on the one split line every split shares",
-     "rule": "SR-6 T3-left-lines",
-     "crop": "1440-rhythm-01-container-edges.jpg"
     },
     {
      "check": "container-edges",
      "sev": "WARN",
      "sel": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(1)",
      "text": "Inadimplência",
-     "msg": "1 text block starts on a left line at x 72, -8px from the container's left: text starts on the container's left, or on one split line (x 623, 732, 841) (it is in a scroll scene: told as a WARN) (SR-6)",
+     "msg": "\"Inadimplência\" runs 0-120px, outside the container lines of section 3 at 80-1360px: full width is for background layers and grounds only (it is in a scroll scene: told as a WARN) (SR-6)",
+     "fix": "keep it inside the container lines (.wrap): full width is for background layers and grounds only",
+     "rule": "SR-6 T2-containment",
+     "crop": "1440-rhythm-02-container-edges.jpg"
+    },
+    {
+     "check": "container-edges",
+     "sev": "WARN",
+     "sel": "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > button.loop-pause.mo-mq__pause",
+     "text": "Pause",
+     "msg": "\"Pause\" runs 1408-1440px, outside the container lines of section 3 at 80-1360px: full width is for background layers and grounds only (it is in a scroll scene: told as a WARN) (SR-6)",
+     "fix": "keep it inside the container lines (.wrap): full width is for background layers and grounds only",
+     "rule": "SR-6 T2-containment"
+    },
+    {
+     "check": "container-edges",
+     "sev": "WARN",
+     "sel": "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > button.loop-pause.mo-mq__pause",
+     "text": "Pause",
+     "msg": "a box runs 1408-1440px, outside the container lines of section 3 at 80-1360px: full width is for background layers and grounds only (it is in a scroll scene: told as a WARN) (and 1 more like it: \"Experimental: confirmar\") (SR-6)",
+     "fix": "keep it inside the container lines (.wrap): full width is for background layers and grounds only",
+     "rule": "SR-6 T2-containment"
+    },
+    {
+     "check": "container-edges",
+     "sev": "WARN",
+     "sel": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(1)",
+     "text": "Inadimplência",
+     "msg": "1 text block starts on a left line at x -8, -88px from the container's left: text starts on the container's left, or on one split line (x 623, 732, 841) (it is in a scroll scene: told as a WARN) (SR-6)",
      "fix": "start the text on the container's left, or on the one split line every split shares",
      "rule": "SR-6 T3-left-lines"
     },
     {
      "check": "row-lines",
      "sev": "FAIL",
-     "sel": "div.wrap > div.frame.vd-frame > div.wg.wg-tela > div.wg-tab.wg-tab--kb",
-     "text": "ConsultoraContatosNormalAtrasadoCríticoE",
-     "msg": "a row of 6 items: its first item starts at 140px, the container's left line at 80px; its last item ends at 1016px, the container's right line at 1360px (2px either way) (SR-7)",
-     "fix": "start the row's first item on the container's left line and end its last on the right line, every item one height",
-     "rule": "SR-7 T-rows",
-     "crop": "1440-rhythm-02-row-lines.jpg"
-    },
-    {
-     "check": "row-lines",
-     "sev": "FAIL",
-     "sel": "article.card.card--row:nth-of-type(1) > div.panel.vd-panel > div.wg.wg-tela > div.wg-tab.wg-tab--conv",
-     "text": "ConsultoraCarteiraViraram clienteConvers",
-     "msg": "a row of 5 items: its first item starts at 123px, its column's left line at 80px; its last item ends at 882px, its column's right line at 925px (2px either way) (SR-7)",
-     "fix": "start the row's first item on the container's left line and end its last on the right line, every item one height",
-     "rule": "SR-7 T-rows"
-    },
-    {
-     "check": "row-lines",
-     "sev": "FAIL",
      "sel": "section#listas > div.wrap > div.grid.vd-fim > div.span-12.vd-marquee",
      "text": "InadimplênciaRisco de abandonoRenovação ",
-     "msg": "a clipped carousel: 1 item cut at rest (SR-7)",
+     "msg": "a clipped carousel: its window runs 0-1440px, not on the container at 80-1360px; 1 item cut at rest (SR-7)",
      "fix": "show every item inside the container, or stack them: no sideways scroller, no half-cut carousel",
-     "rule": "SR-7 T-overflow"
+     "rule": "SR-7 T-overflow",
+     "crop": "1440-rhythm-01-row-lines.jpg"
     },
     {
      "check": "row-lines",
      "sev": "FAIL",
      "sel": "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > div.mo-mq__rail",
      "text": "InadimplênciaRisco de abandonoRenovação ",
-     "msg": "a clipped carousel: 1 item cut at rest (SR-7)",
+     "msg": "a clipped carousel: its window runs 0-1440px, not on the container at 80-1360px; 1 item cut at rest (SR-7)",
      "fix": "show every item inside the container, or stack them: no sideways scroller, no half-cut carousel",
      "rule": "SR-7 T-overflow"
     },
     {
-     "check": "split-pair",
-     "sev": "FAIL",
-     "sel": "section#analises > div.wrap > div.grid",
-     "text": "Compara cada carteira com a equipe Carte",
-     "msg": "the split's columns are off the page's one pair of lines: its right column starts at x 949, the first split's at 732; its right column starts at x 949, on none of the split lines 623 (k=5), 732 (k=6), 841 (k=7) (SR-8)",
-     "fix": "start every split's right column on one shared line (wrap.left + k x (width + 24) / 12, k 5, 6 or 7; 6 on a place page) and end the left one 24px before it",
-     "rule": "SR-8 T-pair",
-     "crop": "1440-rhythm-03-split-pair.jpg"
+     "check": "row-lines",
+     "sev": "WARN",
+     "sel": "div.wrap > div.grid.vd-fim > div.span-12.vd-marquee > button.loop-pause.mo-mq__pause",
+     "text": "Pause",
+     "msg": "\"Pause\" ends at 1440px, past the container's right line at 1360px (it is in a scroll scene: told as a WARN) (SR-7)",
+     "fix": "end it at the container's right line",
+     "rule": "SR-7 T-right"
+    },
+    {
+     "check": "row-lines",
+     "sev": "WARN",
+     "sel": "div.span-12.vd-marquee > div.mo-mq__rail > ul.mo-mq__track:nth-of-type(1) > li:nth-of-type(6)",
+     "text": "Experimental: confirmar",
+     "msg": "\"Experimental: confirmar\" ends at 1409px, past the container's right line at 1360px (it is in a scroll scene: told as a WARN) (SR-7)",
+     "fix": "end it at the container's right line",
+     "rule": "SR-7 T-right"
     }
    ],
    "glAsked": 0
@@ -307,84 +225,14 @@
    "errors": [],
    "findings": [
     {
-     "check": "cut-text",
-     "sev": "FAIL",
-     "sel": "div.wg-app__corpo > div.wg-cartao:nth-of-type(2) > div.wg-item:nth-of-type(2) > b",
-     "text": "Inadimplência da Bianca: 9 contatos atrasados de",
-     "msg": "cut 9px at the bottom by the overflow of section#painel > div.wrap > div.ui.app > div.wg-app__main",
-     "stop": 2,
-     "crop": "390-04-cut-text.jpg",
-     "fix": "give the text room: no overflow clipping a line, no line past its box"
-    },
-    {
-     "check": "scroll-reveal",
-     "sev": "FAIL",
-     "sel": "div.span-2.footer__col:nth-of-type(4) > ul > li:nth-of-type(3) > a",
-     "text": "Contato",
-     "msg": "starts \"color\" (0.1 s) the moment it is scrolled into view (an IntersectionObserver)",
-     "stop": 16,
-     "crop": "390-18-scroll-reveal.jpg",
-     "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view"
-    },
-    {
-     "check": "no-visual",
-     "sev": "FAIL",
-     "sel": "section#perguntas",
-     "text": "Perguntas de quem já usa EVO e WasFit",
-     "msg": "no picture, effect or mock in this section; a feature section needs a visual",
-     "stop": 11,
-     "crop": "390-15-no-visual.jpg",
-     "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits"
-    },
-    {
      "check": "no-visual",
      "sev": "FAIL",
      "sel": "section#contato",
      "text": "Fale com a WasFit sobre a sua academia",
      "msg": "no picture, effect or mock in this section; a feature section needs a visual",
-     "stop": 14,
-     "crop": "390-17-no-visual.jpg",
-     "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits"
-    },
-    {
-     "check": "off-grid",
-     "sev": "FAIL",
-     "sel": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1)",
-     "text": "O mínimo é o que falta dividido pelos dias úteis",
-     "stop": 5,
-     "msg": "left edge at 48px, 24px off the page margin at 24px (78 elements, like div.frame.frame--split); 2 more in this section off the grid too (li:nth-of-type(2) at 48px, li:nth-of-type(3) at 48px)",
-     "crop": "390-08-off-grid.jpg",
-     "fix": "move it onto the page margin, or the column edge its section uses"
-    },
-    {
-     "check": "off-grid",
-     "sev": "FAIL",
-     "sel": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1)",
-     "text": "A consultora contesta uma venda e o gestor resol",
-     "stop": 9,
-     "msg": "left edge at 48px, 24px off the page margin at 24px (78 elements, like p.t-lead); 2 more in this section off the grid too (li:nth-of-type(2) at 48px, li:nth-of-type(3) at 48px)",
-     "crop": "390-13-off-grid.jpg",
-     "fix": "move it onto the page margin, or the column edge its section uses"
-    },
-    {
-     "check": "off-grid",
-     "sev": "FAIL",
-     "sel": "div.grid > div.span-5.stack-5 > ul.vd-fatos > li:nth-of-type(1)",
-     "text": "Para academias que usam a EVO.",
      "stop": 13,
-     "msg": "left edge at 48px, 24px off the page margin at 24px (78 elements, like label); 1 more in this section off the grid too (li:nth-of-type(2) at 48px)",
-     "crop": "390-16-off-grid.jpg",
-     "fix": "move it onto the page margin, or the column edge its section uses"
-    },
-    {
-     "check": "contrast",
-     "sev": "FAIL",
-     "sel": "div.wg.wg-meudia > div.wg-placar > div.wg-anel.wg-anel--g > small",
-     "text": "CONTATOS HOJE",
-     "stop": 5,
-     "msg": "body text over a effect reads at 1.0:1 at its worst tenth (needs 4.5:1), on a busy ground",
-     "crop": "390-09-contrast.jpg",
-     "fix": "put the text on a calm part of the picture, or on a solid panel"
+     "crop": "390-13-no-visual.jpg",
+     "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits"
     },
     {
      "check": "nav",
@@ -399,21 +247,21 @@
     {
      "check": "cut-text",
      "sev": "WARN",
-     "sel": "div.panel.vd-panel > div.wg.wg-tela > div.wg-linha:nth-of-type(3) > span.wg-selo.laranja",
+     "sel": "div.panel.vd-panel > div.ui.wg > div.wg-linha:nth-of-type(3) > span.wg-selo.laranja",
      "text": "14 dias",
      "msg": "cut 10px at the bottom by the overflow of div.group > div.grid > article.card.card--row:nth-of-type(2) > div.panel.vd-panel: a fragment run out through its panel's edge",
      "stop": 3,
-     "crop": "390-05-cut-text.jpg",
+     "crop": "390-04-cut-text.jpg",
      "fix": "give the text room: no overflow clipping a line, no line past its box"
     },
     {
      "check": "cut-text",
      "sev": "WARN",
-     "sel": "div.panel.vd-panel > div.wg.wg-tela > div.wg-motivos:nth-of-type(3) > span.wg-motivo:nth-of-type(1)",
+     "sel": "div.panel.vd-panel > div.ui.wg > div.wg-motivos:nth-of-type(3) > span.wg-motivo:nth-of-type(1)",
      "text": "Preço",
      "msg": "cut 7px at the bottom by the overflow of div.wrap > div.grid.vd-fim > article.card.card--row:nth-of-type(2) > div.panel.vd-panel: a fragment run out through its panel's edge (and 2 more like it: \"Horário\", \"Vai pensar\")",
      "stop": 3,
-     "crop": "390-06-cut-text.jpg",
+     "crop": "390-05-cut-text.jpg",
      "fix": "give the text room: no overflow clipping a line, no line past its box"
     },
     {
@@ -423,38 +271,48 @@
      "text": "→",
      "msg": "cut 7px at the right by the overflow of section#meu-dia > div.wrap > div.grid > div.frame.frame--split: a fragment run out through its panel's edge",
      "stop": 5,
+     "crop": "390-07-cut-text.jpg",
+     "fix": "give the text room: no overflow clipping a line, no line past its box"
+    },
+    {
+     "check": "cut-text",
+     "sev": "WARN",
+     "sel": "div.ui.wg > div.wg-tab.wg-tab--kb > span:nth-of-type(25) > b",
+     "text": "Tainá Souza",
+     "msg": "cut 12px at the bottom by the overflow of section#kanban > div.wrap > div.frame.vd-frame: a fragment run out through its panel's edge",
+     "stop": 6,
+     "crop": "390-08-cut-text.jpg",
+     "fix": "give the text room: no overflow clipping a line, no line past its box"
+    },
+    {
+     "check": "cut-text",
+     "sev": "WARN",
+     "sel": "div.ui.wg > div.wg-tab.wg-tab--conv > span:nth-of-type(16) > b",
+     "text": "Tainá Souza",
+     "msg": "cut 6px at the bottom by the overflow of div.wrap > div.grid > article.card.card--row:nth-of-type(1) > div.panel.vd-panel: a fragment run out through its panel's edge (and 2 more like it: \"28\", \"no padrão\")",
+     "stop": 8,
+     "crop": "390-09-cut-text.jpg",
+     "fix": "give the text room: no overflow clipping a line, no line past its box"
+    },
+    {
+     "check": "cut-text",
+     "sev": "WARN",
+     "sel": "div.ui.wg > div.wg-tab.wg-tab--bonus > span:nth-of-type(7) > b",
+     "text": "2. Bianca Lopes",
+     "msg": "cut 12px at the bottom by the overflow of section#bonus > div.wrap > div.grid > div.frame.frame--split: a fragment run out through its panel's edge (and 2 more like it: \"18\", \"R$ 356,50\")",
+     "stop": 10,
      "crop": "390-10-cut-text.jpg",
      "fix": "give the text room: no overflow clipping a line, no line past its box"
     },
     {
-     "check": "cut-text",
+     "check": "no-visual",
      "sev": "WARN",
-     "sel": "div.wg.wg-tela > div.wg-tab.wg-tab--kb > span:nth-of-type(25) > b",
-     "text": "Tainá Souza",
-     "msg": "cut 12px at the bottom by the overflow of section#kanban > div.wrap > div.frame.vd-frame: a fragment run out through its panel's edge",
-     "stop": 6,
-     "crop": "390-11-cut-text.jpg",
-     "fix": "give the text room: no overflow clipping a line, no line past its box"
-    },
-    {
-     "check": "cut-text",
-     "sev": "WARN",
-     "sel": "div.wg.wg-tela > div.wg-tab.wg-tab--conv > span:nth-of-type(16) > b",
-     "text": "Tainá Souza",
-     "msg": "cut 6px at the bottom by the overflow of div.wrap > div.grid > article.card.card--row:nth-of-type(1) > div.panel.vd-panel: a fragment run out through its panel's edge (and 2 more like it: \"28\", \"no padrão\")",
-     "stop": 8,
-     "crop": "390-12-cut-text.jpg",
-     "fix": "give the text room: no overflow clipping a line, no line past its box"
-    },
-    {
-     "check": "cut-text",
-     "sev": "WARN",
-     "sel": "div.wg.wg-tela > div.wg-tab.wg-tab--bonus > span:nth-of-type(7) > b",
-     "text": "2. Bianca Lopes",
-     "msg": "cut 12px at the bottom by the overflow of section#bonus > div.wrap > div.grid > div.frame.frame--split: a fragment run out through its panel's edge (and 2 more like it: \"18\", \"R$ 356,50\")",
-     "stop": 10,
-     "crop": "390-14-cut-text.jpg",
-     "fix": "give the text room: no overflow clipping a line, no line past its box"
+     "sel": "section#integra",
+     "text": "Liga a EVO e o app.wasfit",
+     "msg": "pictures, effects and mocks cover 21% of this section; a feature section needs a visual (about 25% or more)",
+     "stop": 11,
+     "crop": "390-11-no-visual.jpg",
+     "fix": "give the section a visual: a UI fragment on a ground, real icons, or a photograph that fits"
     },
     {
      "check": "cta",
@@ -463,7 +321,17 @@
      "text": "Listas automáticas vindas da EVO. Cada consultor",
      "msg": "a section over 1.5 screens long with no link or button in it",
      "stop": 3,
-     "crop": "390-07-cta.jpg",
+     "crop": "390-06-cta.jpg",
+     "fix": "add the action: a button in the hero, one on every priced item, one in the closing section"
+    },
+    {
+     "check": "cta",
+     "sev": "WARN",
+     "sel": "section#integra",
+     "text": "Liga a EVO e o app.wasfit",
+     "msg": "a section over 1.5 screens long with no link or button in it",
+     "stop": 11,
+     "crop": "390-12-cta.jpg",
      "fix": "add the action: a button in the hero, one on every priced item, one in the closing section"
     },
     {
@@ -524,8 +392,8 @@
   "findings": []
  },
  "counts": {
-  "FAIL": 23,
-  "WARN": 24
+  "FAIL": 5,
+  "WARN": 29
  },
  "checks": {
   "assets": "PASS",
@@ -548,11 +416,11 @@
   "collide": "PASS",
   "tap-size": "PASS",
   "row-gap": "PASS",
-  "cut-text": "FAIL",
+  "cut-text": "WARN",
   "fold-cut": "PASS",
-  "marquee": "PASS",
+  "marquee": "WARN",
   "scroll-linked": "not checked",
-  "scroll-reveal": "FAIL",
+  "scroll-reveal": "not checked",
   "pinned": "PASS",
   "loop-pause": "not checked",
   "reduced-motion": "not checked",
@@ -569,9 +437,9 @@
   "ui-fit": "PASS",
   "ui-centre": "PASS",
   "dark-ground": "PASS",
-  "button-styles": "FAIL",
+  "button-styles": "PASS",
   "button-shape": "PASS",
-  "same-action": "FAIL",
+  "same-action": "PASS",
   "button-picture": "PASS",
   "cta": "WARN",
   "pricing-tiers": "PASS",
@@ -583,12 +451,12 @@
   "heading-scale": "PASS",
   "stagger": "PASS",
   "top-stagger": "PASS",
-  "off-grid": "FAIL",
+  "off-grid": "PASS",
   "col-edge": "PASS",
   "right-edge": "PASS",
   "centre-axis": "PASS",
   "tilt": "PASS",
-  "contrast": "FAIL",
+  "contrast": "PASS",
   "text-contrast": "PASS",
   "body-size": "PASS",
   "busy-ground": "PASS",
@@ -613,7 +481,7 @@
   "effects-fit": "PASS",
   "fade-cut": "PASS",
   "photo-weight": "PASS",
-  "copy-length": "WARN",
+  "copy-length": "PASS",
   "nav-current": "WARN",
   "progress-bar": "PASS",
   "photo-repeat": "PASS",
@@ -645,9 +513,9 @@
   "section-air": "PASS",
   "one-section": "PASS",
   "one-heading": "PASS",
-  "container-edges": "FAIL",
+  "container-edges": "WARN",
   "row-lines": "FAIL",
-  "split-pair": "FAIL",
+  "split-pair": "PASS",
   "motion-layer": "PASS",
   "count-text": "PASS",
   "loop-cycle": "PASS",

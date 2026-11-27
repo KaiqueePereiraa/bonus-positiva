@@ -8,10 +8,10 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/marca.css?v=20261126220127">
+<link rel="stylesheet" href="shared/marca.css?v=20261126221851">
 <script>window.__hashInicial = location.hash;</script>
 <style>
-#tela{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--fundo);position:relative;overflow:hidden;padding:24px}
+#tela{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--fundo);position:relative;overflow:hidden;padding:24px}
 #tela::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 50% at 15% 0%,color-mix(in oklch,var(--primaria) 18%,transparent),transparent 70%),radial-gradient(50% 45% at 100% 100%,color-mix(in oklch,#9EEA4E 14%,transparent),transparent 70%)}
 #tela::after{content:"";position:absolute;inset:0;background-image:radial-gradient(color-mix(in oklch,var(--primaria) 35%,transparent) 1px,transparent 1px);background-size:28px 28px;opacity:.35;-webkit-mask-image:radial-gradient(ellipse at center,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse at center,#000 20%,transparent 75%)}
 .caixa{position:relative;z-index:2;background:var(--superficie);border:1px solid var(--borda);border-radius:20px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.08)}
@@ -72,6 +72,10 @@
 .etq.vermelho{background:color-mix(in oklch,var(--danger) 14%,transparent);color:var(--texto-perigo)}
 .btn:active{transform:scale(.98)}
 .rodape-acoes{display:flex;gap:18px;align-items:center}
+.aceite{font-size:13px;color:var(--suave);text-align:center;margin-top:12px;line-height:1.45}
+.aceite a,.legal a{color:var(--primaria-forte)}
+.legal{position:relative;z-index:2;display:flex;gap:10px;justify-content:center;margin-top:18px;font-size:13px;color:var(--suave)}
+.legal a{text-decoration:none}.legal a:hover{text-decoration:underline}
 @media (max-width:560px){.caixa{padding:36px 22px}.opcoes{grid-template-columns:1fr}.academia{grid-template-columns:40px 1fr}.academia .btn{grid-column:1 / -1;width:100%}}
 </style>
 </head>
@@ -111,6 +115,7 @@
       <div class="campo"><label for="nova1">Nova senha</label><input id="nova1" type="password" autocomplete="new-password" minlength="8" required></div>
       <div class="campo"><label for="nova2">Repita a senha</label><input id="nova2" type="password" autocomplete="new-password" minlength="8" required></div>
       <button class="btn" type="submit">Salvar senha</button>
+      <p class="aceite">Ao criar sua senha você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>.</p>
       <p class="msg" id="msg-nova" role="alert"></p>
     </form>
 
@@ -145,11 +150,12 @@
 
     <p class="msg" id="carregando">Carregando…</p>
   </div>
+  <nav class="legal" aria-label="Documentos"><a href="termos.html">Termos de uso</a><span aria-hidden="true">·</span><a href="privacidade.html">Privacidade</a></nav>
 </main>
 
 <script type="module">
-import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261126220127';
-import { seloLicenca } from './tarefas/js/conta-regras.js?v=20261126220127';
+import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261126221851';
+import { seloLicenca } from './tarefas/js/conta-regras.js?v=20261126221851';
 
 const $ = (id) => document.getElementById(id);
 const telas = ['form-login', 'form-esqueci', 'form-nova', 'academias', 'escolha', 'sem-acesso', 'carregando'];

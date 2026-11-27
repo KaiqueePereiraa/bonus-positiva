@@ -1,11 +1,11 @@
 /*
   taste-skill diagrams/mount.js - draws every [data-diagram] on the page. One line in the page:
-    <link rel="stylesheet" href="assets/diagrams/diagram.css?v=20261126220127">
-    <script type="module" src="assets/diagrams/mount.js?v=20261126220127"></script>
+    <link rel="stylesheet" href="assets/diagrams/diagram.css?v=20261126221851">
+    <script type="module" src="assets/diagrams/mount.js?v=20261126221851"></script>
   The icons a diagram names are the files scripts/icons.mjs wrote (icons.mjs scan index.html --out assets/icons),
   read from assets/icons/ or from data-icon-base. See references/diagrams.md.
 */
-import dg from './diagram.js?v=20261126220127';
+import dg from './diagram.js?v=20261126221851';
 
 const go = () => dg.auto(document);
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go, { once: true });

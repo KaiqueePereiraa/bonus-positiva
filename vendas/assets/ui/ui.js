@@ -6,7 +6,7 @@
 
   Load into a placeholder (the HTML, both stylesheets and the script are fetched once):
     <div data-ui-load="calendar"></div>
-    import ui from './assets/ui/ui.js?v=20261126220127'; ui.loadAll(document);
+    import ui from './assets/ui/ui.js?v=20261126221851'; ui.loadAll(document);
   Stylesheets: ui.js links base.css and each fragment's CSS from script, so with scripts off (or before it
   runs) a fragment would be unstyled and leave an empty ground. A page therefore links assets/ui/base.css and
   assets/ui/<name>/fragment.css for every fragment it uses in its own <head> (starter.html does); link() here
