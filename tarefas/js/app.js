@@ -1,13 +1,13 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126222023';
-import * as dados from './dados.js?v=20261126222023';
-import { seloLicenca } from './conta-regras.js?v=20261126222023';
-import { hojeSP } from './regras.js?v=20261126222023';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126222023';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126222023';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126222023';
-import { resumoSemana } from './bonus-meta.js?v=20261126222023';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126222023';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126225325';
+import * as dados from './dados.js?v=20261126225325';
+import { seloLicenca } from './conta-regras.js?v=20261126225325';
+import { hojeSP } from './regras.js?v=20261126225325';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126225325';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126225325';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126225325';
+import { resumoSemana } from './bonus-meta.js?v=20261126225325';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126225325';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -254,7 +254,7 @@ async function mostrarConta() {
       box.classList.toggle('outra', !!c.em_outra_conta);
       box.setAttribute('role', 'button'); box.tabIndex = 0;
       box.title = c.em_outra_conta ? `Você (master) está vendo ${c.nome}. Clique para trocar de academia.` : 'Trocar de academia';
-      const ir = () => { location.href = '../index.html?academias=1'; };
+      const ir = () => { location.href = '../master/'; };
       box.addEventListener('click', ir);
       box.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ir(); } });
     }
@@ -285,7 +285,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126222023`);
+    const tela = await import(`./telas/${modulo}.js?v=20261126225325`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

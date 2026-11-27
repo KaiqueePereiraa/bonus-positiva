@@ -1,0 +1,80 @@
+/* Painel master da WasFit — mesmo vocabulário visual da Central (tokens de shared/marca.css), sem menu lateral:
+   é a "torre de controle" das academias, uma página só. */
+body{background:var(--fundo);color:var(--texto);font-size:15px}
+.topo{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 32px;background:var(--fundo);border-bottom:1px solid var(--borda)}
+.marca{display:flex;align-items:center;gap:12px}
+.marca img{height:26px;width:auto}
+.etq-master{font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;background:color-mix(in oklch,var(--primaria) 20%,transparent);color:var(--primaria-forte)}
+.topo-acoes{display:flex;align-items:center;gap:10px}
+.quem{font-size:13px;color:var(--suave)}
+.icone{width:38px;height:38px;border-radius:12px;border:1px solid var(--borda);background:transparent;color:var(--texto);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.icone svg{width:19px;height:19px}
+
+.btn{font:inherit;font-size:14px;font-weight:600;padding:9px 16px;border-radius:10px;border:0;background:var(--primaria);color:var(--primaria-texto);cursor:pointer;white-space:nowrap;transition:background-color .15s,box-shadow .15s,transform .12s cubic-bezier(.2,.8,.2,1)}
+.btn:hover{background:oklch(.78 .18 160.5)}
+.btn.sec{background:var(--superficie);color:var(--texto);box-shadow:inset 0 0 0 1px var(--borda)}
+.btn.sec:hover{box-shadow:inset 0 0 0 1px var(--primaria-forte)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.6;cursor:wait}
+
+.conteudo{max-width:1240px;margin:0 auto;padding:28px 32px 48px;display:flex;flex-direction:column;gap:20px}
+.cabeca h1{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.dica{color:var(--suave);font-size:13px;line-height:1.5}
+
+.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.numero{background:var(--superficie);border:1px solid var(--borda);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow)}
+.numero small{font-size:13px;font-weight:500;color:var(--suave)}
+.numero b{font-size:28px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.numero span{font-size:12.5px;color:var(--suave);line-height:1.4}
+.numero.verde b{color:var(--primaria-forte)}
+.numero.laranja b{color:var(--texto-aviso)}
+.numero.vermelho b{color:var(--texto-perigo)}
+
+.cartao{background:var(--superficie);border:1px solid var(--borda);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow)}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.filtros button{font:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:999px;border:1px solid var(--borda);background:var(--superficie);color:var(--texto);cursor:pointer}
+.filtros button.ativo{background:var(--texto);color:var(--superficie);border-color:var(--texto)}
+.filtros .cont{font-variant-numeric:tabular-nums;opacity:.75;margin-left:2px}
+
+.tabela-wrap{overflow-x:auto}
+.tabela{width:100%;border-collapse:collapse;font-size:14px}
+.tabela th{text-align:left;font-size:12px;font-weight:600;color:var(--suave);padding:8px 10px;border-bottom:1px solid var(--borda);white-space:nowrap}
+.tabela td{padding:12px 10px;border-bottom:1px solid var(--borda);vertical-align:middle;font-variant-numeric:tabular-nums}
+.tabela tr:last-child td{border-bottom:0}
+.tabela tr.inativa td{opacity:.6}
+.tabela td.nome{display:flex;align-items:center;gap:12px;min-width:220px}
+.tabela td.nome img,.sem-logo{width:36px;height:36px;border-radius:9px;object-fit:contain;background:var(--muted);flex:none}
+.sem-logo{display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--suave)}
+.tabela .sub{display:block;font-size:12.5px;color:var(--suave);margin-top:2px}
+.tabela td.acoes{text-align:right;white-space:nowrap}
+.tabela td.acoes .btn{margin-left:6px;padding:7px 12px;font-size:13px}
+.tabela td.vazio{text-align:center;color:var(--suave);padding:28px}
+
+.saude{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.saude::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gray)}
+.saude.verde{color:var(--primaria-forte)}.saude.verde::before{background:var(--primaria-forte)}
+.saude.amarelo{color:var(--texto-aviso)}.saude.amarelo::before{background:var(--warning)}
+.saude.vermelho{color:var(--texto-perigo)}.saude.vermelho::before{background:var(--danger)}
+.saude.inativa{color:var(--suave)}
+
+.selo{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--muted);color:var(--suave)}
+.selo.laranja{background:color-mix(in oklch,var(--warning) 18%,transparent);color:var(--texto-aviso)}
+.selo.vermelho{background:color-mix(in oklch,var(--danger) 14%,transparent);color:var(--texto-perigo)}
+.rodape{margin-top:14px}
+.msg{color:var(--texto-perigo);font-size:14px;min-height:20px}
+
+dialog{border:1px solid var(--borda);border-radius:16px;padding:24px;background:var(--superficie);color:var(--texto);width:min(420px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.18)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{font-size:18px;font-weight:700;margin-bottom:14px}
+dialog form{display:flex;flex-direction:column;gap:12px}
+.campo{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--titulo)}
+.campo input,.campo select{font:inherit;font-size:15px;font-weight:400;padding:10px 12px;border-radius:10px;border:1px solid var(--borda);background:var(--superficie);color:var(--texto)}
+.campo input:focus,.campo select:focus{outline:none;border-color:var(--primaria-forte);box-shadow:0 0 0 3px color-mix(in oklch,var(--primaria) 25%,transparent)}
+dialog .acoes{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+
+@media (max-width:760px){
+  .topo{padding:12px 16px}.quem{display:none}
+  .conteudo{padding:20px 16px 40px}
+  .numeros{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .numero b{font-size:22px}
+}

@@ -8,7 +8,7 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/marca.css?v=20261126222023">
+<link rel="stylesheet" href="shared/marca.css?v=20261126225325">
 <script>window.__hashInicial = location.hash;</script>
 <style>
 #tela{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--fundo);position:relative;overflow:hidden;padding:24px}
@@ -57,26 +57,13 @@
 .rodape{display:flex;justify-content:space-between;align-items:center;margin-top:24px;font-size:14px;color:var(--suave)}
 .rodape .link{margin:0}
 [hidden]{display:none!important}
-.academias{display:grid;grid-template-columns:1fr;gap:10px}
-.academia{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;padding:16px 18px;border:1px solid var(--borda);border-radius:14px;background:var(--superficie);text-align:left}
-.academia.atual{border-color:var(--primaria-forte);background:color-mix(in oklch,var(--primaria) 7%,var(--superficie))}
-.academia img,.academia .sem-logo{width:44px;height:44px;border-radius:10px;object-fit:contain;background:var(--muted)}
-.academia .sem-logo{display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--suave)}
-.academia b{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.academia .info{font-size:13px;color:var(--suave);margin-top:3px;line-height:1.45}
-.academia .btn{width:auto;margin:0;padding:10px 18px;font-size:14px}
-.academia .btn.sec{background:var(--superficie);color:var(--texto);box-shadow:inset 0 0 0 1px var(--borda)}
-.etq{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--muted);color:var(--suave)}
-.etq.verde{background:color-mix(in oklch,var(--primaria) 20%,transparent);color:var(--primaria-forte)}
-.etq.laranja{background:color-mix(in oklch,var(--warning) 18%,transparent);color:var(--texto-aviso)}
-.etq.vermelho{background:color-mix(in oklch,var(--danger) 14%,transparent);color:var(--texto-perigo)}
 .btn:active{transform:scale(.98)}
 .rodape-acoes{display:flex;gap:18px;align-items:center}
 .aceite{font-size:13px;color:var(--suave);text-align:center;margin-top:12px;line-height:1.45}
 .aceite a,.legal a{color:var(--primaria-forte)}
 .legal{position:relative;z-index:2;display:flex;gap:10px;justify-content:center;margin-top:18px;font-size:13px;color:var(--suave)}
 .legal a{text-decoration:none}.legal a:hover{text-decoration:underline}
-@media (max-width:560px){.caixa{padding:36px 22px}.opcoes{grid-template-columns:1fr}.academia{grid-template-columns:40px 1fr}.academia .btn{grid-column:1 / -1;width:100%}}
+@media (max-width:560px){.caixa{padding:36px 22px}.opcoes{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -119,13 +106,6 @@
       <p class="msg" id="msg-nova" role="alert"></p>
     </form>
 
-    <section id="academias" hidden>
-      <p class="ajuda">Painel da WasFit · escolha a academia que você quer acessar.</p>
-      <div class="academias" id="lista-academias"></div>
-      <p class="msg" id="msg-academias" role="alert"></p>
-      <div class="rodape"><span id="quem-master"></span><button class="link" type="button" id="sair3">Sair</button></div>
-    </section>
-
     <section id="escolha" hidden>
       <p class="ajuda" id="ola"></p>
       <div class="opcoes">
@@ -154,14 +134,13 @@
 </main>
 
 <script type="module">
-import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261126222023';
-import { seloLicenca } from './tarefas/js/conta-regras.js?v=20261126222023';
+import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261126225325';
 
 const $ = (id) => document.getElementById(id);
-const telas = ['form-login', 'form-esqueci', 'form-nova', 'academias', 'escolha', 'sem-acesso', 'carregando'];
+const telas = ['form-login', 'form-esqueci', 'form-nova', 'escolha', 'sem-acesso', 'carregando'];
 const mostrar = (id) => {
   telas.forEach((t) => { $(t).hidden = t !== id; });
-  $('caixa').classList.toggle('larga', id === 'escolha' || id === 'academias');
+  $('caixa').classList.toggle('larga', id === 'escolha');
   const foco = $(id).querySelector('input');
   if (foco) foco.focus();
 };
@@ -219,7 +198,7 @@ async function seguir() {
   try { ({ data: conta } = await sb.rpc('minha_conta')); } catch { /* sem conta */ }
   const nome1 = (perfil.nome || perfil.email).split(' ')[0];
   // Master admin (WasFit): depois do login cai no painel das academias e escolhe qual acessar (pedido de 26/11/2026)
-  if (conta?.master && (busca.has('academias') || !escolheuAcademia())) return painelAcademias(perfil, nome1);
+  if (conta?.master && (busca.has('academias') || !escolheuAcademia())) return location.replace('master/');   // painel master da WasFit
   const areas = areasDoPerfil(perfil);
   let temBonus = areas.bonus;
   if (temBonus) { try { const { data } = await sb.rpc('tem_bonus'); if (data === false) temBonus = false; } catch { /* mantém */ } }
@@ -240,58 +219,6 @@ async function seguir() {
 const CHAVE_ESCOLHA = 'wasfit_academia_escolhida';
 const escolheuAcademia = () => { try { return sessionStorage.getItem(CHAVE_ESCOLHA) === '1'; } catch { return false; } };
 const marcarEscolha = (sim) => { try { if (sim) sessionStorage.setItem(CHAVE_ESCOLHA, '1'); else sessionStorage.removeItem(CHAVE_ESCOLHA); } catch { /* sem armazenamento */ } };
-const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-function haQuanto(ts) {
-  if (!ts) return 'nunca';
-  const min = Math.round((Date.now() - Date.parse(ts)) / 60000);
-  if (min < 2) return 'agora';
-  if (min < 60) return `há ${min} min`;
-  const h = Math.round(min / 60);
-  if (h < 24) return `há ${h} h`;
-  const d = Math.round(h / 24);
-  return d === 1 ? 'ontem' : `há ${d} dias`;
-}
-const logoDe = (c) => {
-  const escuro = document.documentElement.dataset.tema === 'escuro';
-  const l = escuro ? (c.logo_claro || c.logo_escuro) : (c.logo_escuro || c.logo_claro);
-  return l ? (/^https?:/.test(l) ? l : l) : null;
-};
-async function painelAcademias(perfil, nome1) {
-  $('titulo').textContent = `Olá, ${nome1}`;
-  $('quem-master').textContent = `${perfil.email} · master admin`;
-  $('lista-academias').innerHTML = '<p class="ajuda">Carregando academias…</p>';
-  mostrar('academias');
-  let contas = [];
-  try { const { data, error } = await sb.rpc('master_contas'); if (error) throw error; contas = data || []; }
-  catch (e) { msg('msg-academias', 'Não foi possível carregar as academias. Atualize a página.'); return; }
-  const n = (v, um, varios) => `${v} ${v === 1 ? um : varios}`;
-  $('lista-academias').innerHTML = contas.map((c) => {
-    const sl = seloLicenca(c.dias_licenca, c.licenca_vence);
-    const logo = logoDe(c);
-    return `<div class="academia ${c.atual ? 'atual' : ''}">
-      ${logo ? `<img src="${esc(logo)}" alt="">` : `<span class="sem-logo">${esc((c.nome || '?').slice(0, 1))}</span>`}
-      <div><b>${esc(c.nome)}${c.casa ? ' <span class="etq">sua academia</span>' : ''}${c.atual ? ' <span class="etq verde">você está aqui</span>' : ''}${c.ativa === false ? ' <span class="etq vermelho">desativada</span>' : ''}${sl ? ` <span class="etq ${sl.cor === 'neutro' ? '' : sl.cor}" title="${esc(sl.dica)}">${esc(sl.texto)}</span>` : ''}</b>
-        <div class="info">${esc(c.plano || 'sem plano')} · ${n(c.unidades || 0, 'unidade', 'unidades')} · ${n(c.usuarios || 0, 'usuário ativo', 'usuários ativos')} · último uso ${haQuanto(c.ultima_atividade || c.ultimo_login)}</div></div>
-      <button class="btn ${c.atual ? '' : 'sec'}" type="button" data-entrar="${esc(c.id)}">${c.atual ? 'Continuar' : 'Entrar'}</button></div>`;
-  }).join('') || '<p class="ajuda">Nenhuma academia cadastrada ainda.</p>';
-  $('lista-academias').onclick = async (e) => {
-    const b = e.target.closest('[data-entrar]');
-    if (!b) return;
-    const c = contas.find((x) => x.id === b.dataset.entrar);
-    b.disabled = true;
-    try {
-      if (!c.atual) {
-        const { error } = await sb.rpc('master_entrar_conta', { p_conta: c.id });
-        if (error) throw error;
-        try { localStorage.removeItem('central_unidade'); } catch { /* sem armazenamento */ }   // a unidade escolhida era da outra academia
-      }
-      marcarEscolha(true);
-      if (busca.has('academias')) history.replaceState(null, '', location.pathname);
-      busca.delete('academias');
-      seguir();
-    } catch (err) { b.disabled = false; msg('msg-academias', err?.message || 'Não foi possível entrar nesta academia.'); }
-  };
-}
 
 sb.auth.onAuthStateChange((evento) => {
   if (evento === 'PASSWORD_RECOVERY') { definindoSenha = true; seguir(); }
@@ -333,8 +260,7 @@ document.querySelectorAll('[data-ir]').forEach((b) => b.addEventListener('click'
 }));
 const sairTudo = () => { marcarEscolha(false); sair(); };
 $('sair').addEventListener('click', sairTudo);
-$('sair3').addEventListener('click', sairTudo);
-$('ir-academias').addEventListener('click', () => { marcarEscolha(false); seguir(); });
+$('ir-academias').addEventListener('click', () => { marcarEscolha(false); location.href = 'master/'; });
 $('trocar-tema').addEventListener('click', () => {
   const escuro = document.documentElement.dataset.tema !== 'escuro';
   if (escuro) document.documentElement.dataset.tema = 'escuro'; else delete document.documentElement.dataset.tema;

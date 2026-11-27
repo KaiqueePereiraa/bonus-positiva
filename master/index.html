@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel master — Wasfit gestão</title>
+<link rel="icon" href="../assets/wasfit/favicon-64.png">
+<script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/marca.css?v=20261126225325">
+<link rel="stylesheet" href="master.css?v=20261126225325">
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <img class="so-claro" src="../assets/wasfit/wasfit-logo-light.webp" alt="WasFit" height="26">
+    <img class="so-escuro" src="../assets/wasfit/wasfit-logo-dark.webp" alt="WasFit" height="26">
+    <span class="etq-master">Painel master</span>
+  </div>
+  <div class="topo-acoes">
+    <span id="quem" class="quem"></span>
+    <button class="icone" id="tema" type="button" aria-label="Modo claro / escuro" title="Modo claro / escuro">
+      <svg class="so-claro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="so-escuro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button class="btn sec" id="sair" type="button">Sair</button>
+  </div>
+</header>
+
+<main class="conteudo" id="conteudo" aria-busy="true">
+  <section class="cabeca">
+    <h1>Academias na Wasfit gestão</h1>
+    <p class="dica" id="atualizado">Carregando…</p>
+  </section>
+  <section class="numeros" id="numeros" aria-label="Resumo"></section>
+  <section class="cartao">
+    <div class="filtros" id="filtros" role="tablist" aria-label="Filtrar academias"></div>
+    <div class="tabela-wrap"><table class="tabela" id="tabela">
+      <thead><tr><th>Academia</th><th>Situação</th><th>Plano</th><th>Licença</th><th>Equipe</th><th>Uso (contatos)</th><th>Último acesso</th><th></th></tr></thead>
+      <tbody id="linhas"></tbody>
+    </table></div>
+    <p class="dica rodape">Saúde: <b>verde</b> = em dia e em uso · <b>amarelo</b> = licença vencendo, sem contatos na semana ou 7+ dias sem ninguém entrar · <b>vermelho</b> = licença vencida, 30 dias sem contatos ou 14+ dias sem acesso.
+      Receita mensal soma o valor das academias ativas. Academia inativa ainda consegue entrar (o bloqueio vem com a cobrança).</p>
+  </section>
+  <p class="msg" id="msg" role="alert"></p>
+</main>
+
+<dialog id="editar" aria-labelledby="ed-titulo">
+  <form method="dialog" id="ed-form">
+    <h2 id="ed-titulo">Editar academia</h2>
+    <label class="campo">Situação<select id="ed-ativa"><option value="true">Ativa</option><option value="false">Inativa</option></select></label>
+    <label class="campo">Plano<input id="ed-plano" placeholder="ex.: Gestão 3 unidades" maxlength="60"></label>
+    <label class="campo">Valor mensal (R$)<input id="ed-valor" type="number" min="0" step="0.01" placeholder="ex.: 897"></label>
+    <label class="campo">Licença vence em<input id="ed-vence" type="date"></label>
+    <p class="dica">Deixe a data em branco para não mostrar aviso de vencimento para o gestor.</p>
+    <div class="acoes"><button class="btn sec" value="cancelar" type="submit">Cancelar</button><button class="btn" value="salvar" type="submit" id="ed-salvar">Salvar</button></div>
+  </form>
+</dialog>
+
+<script type="module" src="master.js?v=20261126225325"></script>
+</body>
+</html>
