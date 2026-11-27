@@ -8,7 +8,7 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/marca.css?v=20261126210231">
+<link rel="stylesheet" href="shared/marca.css?v=20261126210347">
 <script>window.__hashInicial = location.hash;</script>
 <style>
 #tela{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--fundo);position:relative;overflow:hidden;padding:24px}
@@ -71,6 +71,7 @@
 .etq.laranja{background:color-mix(in oklch,var(--warning) 18%,transparent);color:var(--texto-aviso)}
 .etq.vermelho{background:color-mix(in oklch,var(--danger) 14%,transparent);color:var(--texto-perigo)}
 .btn:active{transform:scale(.98)}
+.rodape-acoes{display:flex;gap:18px;align-items:center}
 @media (max-width:560px){.caixa{padding:36px 22px}.opcoes{grid-template-columns:1fr}.academia{grid-template-columns:40px 1fr}.academia .btn{grid-column:1 / -1;width:100%}}
 </style>
 </head>
@@ -134,7 +135,7 @@
           <span>Inadimplência, risco de abandono e "Por que não fechou?".</span>
         </a>
       </div>
-      <div class="rodape"><span id="quem"></span><span><button class="link" type="button" id="ir-academias" hidden>← Trocar de academia</button> <button class="link" type="button" id="sair">Sair</button></span></div>
+      <div class="rodape"><span id="quem"></span><span class="rodape-acoes"><button class="link" type="button" id="ir-academias" hidden>← Trocar de academia</button><button class="link" type="button" id="sair">Sair</button></span></div>
     </section>
 
     <section id="sem-acesso" hidden>
@@ -147,8 +148,8 @@
 </main>
 
 <script type="module">
-import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261126210231';
-import { seloLicenca } from './tarefas/js/conta-regras.js?v=20261126210231';
+import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261126210347';
+import { seloLicenca } from './tarefas/js/conta-regras.js?v=20261126210347';
 
 const $ = (id) => document.getElementById(id);
 const telas = ['form-login', 'form-esqueci', 'form-nova', 'academias', 'escolha', 'sem-acesso', 'carregando'];
