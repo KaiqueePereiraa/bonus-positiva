@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261126232913';
+import { sb } from '../../shared/sessao.js?v=20261127011516';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -8,7 +8,7 @@ let comoId = null;
 export const verComo = (id) => { comoId = id || null; };
 export const vendoComo = () => comoId;
 export const MSG_SO_OLHAR = 'Você está vendo como consultora: neste modo nada é salvo e o WhatsApp não abre.';
-const SO_LEITURA = new Set(['minhas_unidades_coord', 'vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como', 'desempenho_comercial', 'meu_kanban', 'controles_da_conta']);
+const SO_LEITURA = new Set(['minhas_unidades_coord', 'vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como', 'desempenho_comercial', 'meu_kanban', 'controles_da_conta', 'bonus_config_ler']);
 const travar = () => { if (comoId) throw new Error(MSG_SO_OLHAR); };
 const rpc = async (nome, args) => {
   if (comoId && !SO_LEITURA.has(nome)) travar();
@@ -241,7 +241,12 @@ export const meuKanban = () => rpc('meu_kanban', { p_como: comoId || null });
 export const kanbanSalvarRegras = (regras) => rpc('kanban_salvar_regras', { p_regras: regras });
 export const kanbanLigarUsuario = (usuario, profile) => rpc('kanban_ligar_usuario', { p_usuario: usuario, p_profile: profile || null });
 export const desempenhoProfessores = (mes) => rpc('desempenho_professores', { p_mes: mes });
-export const minhaMetaSemana = () => (comoId ? rpc('minha_meta_semana_como', { p_user: comoId }) : rpc('minha_meta_semana', {}));
+export async function minhaMetaSemana() {
+  const m = await (comoId ? rpc('minha_meta_semana_como', { p_user: comoId }) : rpc('minha_meta_semana', {}));
+  // Bônus configurável (27/11/2026): as faixas da semana vêm da configuração da academia (sem a tabela de planos)
+  if (m) m.config_versoes = await rpc('bonus_config_ler', { p_planos: false }).catch(() => null);
+  return m;
+}
 export const desempenho = (de, ate) => rpc('desempenho', { p_de: de, p_ate: ate });
 // folgas/atestados/faltas (coordenador marca; RLS: a consultora lê só as dela)
 export const ausencias = async (de, ate) => ok(await sb.from('ausencias').select('consultora_id,data,motivo,obs,protege_sequencia').gte('data', de).lte('data', ate).order('data'));
@@ -305,3 +310,13 @@ export const marcarAvisosVistos = async (userId) => {
   travar();
   return ok(await sb.from('avisos_vistos').upsert({ user_id: userId, visto_ate: new Date().toISOString() }));
 };
+
+// ── Bônus configurável e trilha do 1º acesso (migrações 400 e 401, 27/11/2026) ──
+export const bonusConfigLer = (planos = true) => rpc('bonus_config_ler', { p_planos: planos });
+export const bonusConfigSalvar = (mes, regras) => rpc('bonus_config_salvar', { p_vale_de: mes, p_regras: regras });
+export const trilhaEstado = () => rpc('trilha_estado', {});
+export const trilhaSalvar = (passo, d = {}, feito = true) => rpc('trilha_salvar', { p_passo: passo, p_dados: d, p_feito: feito });
+export const trilhaAcademia = (nome, logoClaro, logoEscuro) => rpc('trilha_academia', { p_nome: nome, p_logo_claro: logoClaro || null, p_logo_escuro: logoEscuro || null });
+export const trilhaUnidadeSalvar = (id, nome, grupo) => rpc('trilha_unidade_salvar', { p_id: id || null, p_nome: nome, p_grupo: grupo || null });
+export const trilhaUnidadeRemover = (id) => rpc('trilha_unidade_remover', { p_id: id });
+export const trilhaAtivar = () => rpc('trilha_ativar', {});

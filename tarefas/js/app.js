@@ -1,13 +1,13 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126232913';
-import * as dados from './dados.js?v=20261126232913';
-import { seloLicenca } from './conta-regras.js?v=20261126232913';
-import { hojeSP } from './regras.js?v=20261126232913';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126232913';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126232913';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126232913';
-import { resumoSemana } from './bonus-meta.js?v=20261126232913';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126232913';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261127011516';
+import * as dados from './dados.js?v=20261127011516';
+import { seloLicenca } from './conta-regras.js?v=20261127011516';
+import { hojeSP } from './regras.js?v=20261127011516';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261127011516';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261127011516';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261127011516';
+import { resumoSemana, equipeDoDia } from './bonus-meta.js?v=20261127011516';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261127011516';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -54,6 +54,8 @@ const ROTAS = {
   // Para abrir para as consultoras: trocar quem para 'todos' e religar o cron (supabase/migrations/021_escala_pausar_lembretes.sql).
   escala: { titulo: 'Escala', modulo: 'escala', icone: 'escala', quem: 'admin', grupo: 'ajustes', frase: 'Quem trabalha em cada fim de semana.' },
   historico: { titulo: 'Histórico', modulo: 'historico', icone: 'hist', quem: 'admin', grupo: 'ajustes', frase: 'Tudo o que foi feito na plataforma: quem fez, quando e o quê.' },
+  // Primeiros passos da academia nova (trilha do 1º acesso, 27/11/2026): só o administrador geral; aparece no menu enquanto a academia não foi ativada
+  trilha: { titulo: 'Primeiros passos', modulo: 'trilha', icone: 'alvo', quem: 'super', grupo: null, frase: 'Deixe a academia pronta em 7 passos. Pode parar e continuar depois de onde parou.' },
   configuracoes: { titulo: 'Configurações', modulo: 'configuracoes', icone: 'conf', quem: 'admin', grupo: 'ajustes', frase: 'Equipe, unidades e grupos, mensagens, WhatsApp e a conexão com a EVO.' },
 };
 // grupos que são listas de contato (a consultora só vê as listas em que tem algo)
@@ -285,7 +287,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126232913`);
+    const tela = await import(`./telas/${modulo}.js?v=20261127011516`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
@@ -428,7 +430,7 @@ async function atualizarHud(animarMudanca = false) {
 // "🎯 1/2": contratos da semana / próxima faixa do Bônus (ou ✓ na Super meta) — a meta à vista enquanto ela trabalha nas listas
 function hudMeta(hoje) {
   if (!metaSemana?.publicado_em) return '';
-  const r = resumoSemana(metaSemana.vendas || [], hoje, perfil.unidade, metaSemana.regua);
+  const r = resumoSemana(metaSemana.vendas || [], hoje, perfil.unidade, metaSemana.regua, equipeDoDia(metaSemana, hoje, perfil.unidade));
   const alvo = r.proxima ? r.feitos + r.proxima.faltam : null;
   return `<span class="hud-meta" title="Meta da semana: ${r.feitos} ${r.feitos === 1 ? 'contrato' : 'contratos'}${r.proxima ? ` · faltam ${r.proxima.faltam} para ${r.proxima.nome}` : ` · ${r.topo} batida!`}">🎯 <b>${r.feitos}</b>${alvo ? `/${alvo}` : ' 🏆'}</span>`;
 }
@@ -437,6 +439,18 @@ if (!ehAdmin) window.addEventListener('central:contato', () => { clearTimeout(hu
 
 if (!souAdmin) await pedirJustificativas();
 if (!ehAdmin) atualizarHud();
+// Academia nova ainda não ativada: o administrador geral cai nos "Primeiros passos" (a não ser que tenha escolhido "Fazer depois")
+if (ehAdmin && souSuper) {
+  try {
+    const trilha = await dados.trilhaEstado();
+    if (!trilha.configurada) {
+      ROTAS.trilha.grupo = 'inicio';
+      let depois = false;
+      try { depois = sessionStorage.getItem('trilha_depois') === '1'; } catch { /* sem armazenamento */ }
+      if (!depois && !location.hash.startsWith('#/trilha')) history.replaceState(null, '', '#/trilha');
+    }
+  } catch { /* banco sem a trilha ainda: segue normal */ }
+}
 montarMenu();
 ligarSino();
 window.addEventListener('hashchange', navegar);

@@ -3,7 +3,13 @@
 // Club 6/9/12 (4/7/10 a partir de novembro/2026) e Acqua 2/3/4 contratos "de meta" (cadastro, rematrícula ou venda completa) na semana.
 // Dezembro/2026 em diante (comissão aprovada em 24/11/2026): Laranjeiras + República são uma equipe só — contam as vendas
 // dela nas duas unidades e as faixas vêm da régua do mês (minha_meta_semana → regua): Entrada, Básico e Meta real.
-// Puro: testado em tests/bonus-meta.test.js.
+// Bônus configurável (27/11/2026): quando minha_meta_semana traz a configuração da equipe dela (config_equipe), as faixas e as
+// unidades que contam vêm dela (site/shared/bonus-motor.js); sem configuração, as regras antigas abaixo.
+// Puro: testado em tests/bonus-meta.test.js e tests/bonus-config-meta.test.js.
+import { faixasSemana, versaoDoMes, equipeDaUnidade } from '../../shared/bonus-motor.js?v=20261127011516';
+
+// Equipe da consultora no dia, pela configuração que veio junto com minha_meta_semana (dados.minhaMetaSemana)
+export const equipeDoDia = (meta, hoje, unidade) => equipeDaUnidade(versaoDoMes(meta?.config_versoes, hoje), unidade);
 
 export const FAIXAS = {
   club: [[12, 'Super meta'], [9, 'Meta real'], [6, 'Básico']],
@@ -18,7 +24,8 @@ const clubV3 = (unidade, hoje) => unidade === 'club' && !!hoje && hoje >= '2026-
 export const ACQUA = ['laranjeiras', 'republica'];
 const ehV3 = (unidade, regua) => !!regua?.v3 && ACQUA.includes(unidade);
 // Faixas da unidade, da maior para a menor: [[contratos, nome], …]
-export function faixasDe(unidade, regua = null, hoje = null) {
+export function faixasDe(unidade, regua = null, hoje = null, equipe = null) {
+  if (equipe) return faixasSemana(equipe, regua).slice(0, -1).map(([min, , nome]) => [min, nome]);
   if (ehV3(unidade, regua)) return [[regua.meta_real, 'Meta real'], [regua.basico, 'Básico'], [regua.entrada, 'Entrada']];
   if (clubV3(unidade, hoje)) return FAIXAS_CLUB_V3;
   return FAIXAS[unidade] || FAIXAS.club;
@@ -39,18 +46,18 @@ export function semanasDoMes(hoje) {
 }
 
 // vendas: [{ data: 'DD/MM/AAAA', unit, peso? }] (já só as "de meta" da consultora, vindas de minha_meta_semana; peso 0,5 = Black do Club)
-export function resumoSemana(vendas, hoje, unidade, regua = null) {
+export function resumoSemana(vendas, hoje, unidade, regua = null, equipe = null) {
   const semanas = semanasDoMes(hoje);
   const n = semanas.findIndex((s) => hoje >= s.ini && hoje <= s.fim);
   const s = semanas[n];
   const v3 = ehV3(unidade, regua);
-  const faixas = faixasDe(unidade, regua, hoje);
-  const daUnidade = (v) => (v3 ? ACQUA.includes(v.unit) : v.unit === unidade);
+  const faixas = faixasDe(unidade, regua, hoje, equipe);
+  const daUnidade = (v) => (equipe ? (equipe.unidades || [unidade]).includes(v.unit) : v3 ? ACQUA.includes(v.unit) : v.unit === unidade);
   const naSemana = vendas.filter(daUnidade).filter((v) => { const d = dataISO(v.data); return d && d >= s.ini && d <= s.fim; });
   const feitos = Math.floor(naSemana.reduce((a, v) => a + (Number(v.peso) || 1), 0) + 1e-9);
   const atual = faixas.find(([min]) => feitos >= min);
   const proxima = [...faixas].reverse().find(([min]) => feitos < min);
-  const abaixo = v3 ? 'Abaixo da entrada' : 'Abaixo do básico';
+  const abaixo = equipe ? (equipe.meta?.abaixo || 'Abaixo do básico') : v3 ? 'Abaixo da entrada' : 'Abaixo do básico';
   return { semana: n + 1, ini: s.ini, fim: s.fim, feitos, faixa: atual ? atual[1] : abaixo, abaixo: !atual, faixas, topo: faixas[0][1],
     proxima: proxima ? { nome: proxima[1], faltam: proxima[0] - feitos } : null, basico: faixas[faixas.length - 1][0] };
 }

@@ -1,16 +1,16 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import { MOTIVOS } from './_ausencias.js?v=20261126232913';
-import * as dados from '../dados.js?v=20261126232913';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126232913';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261126232913';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261126232913';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261126232913';
-import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261126232913';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261126232913';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261126232913';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261126232913';
+import { MOTIVOS } from './_ausencias.js?v=20261127011516';
+import * as dados from '../dados.js?v=20261127011516';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127011516';
+import { resumoSemana, painelMeta, equipeDoDia } from '../bonus-meta.js?v=20261127011516';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261127011516';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261127011516';
+import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261127011516';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261127011516';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261127011516';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261127011516';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -219,7 +219,7 @@ function quadroResultados(r, vits = [], euId = '') {
 // com a barra até a faixa mais alta (Super meta; Meta real na Acqua desde dez/2026) e os marcos de cada faixa. Os números vêm da EVO de madrugada.
 export function cartaoMeta(meta, hoje, unidade) {
   if (!meta || !meta.publicado_em) return '';
-  const r = resumoSemana(meta.vendas || [], hoje, unidade, meta.regua);
+  const r = resumoSemana(meta.vendas || [], hoje, unidade, meta.regua, equipeDoDia(meta, hoje, unidade));
   const p = painelMeta(r, hoje, unidade);
   // dez/2026+: a caixa d'água da equipe (Laranjeiras + República) — os extras só saem se a equipe repor as saídas do mês
   const rg = meta.regua?.v3 && meta.equipe != null ? meta.regua : null;
