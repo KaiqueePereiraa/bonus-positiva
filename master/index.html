@@ -9,8 +9,8 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/marca.css?v=20261127011516">
-<link rel="stylesheet" href="master.css?v=20261127011516">
+<link rel="stylesheet" href="../shared/marca.css?v=20261127011833">
+<link rel="stylesheet" href="master.css?v=20261127011833">
 </head>
 <body>
 <header class="topo">
@@ -31,8 +31,9 @@
 
 <main class="conteudo" id="conteudo" aria-busy="true">
   <section class="cabeca">
-    <h1>Academias na Wasfit gestão</h1>
-    <p class="dica" id="atualizado">Carregando…</p>
+    <div><h1>Academias na Wasfit gestão</h1>
+    <p class="dica" id="atualizado">Carregando…</p></div>
+    <button class="btn" id="nova" type="button">+ Nova academia</button>
   </section>
   <section class="numeros" id="numeros" aria-label="Resumo"></section>
   <section class="cartao">
@@ -43,7 +44,7 @@
     </form>
     <div class="filtros" id="filtros" role="tablist" aria-label="Filtrar academias"></div>
     <div class="tabela-wrap"><table class="tabela" id="tabela">
-      <thead><tr><th>Academia</th><th>Situação</th><th>Plano</th><th>Licença</th><th>Equipe</th><th>Uso (contatos)</th><th>Último acesso</th><th></th></tr></thead>
+      <thead><tr><th>Academia</th><th>Situação</th><th>Plano</th><th>Licença</th><th>Configuração</th><th>Equipe</th><th>Uso (contatos)</th><th>Último acesso</th><th></th></tr></thead>
       <tbody id="linhas"></tbody>
     </table></div>
     <p class="dica rodape">Saúde: <b>verde</b> = em dia e em uso · <b>amarelo</b> = licença vencendo, sem contatos na semana ou 7+ dias sem ninguém entrar · <b>vermelho</b> = licença vencida, 30 dias sem contatos ou 14+ dias sem acesso.
@@ -64,6 +65,22 @@
   </form>
 </dialog>
 
-<script type="module" src="master.js?v=20261127011516"></script>
+<dialog id="dlg-nova" aria-labelledby="nova-titulo">
+  <form method="dialog" id="nova-form">
+    <h2 id="nova-titulo">Nova academia</h2>
+    <p class="dica">A academia nasce com o padrão da Positiva (motivos, feriados, regras do kanban e mensagens). O gestor recebe o convite por e-mail e, no 1º acesso, faz a trilha de configuração (unidades, equipe, EVO, listas, Bônus e kanban).</p>
+    <label class="campo">Nome da academia<input id="nv-nome" required maxlength="80" placeholder="ex.: Academia Movimento"></label>
+    <div class="dupla"><label class="campo">Plano<input id="nv-plano" maxlength="60" placeholder="ex.: Gestão 2 unidades"></label>
+      <label class="campo">Valor mensal (R$)<input id="nv-valor" type="number" min="0" step="0.01"></label></div>
+    <label class="campo">Licença vence em<input id="nv-vence" type="date"></label>
+    <h3 class="sub-titulo">Gestor (admin geral)</h3>
+    <label class="campo">Nome<input id="nv-gnome" required maxlength="80"></label>
+    <label class="campo">E-mail<input id="nv-gemail" type="email" required></label>
+    <p class="msg" id="nv-msg" role="alert"></p>
+    <div class="acoes"><button class="btn sec" value="cancelar" type="submit" formnovalidate>Cancelar</button><button class="btn" value="criar" type="submit" id="nv-criar">Criar e convidar</button></div>
+  </form>
+</dialog>
+
+<script type="module" src="master.js?v=20261127011833"></script>
 </body>
 </html>

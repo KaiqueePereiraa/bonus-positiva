@@ -88,3 +88,10 @@ dialog .acoes{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
 .busca-res{list-style:none;display:flex;flex-direction:column;gap:6px}
 .busca-res li{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;padding:6px 0}
 .busca-res .btn{padding:6px 12px;font-size:13px}
+
+/* cabeçalho com botão "Nova academia" e janela de criação */
+.cabeca{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sub-titulo{font-size:14px;font-weight:700;margin-top:6px}
+#dlg-nova{width:min(480px,calc(100vw - 32px))}
+#dlg-nova .msg{min-height:0}

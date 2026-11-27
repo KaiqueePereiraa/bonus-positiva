@@ -1,16 +1,16 @@
 // Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
 // juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
 // do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
-import * as dados from '../dados.js?v=20261127011516';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127011516';
-import { somarDias, semanaDe } from '../regras.js?v=20261127011516';
+import * as dados from '../dados.js?v=20261127011833';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127011833';
+import { somarDias, semanaDe } from '../regras.js?v=20261127011833';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261127011516';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127011516';
-import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127011516';
-import { cartaoAnaliseSemanal } from './_analise-semanal.js?v=20261127011516';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261127011833';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127011833';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127011833';
+import { cartaoAnaliseSemanal } from './_analise-semanal.js?v=20261127011833';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();

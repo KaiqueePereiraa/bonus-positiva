@@ -1,14 +1,15 @@
 // Painel master da WasFit (26/11/2026): todas as academias do sistema — cadastradas, ativas e inativas, saúde (licença e
 // uso), receita mensal — com "Entrar" e "Editar". Só o master admin (o banco recusa os outros com "Só o master admin.").
-import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261127011516';
-import { saude, resumo, filtrar, FILTROS, haQuanto, reais } from './master-regras.js?v=20261127011516';
-import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261127011516';
+import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261127011833';
+import { saude, resumo, filtrar, FILTROS, haQuanto, reais } from './master-regras.js?v=20261127011833';
+import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261127011833';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const n = (v, um, varios) => `${v} ${v === 1 ? um : varios}`;
 const SAUDE = { verde: 'Saudável', amarelo: 'Atenção', vermelho: 'Em risco', inativa: 'Inativa' };
 let contas = [];
+let trilhas = new Map();   // conta_id → passo da trilha do 1º acesso (master_trilhas)
 let filtro = 'todas';
 
 const logoDe = (c) => {
@@ -45,17 +46,29 @@ function linhas(agora) {
       <td><span class="saude ${s.nivel}">${SAUDE[s.nivel]}</span><span class="sub" title="${esc(s.motivos.join(' · '))}">${esc(s.motivos[0])}</span></td>
       <td>${c.plano ? esc(c.plano) : '<span class="dica">—</span>'}<span class="sub">${Number(c.valor_mensal) > 0 ? `${reais(c.valor_mensal)}/mês` : 'sem valor'}</span></td>
       <td>${sl ? `<span class="selo ${sl.cor}" title="${esc(sl.dica)}">${esc(sl.texto)}</span>` : '<span class="dica">sem data</span>'}</td>
+      <td>${configHtml(trilhas.get(c.id))}</td>
       <td>${n(c.unidades || 0, 'unidade', 'unidades')}<span class="sub">${n(c.usuarios || 0, 'usuário', 'usuários')} · ${n(c.consultoras || 0, 'consultora', 'consultoras')}</span></td>
       <td><b>${(c.contatos_7d || 0).toLocaleString('pt-BR')}</b> <span class="dica">em 7 dias</span><span class="sub">${(c.contatos_30d || 0).toLocaleString('pt-BR')} em 30 dias</span></td>
       <td>${haQuanto(c.ultimo_login, agora)}</td>
       <td class="acoes"><button class="btn ${c.atual ? '' : 'sec'}" data-entrar="${esc(c.id)}">${c.atual ? 'Continuar' : 'Entrar'}</button><button class="btn sec" data-editar="${esc(c.id)}">Editar</button></td></tr>`;
-  }).join('') || `<tr><td colspan="8" class="vazio">Nenhuma academia neste filtro.</td></tr>`;
+  }).join('') || `<tr><td colspan="9" class="vazio">Nenhuma academia neste filtro.</td></tr>`;
+}
+
+// Trilha do 1º acesso: configurada, ou "passo X de 7" (+ pedido de chave da EVO, que a WasFit coloca)
+const PASSOS = { academia: 'academia', equipe: 'equipe', evo: 'EVO', listas: 'listas', bonus: 'Bônus', kanban: 'kanban', revisao: 'revisão' };
+function configHtml(t) {
+  if (!t) return '<span class="dica">—</span>';
+  if (t.configurada) return '<span class="saude verde">Configurada</span>';
+  const pe = t.pedido_evo ? '<span class="sub">⚠️ pediu as chaves da EVO</span>' : '';
+  if (!t.n_feitos) return `<span class="saude amarelo">Não começou</span><span class="sub">trilha do 1º acesso</span>${pe}`;
+  return `<span class="saude amarelo">Passo ${t.n_feitos + 1} de ${t.n_passos}</span><span class="sub">em: ${esc(PASSOS[t.passo] || t.passo || '—')}</span>${pe}`;
 }
 
 async function carregar() {
-  const { data, error } = await sb.rpc('master_painel');
+  const [{ data, error }, tr] = await Promise.all([sb.rpc('master_painel'), sb.rpc('master_trilhas')]);
   if (error) throw error;
   contas = data?.contas || [];
+  trilhas = new Map(((tr && !tr.error && tr.data) || []).map((t) => [t.conta_id, t]));
   const agora = Date.now();
   numeros(resumo(contas, agora));
   filtros(agora);
@@ -131,4 +144,40 @@ $('tema').addEventListener('click', () => {
   if (escuro) document.documentElement.dataset.tema = 'escuro'; else delete document.documentElement.dataset.tema;
   try { localStorage.setItem('wasfit_tema', escuro ? 'escuro' : 'claro'); } catch { /* sem armazenamento */ }
   linhas(Date.now());   // logos trocam com o tema
+});
+
+// ── Nova academia: cria a conta, convida o gestor (admin geral) e volta para a academia de casa ──
+$('nova').addEventListener('click', () => { $('nova-form').reset(); $('nv-msg').textContent = ''; $('dlg-nova').showModal(); });
+$('nova-form').addEventListener('submit', async (e) => {
+  const botao = e.submitter;
+  if (botao?.value !== 'criar') return;   // Cancelar fecha normalmente
+  e.preventDefault();
+  const nome = $('nv-nome').value.trim(), gnome = $('nv-gnome').value.trim(), gemail = $('nv-gemail').value.trim().toLowerCase();
+  if (!nome || !gnome || !/^\S+@\S+\.\S+$/.test(gemail)) { $('nv-msg').textContent = 'Preencha o nome da academia, o nome e o e-mail do gestor.'; return; }
+  const casa = contas.find((c) => c.casa);
+  botao.disabled = true; $('nv-msg').textContent = 'Criando…';
+  try {
+    const valor = $('nv-valor').value === '' ? null : Number($('nv-valor').value);
+    const { data: id, error: e1 } = await sb.rpc('master_criar_conta', { p_nome: nome, p_plano: $('nv-plano').value, p_valor_mensal: valor, p_licenca_vence: $('nv-vence').value || null });
+    if (e1) throw e1;
+    const { error: e2 } = await sb.rpc('master_entrar_conta', { p_conta: id });   // o convite entra na academia ativa do master
+    if (e2) throw e2;
+    try {
+      const redirectTo = new URL('../index.html', location.href).href;
+      const { data: conv, error: e3 } = await sb.functions.invoke('convidar-usuario', { body: { email: gemail, redirectTo,
+        perfil: { nome: gnome, acesso_tarefas: true, papel_tarefas: 'admin', ativo: true } } });
+      if (e3 || conv?.erro) throw new Error(conv?.erro || (await e3?.context?.json?.().catch(() => null))?.erro || e3?.message || 'Não foi possível convidar.');
+      const { error: e4 } = await sb.rpc('master_definir_admin_geral', { p_usuario: conv.id });
+      if (e4) throw e4;
+    } finally {
+      if (casa) await sb.rpc('master_entrar_conta', { p_conta: casa.id });   // volta para a sua academia
+    }
+    $('dlg-nova').close();
+    $('msg').textContent = '';
+    await carregar();
+    alert(`Academia "${nome}" criada. O convite foi para ${gemail}: no 1º acesso, ${gnome.split(' ')[0]} faz a trilha de configuração.`);
+  } catch (err) {
+    $('nv-msg').textContent = `Não deu certo: ${err?.message || err}. Se a academia já foi criada, ela aparece na lista — use "Entrar" para convidar o gestor por Configurações → Usuários.`;
+    await carregar().catch(() => {});
+  } finally { botao.disabled = false; }
 });
