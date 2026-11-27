@@ -1,8 +1,8 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261126221851';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126221851';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126221851';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126221851';
+import * as dados from '../dados.js?v=20261126222023';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261126222023';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261126222023';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261126222023';
 
 // 26/11: abre na 1ª aba (Usuários); a licença (só o master admin) foi para o fim
 const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO'], ['conta', 'Conta e licença']];
