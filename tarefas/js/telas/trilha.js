@@ -2,9 +2,9 @@
 // está configurada, a Central abre aqui. Cada passo fica salvo (conta_trilha) e dá para voltar de onde parou; tudo continua
 // editável depois em Configurações e no Bônus → Configurações. O master também pode entrar na academia e ajudar.
 // Banco: migração 401 (trilha_estado, trilha_salvar, trilha_academia, trilha_unidade_salvar/_remover, trilha_ativar).
-import * as dados from '../dados.js?v=20261127194854';
-import { esc, toast, erro, carregando, confirmar } from '../ui.js?v=20261127194854';
-import { montarEditorBonus } from '../../../shared/bonus-config-editor.js?v=20261127194854';
+import * as dados from '../dados.js?v=20261127195052';
+import { esc, toast, erro, carregando, confirmar } from '../ui.js?v=20261127195052';
+import { montarEditorBonus } from '../../../shared/bonus-config-editor.js?v=20261127195052';
 
 const PASSOS = [
   { id: 'academia', titulo: 'Academia', frase: 'Nome, logo e unidades. Unidades que trabalham juntas formam uma equipe.' },

@@ -3,8 +3,8 @@
 // limita à academia de quem está logado, e a análise da academia inteira só aparece para o administrador geral (super).
 // Uso no Painel: `${await cartaoAnaliseSemanal(ctx)}` — devolve '' para quem não deve ver (consultora, coordenador de unidade).
 // Sem CSS novo: só cartao/dica/selo e listas simples (tokens da marca).
-import { sb } from '../../../shared/sessao.js?v=20261127194854';
-import { esc } from '../ui.js?v=20261127194854';
+import { sb } from '../../../shared/sessao.js?v=20261127195052';
+import { esc } from '../ui.js?v=20261127195052';
 
 const dataCurta = (iso) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: '2-digit', month: '2-digit' }).format(new Date(`${iso}T12:00:00Z`));
 export const periodoSemana = (ini, fim) => `${dataCurta(ini)} a ${dataCurta(fim)}`;

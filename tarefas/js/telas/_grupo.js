@@ -2,10 +2,10 @@
 // Consultora: as listas mais recentes de cada tipo + as anteriores que ainda têm pendência.
 // Admin: o progresso de cada consultora na lista mais recente de cada tipo, com link para o detalhe.
 // Lista com motivos cadastrados (ex.: "venceu e não renovou", "cancelou") pede o motivo; as demais, "Marcar enviada".
-import * as dados from '../dados.js?v=20261127194854';
-import { esc, dataCurta, vazio, NOMES_CONTROLE, LISTAS_DIARIAS } from '../ui.js?v=20261127194854';
-import { cabecalhoTarefa, listaContatos, linhaProgresso } from './_comum.js?v=20261127194854';
-import { formMotivos } from './_motivos.js?v=20261127194854';
+import * as dados from '../dados.js?v=20261127195052';
+import { esc, dataCurta, vazio, NOMES_CONTROLE, LISTAS_DIARIAS } from '../ui.js?v=20261127195052';
+import { cabecalhoTarefa, listaContatos, linhaProgresso } from './_comum.js?v=20261127195052';
+import { formMotivos } from './_motivos.js?v=20261127195052';
 
 const CONCLUIDA = (t) => t.status === 'concluida' || t.status === 'concluida_atraso';
 const quando = (t) => (LISTAS_DIARIAS.includes(t.controle_id) ? dataCurta(t.periodo_inicio) : `semana ${dataCurta(t.periodo_inicio)}`);

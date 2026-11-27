@@ -3,20 +3,27 @@
 // No 1º acesso do mês (até o dia 7) a versão é a do mês anterior. Depois de visto não reaparece (nem em outro aparelho);
 // para rever, o link "📬 Resumo da semana". No "ver como consultora" só abre pelo link e não marca como visto.
 // Regras puras em ../resumo-regras.js; novidades em ../novidades.js.
-import * as dados from '../dados.js?v=20261127194854';
-import { esc, erro, NOMES_CONTROLE } from '../ui.js?v=20261127194854';
-import { destaques, voceVsVoce, TIPOS_RESULTADO } from '../jogo.js?v=20261127194854';
-import { celebrar } from '../jogo-visual.js?v=20261127194854';
-import { agruparVitorias } from './_vitorias.js?v=20261127194854';
-import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127194854';
-import { periodoResumo, unidadesPeriodo, vitoriasPeriodo, novidadesPara, delta } from '../resumo-regras.js?v=20261127194854';
-import { tempoEspera } from '../fila-espera-regras.js?v=20261127194854';
-import { NOVIDADES } from '../novidades.js?v=20261127194854';
-import { somarDias, semanaDe } from '../regras.js?v=20261127194854';
+import * as dados from '../dados.js?v=20261127195052';
+import { esc, erro, NOMES_CONTROLE } from '../ui.js?v=20261127195052';
+import { destaques, voceVsVoce, TIPOS_RESULTADO } from '../jogo.js?v=20261127195052';
+import { celebrar } from '../jogo-visual.js?v=20261127195052';
+import { agruparVitorias } from './_vitorias.js?v=20261127195052';
+import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127195052';
+import { periodoResumo, unidadesPeriodo, vitoriasPeriodo, novidadesPara, delta } from '../resumo-regras.js?v=20261127195052';
+import { tempoEspera } from '../fila-espera-regras.js?v=20261127195052';
+import { NOVIDADES } from '../novidades.js?v=20261127195052';
+import { somarDias, semanaDe } from '../regras.js?v=20261127195052';
 
 let aberto = false;
 const ESTREIA = '2026-11-30';   // abre sozinho a partir da 1ª segunda (antes disso, só pelo link 📬)
 const primeiro = (n) => String(n || '').trim().split(/\s+/)[0];
+// Primeiro nome; se outra pessoa da lista tem o mesmo primeiro nome, junta o sobrenome (ex.: "Maria Lopes" × "Maria Loussurdo")
+const cap = (w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '');
+function nomeCurto(nome, todos) {
+  const p = primeiro(nome), partes = String(nome || '').trim().split(/\s+/);
+  const dup = (todos || []).some((n) => n && n !== nome && primeiro(n).toLowerCase() === p.toLowerCase());
+  return dup && partes.length > 1 ? `${cap(p)} ${cap(partes[1])}` : p;
+}
 const DIAS_SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const diaTxt = (iso) => `${DIAS_SEMANA[new Date(`${iso}T12:00:00Z`).getUTCDay()]}, ${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 const diasDesde = (de, hoje) => Math.min(45, Math.round((Date.parse(`${hoje}T12:00:00Z`) - Date.parse(`${de}T12:00:00Z`)) / 864e5) + 1);
@@ -64,7 +71,7 @@ async function cartoesConsultora(ctx, p, ultimoVisto) {
   const c1 = { icone: '✨', titulo: p.tipo === 'mes' ? 'Destaques do mês' : 'Destaques da semana', festa: souDestaque,
     corpo: `<p class="resumo-sub">${esc(p.rotulo)}${un ? ` · ${esc(ctx.nomeUnidade(un).replace('Positiva ', ''))}` : ''}</p>
       ${ds.length ? ds.map((d) => { const eu = d.quem.some((c) => c.id === uid);
-        return linha(d.icone, esc(d.titulo), `${eu ? 'Você' : esc(d.quem.map((c) => primeiro(c.nome)).join(', '))} · ${esc(d.texto)}`, '', eu ? 'eu' : ''); }).join('')
+        return linha(d.icone, esc(d.titulo), `${eu ? 'Você' : esc(d.quem.map((c) => nomeCurto(c.nome, lista.map((x) => x.nome))).join(', '))} · ${esc(d.texto)}`, '', eu ? 'eu' : ''); }).join('')
       : '<p>Ainda sem destaques: poucos dias fechados no período.</p>'}
       ${souDestaque ? `<p class="resumo-festa">🎉 Você foi destaque ${p.tipo === 'mes' ? 'do mês' : 'da semana'}!</p>` : ''}` };
 
@@ -109,12 +116,13 @@ async function cartoesGestor(ctx, p, ultimoVisto) {
   const lista = un ? lista0.filter((c) => c.unidade === un) : lista0;
   const antes = un ? antes0.filter((c) => c.unidade === un) : antes0;
   const nomeUn = (u) => esc(ctx.nomeUnidade(u).replace('Positiva ', '').replace('Acqua ', ''));
+  const todosNomes = [...new Set([...lista0.map((c) => c.nome), ...(vits || []).map((x) => x.consultora)])];
 
   // 1. Destaques da equipe
   const ds = destaques(lista, antes);
   const c1 = { icone: '✨', titulo: p.tipo === 'mes' ? 'Destaques do mês' : 'Destaques da equipe',
     corpo: `<p class="resumo-sub">${esc(p.rotulo)}</p>
-      ${ds.length ? ds.map((d) => linha(d.icone, esc(d.titulo), `${esc(d.quem.map((c) => primeiro(c.nome)).join(', '))} · ${esc(d.texto)}`)).join('')
+      ${ds.length ? ds.map((d) => linha(d.icone, esc(d.titulo), `${esc(d.quem.map((c) => nomeCurto(c.nome, todosNomes)).join(', '))} · ${esc(d.texto)}`)).join('')
       : '<p>Ainda sem destaques: poucos dias fechados no período.</p>'}` };
 
   // 2. Unidades × período anterior
@@ -136,7 +144,7 @@ async function cartoesGestor(ctx, p, ultimoVisto) {
     at.push(linha('🏊', `Professor ${esc(primeiro(a.professor))}`, `perdeu ${String(a.taxa).replace('.', ',')}% dos alunos no mês (unidade: ${String(a.media).replace('.', ',')}%)`));
   }
   const fracas = lista.filter((c) => c.pct != null && c.dias >= 2 && c.pct < 50);
-  if (fracas.length) at.push(linha('📉', 'Abaixo da metade do mínimo', esc(fracas.map((c) => `${primeiro(c.nome)} (${c.pct}%)`).join(', '))));
+  if (fracas.length) at.push(linha('📉', 'Abaixo da metade do mínimo', esc(fracas.map((c) => `${nomeCurto(c.nome, todosNomes)} (${c.pct}%)`).join(', '))));
   const novas = novidadesPara(NOVIDADES, 'gestor', ultimoVisto, hoje);
   const c3 = { icone: '⚠️', titulo: 'O que pede atenção',
     corpo: `${at.length ? at.join('') : '<p>Nada pedindo atenção agora. 👏</p>'}${novas.map((n) => linha('🆕', 'Novidade na Central', esc(n.texto), '', 'novidade')).join('')}` };
@@ -148,7 +156,7 @@ async function cartoesGestor(ctx, p, ultimoVisto) {
     corpo: `<p class="resumo-sub">Reconhecimento do gestor pesa mais que qualquer medalha.</p>
       ${grupos.length ? grupos.map((g) => { const ja = g.palmas.some((x) => x.de === uid);
         const tipos = Object.entries(TIPOS_RESULTADO).filter(([k]) => g.porTipo[k]).map(([k, t]) => `${t.icone} ${g.porTipo[k]} ${g.porTipo[k] === 1 ? t.um : t.varios}`).join(' · ');
-        return `<div class="resumo-linha"><span class="resumo-ic">🌟</span><div><b>${esc(primeiro(g.consultora))}</b><small>${esc(tipos)} · ${esc(diaTxt(g.dia))}</small></div>
+        return `<div class="resumo-linha"><span class="resumo-ic">🌟</span><div><b>${esc(nomeCurto(g.consultora, todosNomes))}</b><small>${esc(tipos)} · ${esc(diaTxt(g.dia))}</small></div>
           <button class="btn ${ja ? 'sec' : ''} peq resumo-num" data-aplaudir="${esc(g.consultora_id)}|${esc(g.dia)}" ${ja ? 'disabled' : ''}>${ja ? '👏 Aplaudido' : '👏 Aplaudir'}</button></div>`; }).join('')
       : '<p>Nenhum resultado confirmado no período ainda.</p>'}` };
   return [c1, c2, c3, c4];

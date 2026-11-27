@@ -1,7 +1,7 @@
 // Resumo da semana (27/11/2026, aprovado pelo Kaique) — regras puras, testadas em tests/resumo-regras.test.js.
 // Aparece no 1º acesso da semana (segunda, ou o 1º dia em que a pessoa entrar) com a semana ANTERIOR (seg a dom).
 // No 1º acesso do mês (até o dia 7), a versão é a do mês anterior e vale também como a da semana (nunca aparecem as duas).
-import { somarDias, semanaDe } from './regras.js?v=20261127194854';
+import { somarDias, semanaDe } from './regras.js?v=20261127195052';
 
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const dm = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
