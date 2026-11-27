@@ -3,9 +3,9 @@
 //    unidade e com o mesmo período do mês anterior; quantos entraram na lista de risco de abandono;
 //  • aula experimental: quantos interessados fizeram a experimental com ele e quantos viraram cliente em até 30 dias.
 // Turmas vêm da agenda da EVO (lida todo dia; histórico desde 01/08/2026); saídas, da leitura de saldo do mês.
-import * as dados from '../dados.js?v=20261127185158';
-import { esc, vazio, nomeMesCap, dataCurta } from '../ui.js?v=20261127185158';
-import { avaliarUnidade, MIN_ALUNOS, FOLGA } from '../professores-regras.js?v=20261127185158';
+import * as dados from '../dados.js?v=20261127192203';
+import { esc, vazio, nomeMesCap, dataCurta } from '../ui.js?v=20261127192203';
+import { avaliarUnidade, MIN_ALUNOS, FOLGA } from '../professores-regras.js?v=20261127192203';
 
 let escolhido = null;
 const SIT = { perde_mais: ['vermelho', 'Perde mais'], perde_menos: ['verde', 'Segura bem'], na_media: ['azul', 'Na média'], poucos: ['cinza', 'Poucos alunos'] };
@@ -47,5 +47,5 @@ function cartaoUnidade(u, ctx, rotuloAnt) {
       <td><span class="selo ${cor}">${rot}</span></td></tr>
       <tr><td colspan="8" class="dica" style="padding-top:0">💡 ${esc(p.leitura)}</td></tr>`; }).join('') || `<tr><td colspan="8">${vazio('Sem professores com turmas lidas neste mês.')}</td></tr>`}
     </tbody></table></div>
-    ${u.experimentais ? `<p class="dica">Aula experimental na unidade: ${u.experimentais} no mês, ${pc(u.conversaoUnidade)} viraram cliente. A agenda só guarda quem fez a experimental antes da aula acontecer, então essa conta começou em 26/11/2026.</p>` : ''}</div>`;
+    <p class="dica">Aula experimental: cada interessado que agenda entra numa turma, e a turma tem um professor — é assim que a experimental fica com ele. ${u.experimentais ? `Na unidade, ${u.experimentais} no mês e ${pc(u.conversaoUnidade)} viraram cliente.` : 'Nenhuma registrada neste mês ainda.'} A EVO tira o interessado da agenda depois da aula, então só dá para registrar enquanto a aula ainda não aconteceu: a contagem começou em 26/11/2026 (o sistema olha a agenda a cada 30 minutos).</p></div>`;
 }

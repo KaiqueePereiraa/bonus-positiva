@@ -1,7 +1,7 @@
 // Editor das regras do Bônus de uma academia (27/11/2026). Usado no Bônus → Configurações e no passo "Bônus" da trilha do
 // 1º acesso (Central). Edita uma versão (bonus_config) que vale a partir de um mês — meses que já fecharam não mudam.
 // Formato das regras: site/shared/bonus-motor.js. Salvar = função bonus_config_salvar (quem chama passa `salvar`).
-import * as M from './bonus-motor.js?v=20261127185158';
+import * as M from './bonus-motor.js?v=20261127192203';
 
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const nomeMes = (iso) => `${MESES[+iso.slice(5, 7) - 1]}/${iso.slice(0, 4)}`;
