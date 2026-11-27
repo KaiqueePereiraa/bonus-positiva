@@ -1,0 +1,317 @@
+/* Página de venda da Wasfit gestão — o que o kit (assets/) não tem: o modo escuro da WasFit, o logo, o chão verde-água
+   dos painéis e as telas da plataforma redesenhadas com dados fictícios (tudo dentro de .wg). */
+
+/* ── chão dos painéis e molduras: verde-água da WasFit no lugar da areia do kit ── */
+:root {
+  --ground-bg: #d3f4e5; --ground-surface: #ecfbf4; --ground-ink: #08090b; --ground-muted: #4a5a52; --ground-accent: #16ea9e;
+}
+
+/* ── modo escuro (html[data-tema="escuro"], a mesma escolha da plataforma) ── */
+:root[data-tema="escuro"] {
+  --p-bg: #0b0b0b; --p-surface: #131415; --p-ink: #f0f0f0; --p-muted: #a3a4a6;
+  --p-accent: #2dde98; --p-accent-ink: #0b0b0b; --p-action: #16ea9e; --p-action-ink: #0b0d0c;
+  --p-inv-bg: #f0f0f0; --p-inv-surface: #ffffff; --p-inv-ink: #08090b; --p-inv-muted: #5c5f65;
+  --ground-bg: #0f2a1f; --ground-surface: #153829; --ground-ink: #f0f0f0; --ground-muted: #a7c4b6; --ground-accent: #16ea9e;
+  color-scheme: dark;
+}
+:root[data-tema="escuro"] .so-claro { display: none !important; }
+:root:not([data-tema="escuro"]) .so-escuro { display: none !important; }
+
+/* o foco e os links no verde escuro (o verde-água sobre branco não passa de 3:1) */
+:focus-visible { outline-color: var(--accent); }
+
+/* ── logo e botão de tema ── */
+.nav__logo { gap: var(--s-2); }
+.vd-logo { height: 28px; width: auto; }
+.vd-logo__prod { font: 500 20px/1 var(--font-display); letter-spacing: -0.02em; color: var(--muted); }
+.vd-tema { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-btn); border: 1px solid var(--line);
+  background: transparent; color: var(--ink); cursor: pointer; }
+.vd-tema svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.vd-tema__lua { fill: currentColor; stroke: none; }
+:root[data-tema="escuro"] .vd-tema__lua, :root:not([data-tema="escuro"]) .vd-tema__sol { display: none; }
+@media (max-width: 1023px) { .nav__actions .vd-tema { display: none; } }
+
+/* ── texto de apoio nas divisões ── */
+.vd-fatos { display: grid; gap: var(--s-3); }
+.vd-fatos li { position: relative; padding-left: var(--s-5); line-height: 1.5; }
+.vd-fatos li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 8px; height: 8px; border-radius: 50%; background: var(--action); }
+.vd-nomes { margin-top: var(--s-7); }
+.vd-nomes p { margin-top: var(--s-2); }
+.vd-fim { align-content: start; }
+.vd-marquee { margin-top: var(--s-8); font: 500 var(--t-lead)/1.3 var(--font-display); letter-spacing: -0.01em; }
+.vd-faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gutter); }
+.vd-faq > .faq__item:nth-child(2) { padding-top: 0; }
+@media (max-width: 1023px) { .vd-faq { grid-template-columns: minmax(0, 1fr); } .vd-faq > .faq__item:nth-child(2) { padding-top: var(--s-5); } }
+
+/* ── painéis e molduras que mostram a plataforma ── */
+#listas .panel { --p-h: 330px; }
+#analises .panel { --p-h: 300px; }
+@media (max-width: 639px) { #listas .panel { --p-h: 196px; } #analises .panel { --p-h: 236px; } }
+.vd-panel { display: block; }
+.vd-panel > .wg { position: absolute; left: 24px; right: 24px; top: 24px; }
+@media (max-width: 639px) { .vd-panel > .wg { left: 16px; right: 16px; top: 16px; } }
+.vd-frame { background: var(--ground-bg); border-color: transparent; padding: 0; align-items: flex-start; overflow: clip; }
+.vd-frame > .wg { position: absolute; left: 40px; right: -1px; top: 40px; max-width: none; }
+.vd-frame--kanban { height: 372px; margin-top: var(--s-7); }
+.vd-frame--kanban > .wg { right: 40px; }
+.vd-frame--dg { height: 440px; margin-top: var(--s-7); background: var(--surface); border-color: var(--line); padding: var(--s-5); }
+.vd-frame--dg > .dg { position: relative; width: 100%; height: 100%; }
+#meu-dia .vd-frame, #kanban .vd-frame--kanban { background: var(--ground-bg); }
+@media (max-width: 1023px) {
+  .vd-frame { margin-top: var(--s-7); }
+  .vd-frame > .wg { left: 24px; top: 24px; }
+  .vd-frame--kanban { height: 340px; }
+  .vd-frame--kanban > .wg { right: -1px; }
+  .vd-frame--dg { height: 420px; }
+}
+@media (max-width: 639px) {
+  .vd-frame > .wg { left: 16px; top: 16px; }
+  .vd-frame--kanban { height: 300px; }
+  .vd-frame--dg { height: 460px; padding: var(--s-3); }
+  .vd-nomes { margin-top: var(--s-6); row-gap: var(--s-4); }
+}
+
+/* ═══════════ As telas da plataforma (.wg): tokens iguais aos de site/shared/marca.css ═══════════ */
+.wg {
+  --wg-texto: #08090b; --wg-sup: #ffffff; --wg-fundo: #fafafa; --wg-borda: #dfdfdf; --wg-suave: #5c5f65; --wg-muted: #f0f0f0;
+  --wg-prim: #16ea9e; --wg-prim-forte: #00774b; --wg-prim-texto: #1a1a1a;
+  --wg-perigo: oklch(48% .2 27.3); --wg-aviso: oklch(48% .13 58); --wg-info: oklch(48% .19 258);
+  --wg-perigo-f: oklch(57.7% .245 27.325); --wg-aviso-f: oklch(72% .17 58); --wg-info-f: oklch(58% .19 258);
+  --wg-escuro: radial-gradient(120% 140% at 0% 0%, #3B4C69 0%, #212B37 55%, #18202A 100%); --wg-neon: #BEF575;
+  font-family: "Geist", system-ui, sans-serif; color: var(--wg-texto); font-size: 14px; line-height: 1.4; letter-spacing: 0;
+  font-variant-numeric: tabular-nums; text-align: left;
+}
+:root[data-tema="escuro"] .wg {
+  --wg-texto: #ededed; --wg-sup: #141414; --wg-fundo: #0b0b0b; --wg-borda: #2e2e2e; --wg-suave: #a3a3a3; --wg-muted: #1f1f1f;
+  --wg-prim-forte: #2dde98;
+  --wg-perigo: oklch(70% .19 27.3); --wg-aviso: oklch(72% .17 58); --wg-info: oklch(72% .14 258);
+}
+.wg b { font-weight: 600; }
+.wg small { font-size: 13px; color: var(--wg-suave); font-weight: 400; }
+
+/* cartão base de cada tela solta */
+.wg-tela, .ly-collage .ly-piece.wg-c, .wg-cartao { background: var(--wg-sup); border: 1px solid var(--wg-borda); border-radius: 14px; }
+.wg-tela { padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 18px 40px -22px rgba(0,0,0,.35); }
+.wg-lista__topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.wg-lista__topo > b { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+
+/* selos (iguais aos da plataforma) */
+.wg-selo { display: inline-flex; align-items: center; white-space: nowrap; padding: 2px 8px; border-radius: 999px; font: 600 13px/1.35 "Geist", sans-serif; font-style: normal; }
+.wg-selo.cinza { background: var(--wg-muted); color: var(--wg-suave); }
+.wg-selo.verde { background: color-mix(in oklch, var(--wg-prim) 22%, transparent); color: var(--wg-prim-forte); }
+.wg-selo.laranja { background: color-mix(in oklch, var(--wg-aviso-f) 18%, transparent); color: var(--wg-aviso); }
+.wg-selo.vermelho { background: color-mix(in oklch, var(--wg-perigo-f) 14%, transparent); color: var(--wg-perigo); }
+.wg-selo.azul { background: color-mix(in oklch, var(--wg-info-f) 14%, transparent); color: var(--wg-info); }
+
+/* botões da plataforma (desenho; não são clicáveis) */
+.wg-btn { display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; height: 32px; padding: 0 12px;
+  border-radius: 10px; font: 600 13px/1 "Geist", sans-serif; font-style: normal; }
+.wg-btn--verde { background: var(--wg-prim); color: var(--wg-prim-texto); }
+.wg-btn--sec { background: var(--wg-sup); color: var(--wg-texto); box-shadow: inset 0 0 0 1px var(--wg-borda); }
+.wg-btn--grande { height: 44px; font-size: 15px; padding: 0 16px; box-shadow: 0 8px 24px rgba(190,245,117,.25); }
+.wg-btn i { font-style: normal; font-size: 16px; }
+.wg-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; background: var(--wg-muted);
+  color: var(--wg-texto); font: 600 13px/1 "Geist", sans-serif; white-space: nowrap; }
+
+/* linhas de lista */
+.wg-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border-top: 1px solid var(--wg-borda); }
+.wg-linha > span:first-child { display: grid; gap: 1px; min-width: 0; font-weight: 600; }
+.wg-linha > span:first-child .wg-selo { justify-self: start; margin-bottom: 2px; }
+.wg-linha.is-feito { background: color-mix(in oklch, var(--wg-prim) 8%, transparent); }
+.wg-linha.is-prox { background: color-mix(in oklch, var(--wg-prim) 12%, transparent); box-shadow: inset 3px 0 0 var(--wg-prim); }
+.wg-linha--alto { border-top: 0; padding-inline: 0; }
+.wg-motivos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.wg-motivo { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; font: 600 13px/1 "Geist", sans-serif;
+  box-shadow: inset 0 0 0 1px var(--wg-borda); background: var(--wg-sup); }
+.wg-motivo.is-on { box-shadow: inset 0 0 0 2px var(--wg-prim-forte); background: color-mix(in oklch, var(--wg-prim) 14%, var(--wg-sup)); }
+.wg-motivo--sel { flex: 1; justify-content: space-between; color: var(--wg-suave); }
+.wg-motivo--sel::after { content: "▾"; }
+.wg-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--wg-borda); }
+.wg-item > b { grid-column: 1; font-size: 14px; }
+.wg-item > span { grid-column: 1; color: var(--wg-suave); font-size: 13px; }
+.wg-item > .wg-btn { grid-column: 2; grid-row: 1 / span 2; }
+.wg-mes { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--wg-borda); }
+.wg-mes > span:first-child { font-weight: 600; flex: 1; }
+.wg-n { color: var(--wg-suave); font-size: 13px; }
+
+/* tabelas em grade */
+.wg-tab { display: grid; grid-template-columns: 1.3fr repeat(3, 1fr) 1.4fr; align-items: center; }
+.wg-tab > span { padding: 8px 8px; border-top: 1px solid var(--wg-borda); min-width: 0; }
+.wg-tab > span small { display: block; }
+.wg-tab__h { border-top: 0 !important; font: 600 13px/1.3 "Geist", sans-serif; color: var(--wg-suave); padding-top: 0 !important; }
+.wg-tab--equipe { grid-template-columns: 1.4fr 1fr .8fr 1.6fr; }
+.wg-tab--kb { grid-template-columns: 1.5fr .8fr .8fr .9fr .8fr 1.6fr; }
+.wg-tab--conv { grid-template-columns: 1.4fr .8fr 1fr 1.5fr .7fr; }
+.wg-tab--bonus { grid-template-columns: 1.6fr .6fr 1.4fr; }
+.wg-tab--bonus > span:nth-child(3n) { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* barras do funil */
+.wg-barra { position: relative; display: flex; justify-content: space-between; align-items: center; height: 34px; margin-top: 8px; padding: 0 12px;
+  border-radius: 8px; background: var(--wg-muted); overflow: hidden; isolation: isolate; }
+.wg-barra::before { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); z-index: -1; border-radius: 8px;
+  background: color-mix(in oklch, var(--wg-prim) 38%, var(--wg-sup)); }
+.wg-barra span { font-weight: 600; font-size: 13px; }
+.wg-nota { margin-top: 12px; color: var(--wg-suave); font-size: 13px; }
+
+/* anel do placar */
+.wg-anel { --tam: 112px; position: relative; flex: none; width: var(--tam); height: var(--tam); border-radius: 50%; display: grid; place-content: center; text-align: center;
+  background: conic-gradient(var(--wg-neon) calc(var(--pct) * 1%), rgba(255,255,255,.12) 0); }
+.wg-anel::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: #1d2632; }
+.wg-anel > * { position: relative; }
+.wg-anel b { font: 900 italic 38px/1 "Geist", sans-serif; letter-spacing: -1px; color: #fff; }
+.wg-anel small { margin-top: 4px; font: 800 9.5px/1.2 "Geist", sans-serif; letter-spacing: 1.2px; text-transform: uppercase; color: var(--wg-neon); }
+.wg-anel--g { --tam: 150px; }
+.wg-anel--g b { font-size: 50px; }
+
+/* placar do dia (Meu dia) e a peça da colagem */
+.wg-placar, .ly-collage .pc-placar { display: flex; gap: 22px; align-items: center; padding: 22px; color: #fff; background: var(--wg-escuro); border-radius: 14px; }
+.wg-placar__txt, .pc-placar__txt { display: grid; gap: 8px; min-width: 0; }
+.wg-placar__txt > small, .pc-placar__txt > small { font: 800 12px/1 "Geist", sans-serif; letter-spacing: 1.4px; text-transform: uppercase; color: oklch(78% .01 250); }
+.wg-placar__txt strong, .pc-placar__txt strong { font: 900 italic 24px/1.05 "Geist", sans-serif; text-transform: uppercase; letter-spacing: .2px; }
+.wg-placar__txt em, .pc-placar__txt em { color: var(--wg-neon); font-style: italic; }
+.wg-placar__txt p { font-size: 14px; color: #DDE2E8; }
+.wg-placar__txt .wg-btn, .pc-placar__txt .wg-btn { justify-self: start; }
+.wg-meudia { display: grid; gap: 14px; }
+.wg-missoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.wg-missao { display: grid; gap: 6px; padding: 14px; border-radius: 14px; background: var(--wg-sup); border: 1px solid var(--wg-borda); justify-items: start; }
+.wg-missao > b { font-size: 15px; font-weight: 800; }
+.wg-missao__n { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; color: var(--wg-suave); font-size: 13px; font-weight: 600; }
+.wg-missao__n b { font: 900 italic 18px/1 "Geist", sans-serif; color: var(--wg-texto); }
+.wg-mini { display: block; width: 100%; height: 8px; border-radius: 6px; background: var(--wg-muted); overflow: hidden; position: relative; }
+.wg-mini::before { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); border-radius: 6px; background: var(--wg-prim); }
+.wg-missao.is-ok { background: color-mix(in oklch, var(--wg-prim) 8%, var(--wg-sup)); border-color: color-mix(in oklch, var(--wg-prim) 45%, transparent); }
+
+/* fila Em espera (cartão por cima da tabela do kanban) */
+.wg-kb { display: grid; grid-template-columns: minmax(0, 1fr) 260px; column-gap: 24px; align-items: start; }
+.wg-kb > .wg-lista__topo { grid-column: 1 / -1; }
+.wg-espera, .ly-collage .pc-espera { display: grid; gap: 6px; justify-items: start; padding: 16px 18px; border-radius: 14px; background: var(--wg-sup);
+  border: 1px solid var(--wg-borda); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 18px 40px -18px rgba(0,0,0,.32); }
+.wg-espera { grid-column: 2; grid-row: 2; background: color-mix(in oklch, var(--wg-prim) 8%, var(--wg-sup)); box-shadow: none; }
+.wg-espera strong, .pc-espera strong { font: 800 22px/1.1 "Geist", sans-serif; letter-spacing: -.4px; }
+.wg-espera > span, .pc-espera > span { color: var(--wg-suave); font-size: 13px; }
+.wg-espera > span b, .pc-espera > span b { color: var(--wg-texto); }
+
+/* Bônus */
+.wg-bonus { display: grid; gap: 14px; }
+.wg-meta { display: grid; gap: 6px; padding: 16px; border-radius: 14px; background: color-mix(in oklch, var(--wg-prim) 10%, var(--wg-sup)); border: 1px solid color-mix(in oklch, var(--wg-prim) 40%, transparent); }
+.wg-meta strong { font: 800 24px/1.1 "Geist", sans-serif; letter-spacing: -.5px; }
+.wg-meta > span { color: var(--wg-suave); font-size: 13px; }
+.wg-faixas { display: flex; gap: 6px; flex-wrap: wrap; }
+.wg-faixas i { font: 600 13px/1 "Geist", sans-serif; font-style: normal; padding: 6px 10px; border-radius: 999px; background: var(--wg-muted); color: var(--wg-suave); }
+.wg-faixas i.is-ok { background: var(--wg-prim); color: var(--wg-prim-texto); }
+
+/* ═══════════ a janela do Painel do gestor (app-frame) ═══════════ */
+.app.wg-app { display: grid; grid-template-columns: 200px minmax(0, 1fr); margin-top: var(--s-7); background: var(--wg-fundo); border: 1px solid var(--wg-borda);
+  border-radius: 16px; overflow: hidden; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 30px 60px -30px rgba(0,0,0,.25); }
+.app.wg-app::after { content: ""; position: absolute; inset: auto 0 0 0; height: 72px; background: linear-gradient(transparent, var(--wg-fundo)); pointer-events: none; }
+.wg-app__lado { display: flex; flex-direction: column; gap: 2px; padding: 18px 12px; background: oklch(97.8% 0 0); border-right: 1px solid var(--wg-borda); }
+:root[data-tema="escuro"] .wg-app__lado { background: #0b0b0b; }
+.wg-app__lado img { height: 24px; width: auto; margin: 0 8px 16px; }
+.wg-app__menu { padding: 8px 10px; border-radius: 8px; font-weight: 500; color: oklch(30% .008 265); }
+:root[data-tema="escuro"] .wg-app__menu { color: #d1d1d1; }
+.wg-app__menu.is-on { background: oklch(.93 .008 253.9); font-weight: 600; color: var(--wg-texto); }
+:root[data-tema="escuro"] .wg-app__menu.is-on { background: #262626; }
+.wg-app__grupo { margin: 12px 10px 4px; font-size: 13px; color: var(--wg-suave); }
+.wg-app__main { min-width: 0; overflow: hidden; }
+.wg-app__topo { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--wg-borda); background: var(--wg-fundo); }
+.wg-app__topo > b { font-size: 20px; font-weight: 700; letter-spacing: -.5px; }
+.wg-app__corpo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 18px 24px; align-items: start; }
+.wg-ola { grid-column: 1 / -1; font-size: 17px; font-weight: 800; }
+.wg-ola span { font-size: 13px; font-weight: 600; color: var(--wg-suave); margin-left: 6px; }
+.wg-sinais { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.wg-sinal { display: grid; gap: 4px; padding: 14px; border-radius: 14px; background: var(--wg-sup); border: 1px solid var(--wg-borda); }
+.wg-sinal small { font-weight: 600; }
+.wg-sinal b { font-size: 15px; }
+.wg-sinal span { color: var(--wg-prim-forte); font-weight: 600; font-size: 13px; }
+.wg-cartao { padding: 14px 16px; }
+.wg-cartao:nth-of-type(2) { grid-row: span 2; }
+.wg-cartao:nth-of-type(4) { grid-column: 1 / -1; }
+.wg-cartao .wg-tab { grid-template-columns: 1fr .9fr .8fr .9fr 1.5fr; }
+.wg-cartao .wg-tab--equipe { grid-template-columns: 1.4fr 1fr .8fr 1.6fr; }
+.wg-app { height: 560px; }
+@media (min-width: 1024px) and (max-width: 1279px) { .app.wg-app { grid-template-columns: 0 minmax(0, 1fr); } .wg-app__lado { display: none; } }
+@media (max-width: 1023px) {
+  .app.wg-app { grid-template-columns: minmax(0, 1fr); height: 720px; }
+  .wg-app__lado { display: none; }
+  .wg-app__corpo { grid-template-columns: minmax(0, 1fr); }
+  .wg-cartao:nth-of-type(2) { grid-row: auto; }
+}
+@media (max-width: 639px) {
+  .app.wg-app { height: 560px; }
+  .wg-app__corpo { padding: 14px; }
+  .wg-sinais { grid-template-columns: minmax(0, 1fr); }
+  .wg-sinal:nth-child(n+2) { display: none; }
+  .wg-cartao .wg-tab { grid-template-columns: 1fr .9fr 1.3fr; }
+  .wg-cartao .wg-tab > span:nth-child(5n+2), .wg-cartao .wg-tab > span:nth-child(5n+3) { display: none; }
+  .wg-app__topo { padding: 12px 14px; }
+}
+
+/* ═══════════ as peças da colagem do hero ═══════════ */
+.ly-collage.wg .ly-piece { background: var(--wg-sup); border: 1px solid var(--wg-borda); }
+.ly-collage .pc-lista, .ly-collage .pc-atencao, .ly-collage .pc-mes, .ly-collage .pc-kanban, .ly-collage .pc-funil, .ly-collage .pc-equipe { padding: 14px 16px; }
+.ly-collage.wg .pc-placar { border: 0; padding: 18px; gap: 16px; background: var(--wg-escuro); }
+.ly-collage.wg .pc-chips { background: var(--wg-sup); }
+.ly-collage .pc-placar .wg-anel { --tam: 104px; }
+.ly-collage .pc-placar .wg-anel b { font-size: 34px; }
+.ly-collage .pc-placar__txt strong { font-size: 20px; }
+.ly-collage .pc-chips { display: flex; flex-direction: column; gap: 8px; padding: 12px; align-items: flex-start; }
+.ly-collage .pc-funil > small, .ly-collage .pc-espera > small { font-weight: 600; }
+.ly-collage .wg-linha { padding: 8px 6px; }
+/* a peça que termina no canto de baixo deixa lugar para o botão de pausa da colagem */
+.ly-collage .pc-lista, .ly-collage .pc-mes, .ly-collage .pc-espera { padding-bottom: 48px; }
+.ly-collage .wg-item > b { font-size: 13.5px; }
+@media (max-width: 639px) {
+  .ly-collage .ly-piece { font-size: 13px; }
+  .ly-collage .pc-placar { left: 0 !important; width: 100% !important; top: 0 !important; padding: 14px; gap: 12px; }
+  .ly-collage .pc-placar .wg-anel { --tam: 84px; }
+  .ly-collage .pc-placar .wg-anel b { font-size: 28px; }
+  .ly-collage .pc-placar__txt strong { font-size: 17px; }
+  .ly-collage .pc-lista { left: 6% !important; width: 94% !important; top: auto !important; bottom: 0; }
+  .ly-collage .pc-chips { display: none; }
+  .ly-collage .pc-lista .wg-linha:nth-child(n+4) { display: none; }
+}
+
+/* telas pequenas: as tabelas mostram menos colunas */
+@media (max-width: 639px) {
+  .wg-tab--kb { grid-template-columns: 1.6fr .8fr .9fr .8fr; }
+  .wg-tab--kb > span:nth-child(6n+3), .wg-tab--kb > span:nth-child(6n) { display: none; }
+  .wg-kb { grid-template-columns: minmax(0, 1fr); }
+  .wg-espera { grid-column: 1; grid-row: auto; margin-top: 12px; padding: 12px 14px; }
+  .wg-espera strong { font-size: 18px; }
+  .wg-tab--conv { grid-template-columns: 1.3fr .7fr 1.4fr; }
+  .wg-tab--conv > span:nth-child(5n+3), .wg-tab--conv > span:nth-child(5n) { display: none; }
+  .wg-placar { padding: 16px; gap: 14px; }
+  .wg-anel--g { --tam: 104px; }
+  .wg-anel--g b { font-size: 34px; }
+  .wg-placar__txt strong { font-size: 18px; }
+  .wg-placar__txt p { display: none; }
+  .wg-missoes { grid-template-columns: minmax(0, 1fr); }
+  .wg-btn--grande { height: 40px; font-size: 13px; }
+}
+
+/* formulário em uma coluna, ocupando a altura da seção */
+#contato .form { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1fr); align-content: start; }
+
+/* ═══════════ ajustes por largura (checagem de uma seção por tela) ═══════════ */
+.vd-marquee { overflow: clip; }
+@media (min-width: 1024px) and (max-width: 1279px) {
+  #analises .grid > .card.span-8:has(> .panel) { grid-column: 1 / span 7; }
+  #analises .grid > .card.span-4:has(> .panel) { grid-column: 8 / span 5; }
+  #listas .panel { --p-h: 260px; }
+  #analises .panel { --p-h: 280px; }
+  .vd-frame--kanban { height: 300px; }
+  .vd-nomes { margin-top: var(--s-6); }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  #meu-dia .frame--split, #bonus .frame--split { --ratio: 58%; }
+  #analises .panel { --p-h: 250px; }
+  .vd-frame--dg { height: 560px; }
+  .wg-kb { grid-template-columns: minmax(0, 1fr); }
+  .wg-espera { grid-column: 1; grid-row: auto; margin-top: 12px; }
+}
+@media (max-width: 639px) {
+  #listas .panel { --p-h: 150px; }
+  #listas .card p { display: none; }
+  .vd-marquee { margin-top: var(--s-6); font-size: 15px; }
+  .hero--triptych h1 { font-size: 34px; }
+}

@@ -1,7 +1,7 @@
 // Avisos do sino, calculados na hora a partir do estado das tarefas (nada fica "velho").
 // As mesmas regras alimentam o resumo diário do WhatsApp (supabase/migrations/008_whatsapp.sql).
-import { diaDaSemana, semanaDe } from './regras.js?v=20261126214317';
-import { dataCurta, ROTA_CONTROLE, NOMES_CONTROLE } from './ui.js?v=20261126214317';
+import { diaDaSemana, semanaDe } from './regras.js?v=20261126220127';
+import { dataCurta, ROTA_CONTROLE, NOMES_CONTROLE } from './ui.js?v=20261126220127';
 
 const ABERTA = (t) => t.status !== 'concluida' && t.status !== 'concluida_atraso';
 const faltam = (t) => t.total - t.feitos;

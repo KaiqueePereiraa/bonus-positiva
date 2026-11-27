@@ -1,16 +1,16 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import { MOTIVOS } from './_ausencias.js?v=20261126214317';
-import * as dados from '../dados.js?v=20261126214317';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126214317';
-import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261126214317';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261126214317';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261126214317';
-import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261126214317';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261126214317';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261126214317';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261126214317';
+import { MOTIVOS } from './_ausencias.js?v=20261126220127';
+import * as dados from '../dados.js?v=20261126220127';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126220127';
+import { resumoSemana, painelMeta } from '../bonus-meta.js?v=20261126220127';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261126220127';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261126220127';
+import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261126220127';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261126220127';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261126220127';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261126220127';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
