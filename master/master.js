@@ -1,8 +1,8 @@
 // Painel master da WasFit (26/11/2026): todas as academias do sistema — cadastradas, ativas e inativas, saúde (licença e
 // uso), receita mensal — com "Entrar" e "Editar". Só o master admin (o banco recusa os outros com "Só o master admin.").
-import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261127175440';
-import { saude, resumo, filtrar, FILTROS, haQuanto, reais, linhasHistorico } from './master-regras.js?v=20261127175440';
-import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261127175440';
+import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261127183548';
+import { saude, resumo, filtrar, FILTROS, haQuanto, reais, linhasHistorico } from './master-regras.js?v=20261127183548';
+import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261127183548';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

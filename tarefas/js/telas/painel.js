@@ -1,17 +1,16 @@
 // Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
 // juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
 // do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
-import * as dados from '../dados.js?v=20261127175440';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127175440';
-import { somarDias, semanaDe } from '../regras.js?v=20261127175440';
+import * as dados from '../dados.js?v=20261127183548';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127183548';
+import { somarDias, semanaDe } from '../regras.js?v=20261127183548';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261127175440';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127175440';
-import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127175440';
-import { cartaoAnaliseSemanal } from './_analise-semanal.js?v=20261127175440';
-import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127175440';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261127183548';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127183548';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127183548';
+import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127183548';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -22,7 +21,6 @@ export async function render(el, ctx) {
     hojeIso > seg ? dados.desempenho(seg, somarDias(hojeIso, -1)).catch(() => []) : Promise.resolve([]),
     dados.vitoriasEquipe(7).catch(() => []),
     dados.desempenhoComercial(`${hojeIso.slice(0, 8)}01`).catch(() => null), dados.kanbanWasfit().catch(() => null)]);
-  const analiseSemana = await cartaoAnaliseSemanal(ctx).catch(() => '');
   const ini3 = (() => { const d = new Date(`${hojeIso.slice(0, 7)}-01T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() - 3); return d.toISOString().slice(0, 10); })();
   const saldo = linhasSaldo(await dados.saldoMes(ini3).catch(() => []), ctx.unidade, hojeIso);   // leitura da IA de segunda (some quando não há)
   const vitorias = ctx.unidade ? todasVitorias.filter((v) => v.unidade === ctx.unidade) : todasVitorias;
@@ -59,7 +57,6 @@ export async function render(el, ctx) {
       ${lista.length ? `<ul class="lista-atencao">${lista.map((a) => `<li><b>${esc(a.texto)}</b>${a.acao ? `<span>${esc(a.acao)}</span>` : ''}${a.rota ? ` <a href="${a.rota}">Abrir →</a>` : ''}${a.verComo ? ` <button class="btn sec peq" data-ver-como="${a.verComo}">👁 Ver a tela dela</button>` : ''}</li>`).join('')}</ul>`
         : '<p class="dica">Nada fora do normal agora. 🎉</p>'}</div>
 
-    ${analiseSemana}
 
     ${mes.length ? `<div class="cartao"><h2>Como está o mês <span class="selo cinza">vs mês anterior até o mesmo dia</span></h2>
       <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Oportunidades</th><th>Vendas</th><th>Conversão</th><th>Situação</th></tr></thead><tbody>
