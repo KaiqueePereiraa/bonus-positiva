@@ -73,3 +73,30 @@ export function haQuanto(ts, agora = Date.now()) {
 }
 
 export const reais = (v) => `R$ ${(Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+// Histórico por mês (master_historico): mais recente primeiro, com saldo de academias e variação da receita contratada
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+export function linhasHistorico(lista) {
+  const ord = [...(lista || [])].sort((a, b) => a.mes.localeCompare(b.mes));
+  const maxReceita = Math.max(0, ...ord.map((m) => Number(m.receita_mensal) || 0));
+  const linhas = ord.map((m, i) => {
+    const ant = ord[i - 1];
+    const receita = Number(m.receita_mensal) || 0;
+    const [a, mm] = m.mes.split('-');
+    return {
+      mes: m.mes,
+      rotulo: `${MESES[+mm - 1]}/${a}`,
+      novas: m.novas || 0,
+      encerradas: m.encerradas || 0,
+      reabertas: m.reabertas || 0,
+      saldo: (m.novas || 0) + (m.reabertas || 0) - (m.encerradas || 0),
+      ativas: m.ativas || 0,
+      receita,
+      variacao: ant ? receita - (Number(ant.receita_mensal) || 0) : null,
+      recebido: Number(m.recebido) || 0,
+      barra: maxReceita > 0 ? Math.round((100 * receita) / maxReceita) : 0,
+      estimado: !!m.estimado,
+    };
+  });
+  return linhas.reverse();
+}

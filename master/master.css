@@ -110,3 +110,12 @@ dialog .acoes{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
 .cob-lista li{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;padding:6px 0;border-bottom:1px solid var(--borda)}
 .cob-lista .btn{padding:5px 10px;font-size:12px}
 #editar{width:min(560px,calc(100vw - 32px));max-height:90vh;overflow:auto}
+
+/* Histórico por mês */
+.hist-cabeca{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.hist-cabeca h2{font-size:17px;font-weight:700}
+.hist-cabeca select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid var(--borda);background:var(--superficie);color:var(--texto)}
+.tabela.hist td.pos,.tabela.hist .sub.pos{color:var(--texto-sucesso)}
+.tabela.hist td.neg,.tabela.hist .sub.neg{color:var(--texto-perigo)}
+.barra-receita{height:6px;border-radius:999px;background:var(--muted);max-width:160px;margin-bottom:6px;overflow:hidden}
+.barra-receita span{display:block;height:100%;background:var(--primaria);border-radius:inherit}

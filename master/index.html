@@ -9,8 +9,8 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/marca.css?v=20261127132907">
-<link rel="stylesheet" href="master.css?v=20261127132907">
+<link rel="stylesheet" href="../shared/marca.css?v=20261127175440">
+<link rel="stylesheet" href="master.css?v=20261127175440">
 </head>
 <body>
 <header class="topo">
@@ -50,6 +50,16 @@
     <p class="dica rodape">Saúde: <b>verde</b> = em dia e em uso · <b>amarelo</b> = licença vencendo, sem contatos na semana ou 7+ dias sem ninguém entrar · <b>vermelho</b> = licença vencida, 30 dias sem contatos ou 14+ dias sem acesso.
       Receita mensal soma o valor das academias ativas. Academia inativa ainda consegue entrar (o bloqueio vem com a cobrança).</p>
   </section>
+  <section class="cartao" aria-labelledby="hist-titulo">
+    <div class="hist-cabeca"><h2 id="hist-titulo">Histórico por mês</h2>
+      <label class="dica">Mostrar <select id="hist-meses"><option value="6">6 meses</option><option value="12" selected>12 meses</option><option value="24">24 meses</option></select></label></div>
+    <div class="tabela-wrap"><table class="tabela hist">
+      <thead><tr><th>Mês</th><th>Novas</th><th>Encerradas</th><th>Saldo</th><th>Ativas no fim</th><th>Receita mensal contratada</th><th>Recebido no mês</th></tr></thead>
+      <tbody id="hist-linhas"><tr><td colspan="7" class="vazio">Carregando…</td></tr></tbody>
+    </table></div>
+    <p class="dica rodape">Receita contratada = soma do valor mensal das academias ativas no fim do mês. Recebido = cobranças marcadas como pagas no mês.
+      O sistema tira uma foto de cada academia todo dia às 23h50; mês marcado com * foi calculado pela situação de hoje (sem foto guardada).</p>
+  </section>
   <p class="msg" id="msg" role="alert"></p>
 </main>
 
@@ -83,6 +93,6 @@
   </form>
 </dialog>
 
-<script type="module" src="master.js?v=20261127132907"></script>
+<script type="module" src="master.js?v=20261127175440"></script>
 </body>
 </html>

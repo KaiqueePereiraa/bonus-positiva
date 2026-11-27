@@ -1,16 +1,17 @@
 // Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
 // juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
 // do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
-import * as dados from '../dados.js?v=20261127132907';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127132907';
-import { somarDias, semanaDe } from '../regras.js?v=20261127132907';
+import * as dados from '../dados.js?v=20261127175440';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127175440';
+import { somarDias, semanaDe } from '../regras.js?v=20261127175440';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261127132907';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127132907';
-import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127132907';
-import { cartaoAnaliseSemanal } from './_analise-semanal.js?v=20261127132907';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261127175440';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127175440';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127175440';
+import { cartaoAnaliseSemanal } from './_analise-semanal.js?v=20261127175440';
+import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127175440';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -33,7 +34,14 @@ export async function render(el, ctx) {
   const ativas = unidades.filter((u) => u.consultoras.length);
   const hora = +new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hour12: false }).format(new Date());
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-  const lista = [...atencao(p, unidades, hora, desligadas, ctx.ehSuper), ...itensComercial(com, kb, ctx.unidade)];
+  // professor que perde bem mais alunos que a média da unidade (Análises → Professores)
+  const prof = await dados.professoresPainel(`${hojeIso.slice(0, 8)}01`).catch(() => null);
+  const antesProf = new Map((prof?.antes || []).map((u) => [u.unidade, u]));
+  const nomeP = (n) => String(n || '').toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+  const itensProf = alertasProfessores((prof?.atual || []).filter((u) => !ctx.unidade || u.unidade === ctx.unidade).map((u) => avaliarUnidade(u, antesProf.get(u.unidade))))
+    .map((a) => ({ texto: `${nomeP(a.professor)} perdeu ${String(a.taxa).replace('.', ',')}% dos alunos neste mês (${ctx.nomeUnidade(a.unidade).replace('Positiva ', '').replace('Acqua ', '')}: média ${String(a.media).replace('.', ',')}%).`,
+      acao: 'Converse com o professor e veja com quem saiu o motivo da saída.', rota: '#/analises/professores' }));
+  const lista = [...atencao(p, unidades, hora, desligadas, ctx.ehSuper), ...itensComercial(com, kb, ctx.unidade), ...itensProf];
   const mes = linhasMes(com, ctx.unidade);
   const SIT = { atencao: ['vermelho', '⚠️ Precisa de atenção'], piorando: ['laranja', '▼ Piorando'], melhorando: ['verde', '▲ Melhorando'], estavel: ['azul', '= Estável'] };
   const SEL = { acima: ['verde', 'acima'], dentro: ['azul', 'no padrão'], abaixo: ['vermelho', 'abaixo'], poucos: ['cinza', 'poucos'] };

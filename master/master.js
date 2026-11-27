@@ -1,8 +1,8 @@
 // Painel master da WasFit (26/11/2026): todas as academias do sistema — cadastradas, ativas e inativas, saúde (licença e
 // uso), receita mensal — com "Entrar" e "Editar". Só o master admin (o banco recusa os outros com "Só o master admin.").
-import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261127132907';
-import { saude, resumo, filtrar, FILTROS, haQuanto, reais } from './master-regras.js?v=20261127132907';
-import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261127132907';
+import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261127175440';
+import { saude, resumo, filtrar, FILTROS, haQuanto, reais, linhasHistorico } from './master-regras.js?v=20261127175440';
+import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261127175440';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -65,6 +65,21 @@ function configHtml(t) {
   return `<span class="saude amarelo">Passo ${t.n_feitos + 1} de ${t.n_passos}</span><span class="sub">em: ${esc(PASSOS[t.passo] || t.passo || '—')}</span>${pe}`;
 }
 
+async function historico() {
+  const corpo = $('hist-linhas');
+  const { data, error } = await sb.rpc('master_historico', { p_meses: +$('hist-meses').value || 12 });
+  if (error) { corpo.innerHTML = `<tr><td colspan="7" class="vazio">Não deu para carregar o histórico: ${esc(error.message)}</td></tr>`; return; }
+  const sinal = (v) => (v > 0 ? `+${v}` : `${v}`);
+  corpo.innerHTML = linhasHistorico(data).map((m) => `<tr>
+      <td><b>${m.rotulo}</b>${m.estimado ? ' <span class="dica" title="Calculado pela situação de hoje">*</span>' : ''}</td>
+      <td>${m.novas}</td>
+      <td>${m.encerradas}${m.reabertas ? `<span class="sub">${n(m.reabertas, 'reaberta', 'reabertas')}</span>` : ''}</td>
+      <td class="${m.saldo > 0 ? 'pos' : m.saldo < 0 ? 'neg' : ''}">${sinal(m.saldo)}</td>
+      <td>${m.ativas}</td>
+      <td><div class="barra-receita"><span style="width:${m.barra}%"></span></div><b>${reais(m.receita)}</b>${m.variacao ? `<span class="sub ${m.variacao > 0 ? 'pos' : 'neg'}">${m.variacao > 0 ? '+' : '−'}${reais(Math.abs(m.variacao))} no mês</span>` : ''}</td>
+      <td>${reais(m.recebido)}</td></tr>`).join('') || '<tr><td colspan="7" class="vazio">Sem meses para mostrar.</td></tr>';
+}
+
 async function carregar() {
   const [{ data, error }, tr] = await Promise.all([sb.rpc('master_painel'), sb.rpc('master_trilhas')]);
   if (error) throw error;
@@ -76,6 +91,7 @@ async function carregar() {
   linhas(agora);
   $('atualizado').textContent = `Atualizado ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · ${n(contas.length, 'academia', 'academias')} no sistema`;
   $('conteudo').setAttribute('aria-busy', 'false');
+  historico();
 }
 
 async function entrar(c, b) {
@@ -252,3 +268,5 @@ async function cobrancaHtml(c) {
     } catch (err) { $('msg').textContent = err?.message || 'Não foi possível.'; b.disabled = false; }
   };
 }
+
+$('hist-meses').addEventListener('change', () => historico());

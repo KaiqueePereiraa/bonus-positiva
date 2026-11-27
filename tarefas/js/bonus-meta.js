@@ -6,7 +6,7 @@
 // Bônus configurável (27/11/2026): quando minha_meta_semana traz a configuração da equipe dela (config_equipe), as faixas e as
 // unidades que contam vêm dela (site/shared/bonus-motor.js); sem configuração, as regras antigas abaixo.
 // Puro: testado em tests/bonus-meta.test.js e tests/bonus-config-meta.test.js.
-import { faixasSemana, versaoDoMes, equipeDaUnidade } from '../../shared/bonus-motor.js?v=20261127132907';
+import { faixasSemana, versaoDoMes, equipeDaUnidade } from '../../shared/bonus-motor.js?v=20261127175440';
 
 // Equipe da consultora no dia, pela configuração que veio junto com minha_meta_semana (dados.minhaMetaSemana)
 export const equipeDoDia = (meta, hoje, unidade) => equipeDaUnidade(versaoDoMes(meta?.config_versoes, hoje), unidade);
