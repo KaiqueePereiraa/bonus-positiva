@@ -1,6 +1,6 @@
 // Renovação de contratos — "a vencer" (procurar e marcar) e "venceu e não renovou" (registrar o motivo).
 // As listas chegam sozinhas da EVO toda segunda e são divididas entre as consultoras.
-import { criarTela } from './_grupo.js?v=20261126213627';
+import { criarTela } from './_grupo.js?v=20261126214317';
 
 export const render = criarTela({
   rota: 'renovacao', titulo: 'Renovação',

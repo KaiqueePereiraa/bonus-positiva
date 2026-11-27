@@ -29,7 +29,7 @@ export async function excel(nome, abas) {
     aba.linhas.forEach((l) => ws.addRow(l));
     const cab = ws.getRow(1);
     cab.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    cab.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF212B37' } };
+    cab.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A1D23' } };
     ws.views = [{ state: 'frozen', ySplit: 1 }];
     ws.columns.forEach((c) => {
       let max = 10;
