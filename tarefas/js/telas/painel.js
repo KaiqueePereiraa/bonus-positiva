@@ -1,16 +1,17 @@
 // Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
 // juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
 // do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
-import * as dados from '../dados.js?v=20261127194357';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127194357';
-import { somarDias, semanaDe } from '../regras.js?v=20261127194357';
+import { abrirResumo, linkResumo, ligarLinkResumo } from './_resumo-semana.js?v=20261127194854';
+import * as dados from '../dados.js?v=20261127194854';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127194854';
+import { somarDias, semanaDe } from '../regras.js?v=20261127194854';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261127194357';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127194357';
-import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127194357';
-import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127194357';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261127194854';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127194854';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127194854';
+import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127194854';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -98,7 +99,10 @@ export async function render(el, ctx) {
     ${listasDaSemana(tarefas, hojeIso)}
 
     ${(() => { const t = somar(ativas, 'semana'); return `<p class="dica" style="text-align:center">Nesta semana: ${plural(t.pagou, 'pagou', 'pagaram')}${t.valor ? ` (${reais(t.valor)})` : ''} · ${plural(t.voltou, 'voltou', 'voltaram')} a treinar · ${plural(t.matriculou, 'matrícula', 'matrículas')} · ${plural(t.renovou, 'renovação', 'renovações')}.
-      <a href="#/analises/resultados">Resultados →</a> · <a href="#/analises/retorno">Retorno em R$ →</a></p>`; })()}`;
+      <a href="#/analises/resultados">Resultados →</a> · <a href="#/analises/retorno">Retorno em R$ →</a></p>`; })()}
+    ${linkResumo()}`;
+  ligarLinkResumo(el, ctx);
+  abrirResumo(ctx);   // 1º acesso da semana: resumo do gestor por cima do Painel
   const caixaVit = el.querySelector('#vitorias');
   if (caixaVit) ligarPalmas(caixaVit, vitorias, ctx.perfil.id);
   // "👁 Ver tela": entra no modo ver como consultora (mesma chave do app.js; só nesta aba)

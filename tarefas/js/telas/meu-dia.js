@@ -1,17 +1,18 @@
 // Meu dia — a tela inicial da consultora: o que fazer hoje, na ordem certa. No celular, a 1ª tela responde "o que eu
 // faço agora?" com um botão só (abre a lista mais urgente; se as de hoje acabaram, a de prazo mais perto). Abaixo: as
 // listas de hoje e o que vem depois, os resultados e, por último, sequência e medalhas. Guia de 3 passos na 1ª vez.
-import { MOTIVOS } from './_ausencias.js?v=20261127194357';
-import * as dados from '../dados.js?v=20261127194357';
-import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127194357';
-import { resumoSemana, painelMeta, equipeDoDia } from '../bonus-meta.js?v=20261127194357';
-import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261127194357';
-import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261127194357';
-import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261127194357';
-import { nivelEspera, tempoEspera, placarFila } from '../fila-espera-regras.js?v=20261127194357';
-import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261127194357';
-import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261127194357';
-import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261127194357';
+import { MOTIVOS } from './_ausencias.js?v=20261127194854';
+import * as dados from '../dados.js?v=20261127194854';
+import { esc, dataCurta, diaSemana, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127194854';
+import { resumoSemana, painelMeta, equipeDoDia } from '../bonus-meta.js?v=20261127194854';
+import { pendentesAtePrazo, recadoMinimo } from '../regras.js?v=20261127194854';
+import { titulo as tituloTarefa } from './minhas-tarefas.js?v=20261127194854';
+import { avaliarTime, taxaConsultoras } from '../comercial-regras.js?v=20261127194854';
+import { nivelEspera, tempoEspera, placarFila, telefoneBR } from '../fila-espera-regras.js?v=20261127194854';
+import { abrirResumo, linkResumo, ligarLinkResumo } from './_resumo-semana.js?v=20261127194854';
+import { listaVitorias, ligarPalmas, festaPalmasRecebidas, quandoCurto, faltaAplaudir } from './_vitorias.js?v=20261127194854';
+import { circulos, disponivelDe, recordeDoDia, caminhoSequencia, trilhaSemana, conquistasDoMes, fraseDoDia, resumoResultados, fraseResultado, TIPOS_RESULTADO } from '../jogo.js?v=20261127194854';
+import { aneisSvg, animar, trilhaHtml, conquistasHtml, festaCirculo, celebrar, chipsSequencia, caminhoHtml, festasDaSequencia, festaMedalhas, barraNiveisHtml, festaRecorde } from '../jogo-visual.js?v=20261127194854';
 
 // por pessoa: o computador da recepção pode ser dividido, e o coordenador usa o "ver como consultora"
 const chaveResultados = (id) => `central_resultados_visto_${id}`;
@@ -143,9 +144,12 @@ export async function render(el, ctx) {
 
     ${conquistasHtml(premios)}
 
-    <p class="dica" style="text-align:center"><a href="#/minhas-tarefas">Ver todas as minhas tarefas (quadro) →</a></p>`;
+    <p class="dica" style="text-align:center"><a href="#/minhas-tarefas">Ver todas as minhas tarefas (quadro) →</a></p>
+    ${linkResumo()}`;
 
   animar(el);
+  ligarLinkResumo(el, ctx);
+  abrirResumo(ctx);   // 1º acesso da semana: resumo da semana anterior por cima (não bloqueia a tela)
   // festa do círculo fechado, uma vez por círculo por dia (se ela fechou numa lista, a festa já aconteceu lá)
   festaCirculo(d.hoje, c, ctx.perfil.id);
   festaRecorde(d.hoje, feitos, recorde, ctx.perfil.id);
@@ -253,7 +257,7 @@ function cartaoFila(f) {
   return `<div class="cartao fila-espera ${cor}"><h2>⏳ ${n} ${n === 1 ? 'pessoa esperando' : 'pessoas esperando'} atendimento
       <span class="selo ${cor}">${n === 1 ? 'há' : 'a mais antiga há'} ${tempoEspera(f.mais_antigo_min)}</span></h2>
     <ul class="fila-lista">${mostrar.map((x) => `<li><span class="fila-ponto ${nivelEspera(x.minutos)}"></span><b>${esc(x.contato || 'Contato')}</b>
-      ${x.numero ? `<span class="dica">final ${esc(x.numero)}</span>` : ''}<span class="fila-tempo ${nivelEspera(x.minutos)}">há ${tempoEspera(x.minutos)}</span></li>`).join('')}</ul>
+      ${x.numero ? `<span class="dica fila-fone">${esc(telefoneBR(x.numero))}</span>` : ''}<span class="fila-tempo ${nivelEspera(x.minutos)}">há ${tempoEspera(x.minutos)}</span></li>`).join('')}</ul>
     ${n > mostrar.length ? `<p class="dica">e mais ${n - mostrar.length} na fila.</p>` : ''}
     <p class="dica">Estão com a etiqueta "${esc(f.tag || 'Em espera')}" no WasFit: a IA atendeu e agora precisa de uma pessoa. <b>Quem assumir primeiro no WasFit</b> (mudando a etiqueta) fica com o contato, e ele sai daqui.</p></div>`;
 }

@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261127194357';
+import { sb } from '../../shared/sessao.js?v=20261127194854';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -244,6 +244,13 @@ export const saldoMes = async (desde) => ok(await sb.from('evo_saldo_mes').selec
 export const kanbanWebhooks = () => rpc('kanban_webhooks', {});
 export const kanbanSalvarTagEspera = (nome) => rpc('kanban_salvar_tag_espera', { p_nome: nome });
 export const meuKanban = () => rpc('meu_kanban', { p_como: comoId || null });
+// Resumo da semana (27/11/2026): quais resumos a pessoa já viu (não reaparece em outro aparelho). No "ver como" não grava.
+export const resumosVistos = async (uid) => ok(await sb.from('resumos_vistos').select('chave,visto_em').eq('profile_id', uid));
+export const marcarResumoVisto = async (uid, chaves) => {
+  if (comoId) return;
+  const { error } = await sb.from('resumos_vistos').upsert(chaves.map((chave) => ({ profile_id: uid, chave })), { onConflict: 'profile_id,chave', ignoreDuplicates: true });
+  if (error) throw error;
+};
 export const minhaFilaEspera = () => rpc('minha_fila_espera', { p_como: comoId || null });   // fila "Em espera" no Meu dia (27/11/2026)
 export const kanbanSalvarRegras = (regras) => rpc('kanban_salvar_regras', { p_regras: regras });
 export const kanbanLigarUsuario = (usuario, profile) => rpc('kanban_ligar_usuario', { p_usuario: usuario, p_profile: profile || null });

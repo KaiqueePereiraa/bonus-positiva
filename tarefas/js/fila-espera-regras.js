@@ -21,3 +21,13 @@ export function placarFila(f) {
   const melhor = f.minha_mediana_min != null && f.equipe_mediana_min != null && f.minha_mediana_min <= f.equipe_mediana_min;
   return { numero: n, texto: `Tempo típico ${tempoEspera(f.minha_mediana_min)} · equipe ${tempoEspera(f.equipe_mediana_min)}${melhor ? ' — mais rápida que a equipe 👏' : ''}` };
 }
+
+// Telefone completo para achar o contato no WasFit: 5527999998888 → (27) 99999-8888
+export function telefoneBR(n) {
+  let d = String(n || '').replace(/\D/g, '');
+  if (!d) return '';
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2);
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return String(n);
+}

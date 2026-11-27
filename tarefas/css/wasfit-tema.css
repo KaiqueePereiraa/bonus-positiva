@@ -225,3 +225,32 @@ details.todas-medalhas[open]>summary{margin-bottom:10px}
 .fila-ponto.laranja{background:var(--texto-aviso)}.fila-ponto.vermelho{background:var(--texto-perigo)}
 .fila-tempo{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .fila-tempo.laranja{color:var(--texto-aviso)}.fila-tempo.vermelho{color:var(--texto-perigo)}
+.fila-lista li{flex-wrap:wrap}
+.fila-fone{font-variant-numeric:tabular-nums;user-select:all}
+
+/* Resumo da semana (27/11/2026): cartões em sequência por cima da tela, 1 vez por semana */
+.resumo-fundo{position:fixed;inset:0;z-index:200;background:color-mix(in oklch,black 55%,transparent);display:flex;align-items:center;justify-content:center;padding:16px;animation:resumo-entra .2s ease-out}
+.resumo-card{width:100%;max-width:440px;max-height:calc(100dvh - 32px);overflow:auto;background:var(--superficie);color:var(--texto);border:1px solid var(--borda);border-radius:20px;padding:18px 20px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px color-mix(in oklch,black 30%,transparent)}
+.resumo-barras{display:flex;gap:4px}
+.resumo-barras span{flex:1;height:4px;border-radius:4px;background:var(--borda)}
+.resumo-barras span.feito{background:var(--primaria)}
+.resumo-topo{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--suave)}
+.resumo-x{border:0;background:transparent;color:var(--suave);font-size:18px;cursor:pointer;padding:4px 6px;border-radius:8px}
+.resumo-x:hover{background:var(--muted)}
+.resumo-tit{font-size:21px;font-weight:700;letter-spacing:-.3px;display:flex;gap:8px;align-items:center;margin:0}
+.resumo-corpo{display:flex;flex-direction:column;gap:8px;font-size:14.5px;line-height:1.5}
+.resumo-corpo p{margin:0}
+.resumo-sub{color:var(--suave);font-size:13px}
+.resumo-linha{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--muted)}
+.resumo-linha small{display:block;color:var(--suave);font-size:12.5px;line-height:1.4}
+.resumo-linha.eu{background:color-mix(in oklch,var(--primaria) 18%,var(--superficie));outline:1px solid color-mix(in oklch,var(--primaria) 55%,transparent)}
+.resumo-linha.novidade{background:color-mix(in oklch,var(--info, #5b6cff) 12%,var(--superficie))}
+.resumo-ic{font-size:20px;flex:none;width:26px;text-align:center}
+.resumo-num{margin-left:auto;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.resumo-delta{font-size:12.5px;font-weight:700;margin-left:4px}
+.resumo-delta.pos{color:var(--texto-sucesso)}.resumo-delta.neg{color:var(--texto-perigo)}.resumo-delta.igual{color:var(--suave)}
+.resumo-festa{font-weight:700;color:var(--texto-sucesso);text-align:center;font-size:15.5px}
+.resumo-nav{display:flex;justify-content:space-between;gap:10px;margin-top:4px}
+.rever-resumo{text-align:center;margin-top:4px}
+@keyframes resumo-entra{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.resumo-fundo{animation:none}}
