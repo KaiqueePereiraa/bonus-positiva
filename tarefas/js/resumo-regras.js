@@ -1,7 +1,7 @@
 // Resumo da semana (27/11/2026, aprovado pelo Kaique) — regras puras, testadas em tests/resumo-regras.test.js.
 // Aparece no 1º acesso da semana (segunda, ou o 1º dia em que a pessoa entrar) com a semana ANTERIOR (seg a dom).
 // No 1º acesso do mês (até o dia 7), a versão é a do mês anterior e vale também como a da semana (nunca aparecem as duas).
-import { somarDias, semanaDe } from './regras.js?v=20261127195052';
+import { somarDias, semanaDe } from './regras.js?v=20261127195208';
 
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const dm = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
@@ -72,4 +72,18 @@ export function delta(agora, antes, sufixo = '') {
   if (agora == null || antes == null) return null;
   const d = agora - antes;
   return { d, texto: `${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(d)}${sufixo}`, cor: d > 0 ? 'pos' : d < 0 ? 'neg' : 'igual' };
+}
+
+// Gestor: uma linha por consultora no período (soma dos dias); diasParaAplaudir = dias em que `eu` ainda não aplaudiu
+export function vitoriasPorConsultora(grupos, eu) {
+  const m = new Map();
+  for (const g of grupos || []) {
+    const x = m.get(g.consultora_id) || { consultora_id: g.consultora_id, consultora: g.consultora, total: 0, porTipo: {}, dias: [], diasParaAplaudir: [] };
+    x.total += g.itens.length;
+    for (const [k, n] of Object.entries(g.porTipo || {})) x.porTipo[k] = (x.porTipo[k] || 0) + n;
+    x.dias.push(g.dia);
+    if (!(g.palmas || []).some((p) => p.de === eu)) x.diasParaAplaudir.push(g.dia);
+    m.set(g.consultora_id, x);
+  }
+  return [...m.values()].sort((a, b) => b.total - a.total);
 }

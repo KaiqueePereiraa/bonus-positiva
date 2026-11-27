@@ -3,16 +3,16 @@
 // No 1º acesso do mês (até o dia 7) a versão é a do mês anterior. Depois de visto não reaparece (nem em outro aparelho);
 // para rever, o link "📬 Resumo da semana". No "ver como consultora" só abre pelo link e não marca como visto.
 // Regras puras em ../resumo-regras.js; novidades em ../novidades.js.
-import * as dados from '../dados.js?v=20261127195052';
-import { esc, erro, NOMES_CONTROLE } from '../ui.js?v=20261127195052';
-import { destaques, voceVsVoce, TIPOS_RESULTADO } from '../jogo.js?v=20261127195052';
-import { celebrar } from '../jogo-visual.js?v=20261127195052';
-import { agruparVitorias } from './_vitorias.js?v=20261127195052';
-import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127195052';
-import { periodoResumo, unidadesPeriodo, vitoriasPeriodo, novidadesPara, delta } from '../resumo-regras.js?v=20261127195052';
-import { tempoEspera } from '../fila-espera-regras.js?v=20261127195052';
-import { NOVIDADES } from '../novidades.js?v=20261127195052';
-import { somarDias, semanaDe } from '../regras.js?v=20261127195052';
+import * as dados from '../dados.js?v=20261127195208';
+import { esc, erro, NOMES_CONTROLE } from '../ui.js?v=20261127195208';
+import { destaques, voceVsVoce, TIPOS_RESULTADO } from '../jogo.js?v=20261127195208';
+import { celebrar } from '../jogo-visual.js?v=20261127195208';
+import { agruparVitorias } from './_vitorias.js?v=20261127195208';
+import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127195208';
+import { periodoResumo, unidadesPeriodo, vitoriasPeriodo, vitoriasPorConsultora, novidadesPara, delta } from '../resumo-regras.js?v=20261127195208';
+import { tempoEspera } from '../fila-espera-regras.js?v=20261127195208';
+import { NOVIDADES } from '../novidades.js?v=20261127195208';
+import { somarDias, semanaDe } from '../regras.js?v=20261127195208';
 
 let aberto = false;
 const ESTREIA = '2026-11-30';   // abre sozinho a partir da 1ª segunda (antes disso, só pelo link 📬)
@@ -151,13 +151,13 @@ async function cartoesGestor(ctx, p, ultimoVisto) {
 
   // 4. Quem merece seu aplauso
   const v = vitoriasPeriodo(agruparVitorias(vits), p.de, p.ate);
-  const grupos = [...v.grupos].sort((a, b) => b.itens.length - a.itens.length).slice(0, 4);
+  const pessoas = vitoriasPorConsultora(v.grupos, uid).slice(0, 5);
   const c4 = { icone: '👏', titulo: 'Quem merece seu aplauso', fim: true, palmas: true,
-    corpo: `<p class="resumo-sub">Reconhecimento do gestor pesa mais que qualquer medalha.</p>
-      ${grupos.length ? grupos.map((g) => { const ja = g.palmas.some((x) => x.de === uid);
-        const tipos = Object.entries(TIPOS_RESULTADO).filter(([k]) => g.porTipo[k]).map(([k, t]) => `${t.icone} ${g.porTipo[k]} ${g.porTipo[k] === 1 ? t.um : t.varios}`).join(' · ');
-        return `<div class="resumo-linha"><span class="resumo-ic">🌟</span><div><b>${esc(nomeCurto(g.consultora, todosNomes))}</b><small>${esc(tipos)} · ${esc(diaTxt(g.dia))}</small></div>
-          <button class="btn ${ja ? 'sec' : ''} peq resumo-num" data-aplaudir="${esc(g.consultora_id)}|${esc(g.dia)}" ${ja ? 'disabled' : ''}>${ja ? '👏 Aplaudido' : '👏 Aplaudir'}</button></div>`; }).join('')
+    corpo: `<p class="resumo-sub">Reconhecimento do gestor pesa mais que qualquer medalha. Um 👏 vale para todos os dias dela no período.</p>
+      ${pessoas.length ? pessoas.map((x) => { const ja = !x.diasParaAplaudir.length;
+        const tipos = Object.entries(TIPOS_RESULTADO).filter(([k]) => x.porTipo[k]).map(([k, t]) => `${t.icone} ${x.porTipo[k]} ${x.porTipo[k] === 1 ? t.um : t.varios}`).join(' · ');
+        return `<div class="resumo-linha"><span class="resumo-ic">🌟</span><div><b>${esc(nomeCurto(x.consultora, todosNomes))}</b><small>${esc(tipos)}${x.dias.length > 1 ? ` · em ${x.dias.length} dias` : ` · ${esc(diaTxt(x.dias[0]))}`}</small></div>
+          <button class="btn ${ja ? 'sec' : ''} peq resumo-num" data-aplaudir="${esc(x.consultora_id)}|${esc(x.diasParaAplaudir.join(','))}" ${ja ? 'disabled' : ''}>${ja ? '👏 Aplaudido' : '👏 Aplaudir'}</button></div>`; }).join('')
       : '<p>Nenhum resultado confirmado no período ainda.</p>'}` };
   return [c1, c2, c3, c4];
 }
@@ -189,9 +189,10 @@ function mostrar(ctx, p, cartoes) {
     fundo.querySelector('.resumo-x').addEventListener('click', fechar);
     fundo.querySelectorAll('[data-ir]').forEach((b) => b.addEventListener('click', () => ir(+b.dataset.ir)));
     fundo.querySelectorAll('[data-aplaudir]').forEach((b) => b.addEventListener('click', async () => {
-      const [consultora, dia] = b.dataset.aplaudir.split('|');
+      const [consultora, dias] = b.dataset.aplaudir.split('|');
       b.disabled = true;
-      try { await dados.aplaudirDia(consultora, dia); b.textContent = '👏 Aplaudido'; b.classList.add('sec'); } catch (e) { b.disabled = false; erro(e); }
+      try { for (const dia of dias.split(',').filter(Boolean)) await dados.aplaudirDia(consultora, dia); b.textContent = '👏 Aplaudido'; b.classList.add('sec'); }
+      catch (e) { b.disabled = false; erro(e); }
     }));
     fundo.querySelector('[data-ir="1"]').focus();
     if (c.festa && !festejados.has(k)) { festejados.add(k); celebrar('Você foi destaque! 🎉', 'Olha você nos destaques. Continua assim!'); }
