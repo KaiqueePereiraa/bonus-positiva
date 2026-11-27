@@ -210,3 +210,8 @@ details.todas-medalhas[open]>summary{margin-bottom:10px}
 .seu-mes-grade b{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
 .seu-mes-grade span{font-size:13px;color:var(--suave)}
 .seu-mes-grade .selo{align-self:flex-start;margin-top:4px}
+/* Master admin: a etiqueta da academia troca de academia; em outra academia ganha um contorno de aviso */
+.conta-chip.trocavel{cursor:pointer;transition:border-color .15s}
+.conta-chip.trocavel::after{content:"";width:7px;height:7px;margin-left:2px;border-right:2px solid var(--suave);border-bottom:2px solid var(--suave);transform:rotate(45deg) translateY(-2px)}
+.conta-chip.trocavel:hover{border-color:var(--primaria-forte)}
+.conta-chip.outra{border-color:var(--warning);background:color-mix(in oklch,var(--warning) 10%,var(--superficie))}

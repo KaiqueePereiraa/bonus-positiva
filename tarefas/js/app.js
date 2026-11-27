@@ -1,13 +1,13 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126205825';
-import * as dados from './dados.js?v=20261126205825';
-import { seloLicenca } from './conta-regras.js?v=20261126205825';
-import { hojeSP } from './regras.js?v=20261126205825';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126205825';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126205825';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126205825';
-import { resumoSemana } from './bonus-meta.js?v=20261126205825';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126205825';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126210231';
+import * as dados from './dados.js?v=20261126210231';
+import { seloLicenca } from './conta-regras.js?v=20261126210231';
+import { hojeSP } from './regras.js?v=20261126210231';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126210231';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126210231';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126210231';
+import { resumoSemana } from './bonus-meta.js?v=20261126210231';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126210231';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -247,6 +247,17 @@ async function mostrarConta() {
     const logo = escuro ? (c.logo_claro || c.logo_escuro) : (c.logo_escuro || c.logo_claro);
     if (logo) $('conta-logo').src = /^https?:/.test(logo) ? logo : `../${logo}`; else $('conta-logo').hidden = true;
     $('conta-box').hidden = false;
+    // master admin: a etiqueta da academia vira o botão para trocar de academia (painel das academias no login)
+    if (c.master) {
+      const box = $('conta-box');
+      box.classList.add('trocavel');
+      box.classList.toggle('outra', !!c.em_outra_conta);
+      box.setAttribute('role', 'button'); box.tabIndex = 0;
+      box.title = c.em_outra_conta ? `Você (master) está vendo ${c.nome}. Clique para trocar de academia.` : 'Trocar de academia';
+      const ir = () => { location.href = '../index.html?academias=1'; };
+      box.addEventListener('click', ir);
+      box.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ir(); } });
+    }
     const sl = ehAdmin ? seloLicenca(c.dias_licenca, c.licenca_vence) : null;   // a licença aparece para o gestor
     if (sl) { $('licenca-texto').textContent = sl.texto; $('licenca').className = `licenca ${sl.cor}`; $('licenca').title = sl.dica; $('licenca').hidden = false; }
     window.addEventListener('wasfit-tema', () => {
@@ -274,7 +285,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126205825`);
+    const tela = await import(`./telas/${modulo}.js?v=20261126210231`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {
