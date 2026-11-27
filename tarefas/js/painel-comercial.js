@@ -1,7 +1,7 @@
 // Painel do gestor — o resumo do comercial e do kanban já pronto para agir (testado em tests/painel-comercial.test.js).
 // Junta no "Precisa da sua atenção" o que antes estava espalhado em Desempenho comercial e Kanban; monta o quadro do mês
 // por unidade e acha a carteira e o kanban de cada consultora para a tabela da equipe.
-import { avaliarUnidades, avaliarTime, alertaCarteiras, pct } from './comercial-regras.js?v=20261126210347';
+import { avaliarUnidades, avaliarTime, alertaCarteiras, pct } from './comercial-regras.js?v=20261126213627';
 
 const br = (n) => String(n).replace('.', ',');
 const semAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();

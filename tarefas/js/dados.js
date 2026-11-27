@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261126210347';
+import { sb } from '../../shared/sessao.js?v=20261126213627';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -8,7 +8,7 @@ let comoId = null;
 export const verComo = (id) => { comoId = id || null; };
 export const vendoComo = () => comoId;
 export const MSG_SO_OLHAR = 'Você está vendo como consultora: neste modo nada é salvo e o WhatsApp não abre.';
-const SO_LEITURA = new Set(['minhas_unidades_coord', 'vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como', 'desempenho_comercial', 'meu_kanban']);
+const SO_LEITURA = new Set(['minhas_unidades_coord', 'vitorias_equipe', 'listar_equipe', 'desempenho', 'painel_gestor', 'retorno_mes', 'escala_periodo', 'meu_dia_como', 'minha_meta_semana_como', 'desempenho_comercial', 'meu_kanban', 'controles_da_conta']);
 const travar = () => { if (comoId) throw new Error(MSG_SO_OLHAR); };
 const rpc = async (nome, args) => {
   if (comoId && !SO_LEITURA.has(nome)) travar();
@@ -21,7 +21,8 @@ export const equipe = () => rpc('listar_equipe');
 export const minhasUnidadesCoord = () => rpc('minhas_unidades_coord');
 // histórico de ações (quem fez o quê); o banco só devolve as unidades que o coordenador pode ver
 export const historico = (de, ate, unidade) => rpc('historico', { p_de: de, p_ate: ate, p_unidade: unidade || null });
-export const controles = async () => ok(await sb.from('controles').select('*'));
+// 26/11 (isolamento 1.4): as mensagens das listas são por academia — a RPC devolve a config da academia ativa (ou a padrão)
+export const controles = async () => (await rpc('controles_da_conta')) || [];
 export const unidades = async () => ok(await sb.from('unidades').select('*').order('ordem'));
 export const salvarUnidade = async (id, campos) => ok(await sb.from('unidades').update(campos).eq('id', id));
 export const motivos = async () => ok(await sb.from('motivos').select('*').order('ordem'));
@@ -261,7 +262,8 @@ export async function enviarLinkAcesso(email) {
 
 export const perfis = async () => ok(await sb.from('profiles').select('*').order('nome'));
 export const atualizarPerfil = async (id, campos) => ok(await sb.from('profiles').update(campos).eq('id', id));
-export const atualizarControle = async (id, campos) => ok(await sb.from('controles').update(campos).eq('id', id));
+// Só grava a config (mensagens da lista), na academia de quem salva (RPC controle_salvar_config, só admin geral)
+export const atualizarControle = async (id, { config }) => rpc('controle_salvar_config', { p_id: id, p_config: config });
 
 export async function config() {
   const linhas = ok(await sb.from('config_central').select('*'));
