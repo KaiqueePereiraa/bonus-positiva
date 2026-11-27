@@ -3,9 +3,9 @@
 // Crítico pelo tempo sem nenhuma ação (mudança de etiqueta), com os dias que o gestor define em Configurações → Kanban.
 // Gestor: todas as consultoras, a lista do que está crítico/atrasado, as regras e quem é quem na WasFit.
 // Consultora: só os contatos dela, crítico e atrasado primeiro.
-import * as dados from '../dados.js?v=20261127195208';
-import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261127195208';
-import { texto as regraTexto } from '../kanban-regras.js?v=20261127195208';
+import * as dados from '../dados.js?v=20261127195325';
+import { esc, vazio, toast, erro, modal, dataHora } from '../ui.js?v=20261127195325';
+import { texto as regraTexto } from '../kanban-regras.js?v=20261127195325';
 
 const NIVEL = { critico: ['vermelho', '🔴 Crítico'], urgente: ['laranja', '🟠 Atrasado'], normal: ['verde', '🟢 Normal'], espera: ['azul', '⏳ Em espera'], fora: ['cinza', 'Não monitorada'] };
 // minutos → "25 min", "2 h 10 min", "3 dias"

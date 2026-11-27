@@ -3,16 +3,16 @@
 // No 1º acesso do mês (até o dia 7) a versão é a do mês anterior. Depois de visto não reaparece (nem em outro aparelho);
 // para rever, o link "📬 Resumo da semana". No "ver como consultora" só abre pelo link e não marca como visto.
 // Regras puras em ../resumo-regras.js; novidades em ../novidades.js.
-import * as dados from '../dados.js?v=20261127195208';
-import { esc, erro, NOMES_CONTROLE } from '../ui.js?v=20261127195208';
-import { destaques, voceVsVoce, TIPOS_RESULTADO } from '../jogo.js?v=20261127195208';
-import { celebrar } from '../jogo-visual.js?v=20261127195208';
-import { agruparVitorias } from './_vitorias.js?v=20261127195208';
-import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127195208';
-import { periodoResumo, unidadesPeriodo, vitoriasPeriodo, vitoriasPorConsultora, novidadesPara, delta } from '../resumo-regras.js?v=20261127195208';
-import { tempoEspera } from '../fila-espera-regras.js?v=20261127195208';
-import { NOVIDADES } from '../novidades.js?v=20261127195208';
-import { somarDias, semanaDe } from '../regras.js?v=20261127195208';
+import * as dados from '../dados.js?v=20261127195325';
+import { esc, erro, NOMES_CONTROLE } from '../ui.js?v=20261127195325';
+import { destaques, voceVsVoce, TIPOS_RESULTADO } from '../jogo.js?v=20261127195325';
+import { celebrar } from '../jogo-visual.js?v=20261127195325';
+import { agruparVitorias } from './_vitorias.js?v=20261127195325';
+import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127195325';
+import { periodoResumo, unidadesPeriodo, vitoriasPeriodo, vitoriasPorConsultora, novidadesPara, delta } from '../resumo-regras.js?v=20261127195325';
+import { tempoEspera } from '../fila-espera-regras.js?v=20261127195325';
+import { NOVIDADES } from '../novidades.js?v=20261127195325';
+import { somarDias, semanaDe } from '../regras.js?v=20261127195325';
 
 let aberto = false;
 const ESTREIA = '2026-11-30';   // abre sozinho a partir da 1ª segunda (antes disso, só pelo link 📬)
@@ -150,8 +150,8 @@ async function cartoesGestor(ctx, p, ultimoVisto) {
     corpo: `${at.length ? at.join('') : '<p>Nada pedindo atenção agora. 👏</p>'}${novas.map((n) => linha('🆕', 'Novidade na Central', esc(n.texto), '', 'novidade')).join('')}` };
 
   // 4. Quem merece seu aplauso
-  const v = vitoriasPeriodo(agruparVitorias(vits), p.de, p.ate);
-  const pessoas = vitoriasPorConsultora(v.grupos, uid).slice(0, 5);
+  const v = vitoriasPeriodo(agruparVitorias((vits || []).filter((x) => !un || x.unidade === un)), p.de, p.ate);
+  const pessoas = vitoriasPorConsultora(v.grupos, uid).filter((x) => x.consultora_id !== uid).slice(0, 5);   // o próprio gestor não se aplaude
   const c4 = { icone: '👏', titulo: 'Quem merece seu aplauso', fim: true, palmas: true,
     corpo: `<p class="resumo-sub">Reconhecimento do gestor pesa mais que qualquer medalha. Um 👏 vale para todos os dias dela no período.</p>
       ${pessoas.length ? pessoas.map((x) => { const ja = !x.diasParaAplaudir.length;
