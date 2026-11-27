@@ -1,13 +1,13 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126225325';
-import * as dados from './dados.js?v=20261126225325';
-import { seloLicenca } from './conta-regras.js?v=20261126225325';
-import { hojeSP } from './regras.js?v=20261126225325';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126225325';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126225325';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126225325';
-import { resumoSemana } from './bonus-meta.js?v=20261126225325';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126225325';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261126225450';
+import * as dados from './dados.js?v=20261126225450';
+import { seloLicenca } from './conta-regras.js?v=20261126225450';
+import { hojeSP } from './regras.js?v=20261126225450';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261126225450';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261126225450';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261126225450';
+import { resumoSemana } from './bonus-meta.js?v=20261126225450';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261126225450';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -285,7 +285,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261126225325`);
+    const tela = await import(`./telas/${modulo}.js?v=20261126225450`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

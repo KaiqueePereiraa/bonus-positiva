@@ -1,8 +1,8 @@
 // Inadimplência — toda sexta a lista chega sozinha da EVO e é DIVIDIDA por igual entre as consultoras da unidade
 // (ou do grupo de unidades). Cada uma marca quem recebeu mensagem. Não há mais revezamento/plantão.
-import * as dados from '../dados.js?v=20261126225325';
-import { esc, dataCurta, diaSemana, seloStatus, vazio } from '../ui.js?v=20261126225325';
-import { cabecalhoTarefa, listaContatos, baixarArquivo, linhaProgresso } from './_comum.js?v=20261126225325';
+import * as dados from '../dados.js?v=20261126225450';
+import { esc, dataCurta, diaSemana, seloStatus, vazio } from '../ui.js?v=20261126225450';
+import { cabecalhoTarefa, listaContatos, baixarArquivo, linhaProgresso } from './_comum.js?v=20261126225450';
 
 export async function render(el, ctx, [tarefaId]) {
   if (tarefaId) return detalhe(el, ctx, tarefaId);

@@ -1,6 +1,6 @@
 // Escala — marcação HTML do calendário (funções puras, sem banco). Usado pela tela Escala.
-import { esc, nomeMesCap } from './ui.js?v=20261126225325';
-import { corPessoa, agruparPorMes } from './escala.js?v=20261126225325';
+import { esc, nomeMesCap } from './ui.js?v=20261126225450';
+import { corPessoa, agruparPorMes } from './escala.js?v=20261126225450';
 
 const SEM = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 const MES3 = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];

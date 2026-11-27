@@ -63,7 +63,7 @@ body{background:var(--fundo);color:var(--texto);font-size:15px}
 .rodape{margin-top:14px}
 .msg{color:var(--texto-perigo);font-size:14px;min-height:20px}
 
-dialog{border:1px solid var(--borda);border-radius:16px;padding:24px;background:var(--superficie);color:var(--texto);width:min(420px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.18)}
+dialog{margin:auto;border:1px solid var(--borda);border-radius:16px;padding:24px;background:var(--superficie);color:var(--texto);width:min(420px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.18)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog h2{font-size:18px;font-weight:700;margin-bottom:14px}
 dialog form{display:flex;flex-direction:column;gap:12px}
