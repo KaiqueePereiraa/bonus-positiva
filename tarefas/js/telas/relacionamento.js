@@ -1,6 +1,6 @@
 // Relacionamento — primeiros 90 dias e entrevista de saída de quem cancelou (os ex-alunos ficam em Vendas).
 // Chegam sozinhas da EVO toda segunda, divididas entre as consultoras; prazo na sexta.
-import { criarTela } from './_grupo.js?v=20261126225450';
+import { criarTela } from './_grupo.js?v=20261126232913';
 
 export const render = criarTela({
   rota: 'relacionamento', titulo: 'Relacionamento',

@@ -2,9 +2,9 @@
 // contatos da IA que ela assumiu; não importa quem fechou), comparada entre as consultoras e com o mês anterior; o funil da
 // IA à parte (a IA só cadastra e manda o pagamento — não é comparada com as meninas); números do time e as semanas do mês.
 // Regra do antigo Dashboard Positiva: venda = cadastrou e converteu no mesmo mês. Dados lidos da EVO todo dia (evo-desempenho).
-import * as dados from '../dados.js?v=20261126225450';
-import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126225450';
-import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261126225450';
+import * as dados from '../dados.js?v=20261126232913';
+import { esc, vazio, nomeMesCap, dataCurta, dataHora } from '../ui.js?v=20261126232913';
+import { pct, resumoTime, avaliarTime, variacao, taxaConsultoras, funilIa, alertaCarteiras, avaliarUnidades, avaliarCanais, MIN_CANAL, MIN_CADASTROS } from '../comercial-regras.js?v=20261126232913';
 
 let escolhido = null;
 
@@ -56,13 +56,16 @@ function time(t, r, ctx, rotuloAnt, prof) {
   const s = resumoTime(base);
   const pessoas = avaliarTime(t);
   const padrao = taxaConsultoras(t);
-  const fi = funilIa(t);
+  const fi = funilIa(daUnidade?.funil_ia ? { ...t, funil_ia: daUnidade.funil_ia } : t);   // funil da unidade escolhida (146)
   const alerta = r.admin ? alertaCarteiras(pessoas) : null;
   const eu = !r.admin ? pessoas.find((p) => p.eu) : null;
   const curto = (n) => String(n).replace('Positiva ', '').replace('Acqua ', '');
+  // com uma unidade escolhida, canais e funil da IA são da unidade e ficam antes do bloco da equipe
+  const canaisHtml = r.admin && (daUnidade?.canais ?? t.canais)?.length ? quadroCanais(daUnidade?.canais ?? t.canais, rotuloAnt) : '';
+  const funilHtml = quadroFunilIa(fi, rotuloAnt);
   return `<div class="cartao">
     <h2>${esc(daUnidade ? curto(daUnidade.nome) : t.nome)}</h2>
-    ${daUnidade ? `<p class="aviso-equipe">Números da empresa: só ${esc(curto(daUnidade.nome))}. Consultoras, canais, funil da IA e semanas: <b>equipe ${esc(t.nome)}</b> — as consultoras atendem nas unidades unidas.</p>` : ''}
+    ${daUnidade ? `<p class="aviso-equipe">Números da empresa, canais e funil da IA: só ${esc(curto(daUnidade.nome))}. Consultoras e semanas: <b>equipe ${esc(t.nome)}</b> — as consultoras atendem nas unidades unidas.</p>` : ''}
     <div class="numeros" style="margin:12px 0">
       <div class="numero azul"><small>Oportunidades</small><b>${a.oportunidades ?? 0}</b><span>${seta(a.oportunidades, b.oportunidades)} vs ${b.oportunidades ?? 0}</span></div>
       <div class="numero verde"><small>Vendas no mês</small><b>${a.vendas ?? 0}</b><span>${seta(a.vendas, b.vendas)} vs ${b.vendas ?? 0}</span></div>
@@ -73,12 +76,11 @@ function time(t, r, ctx, rotuloAnt, prof) {
     </div>
     <p class="dica">Comparação com ${esc(rotuloAnt)}.${r.fechado && a.futuras ? ` ${a.futuras === 1 ? '1 cadastro deste mês fechou' : `${a.futuras} cadastros deste mês fecharam`} no mês seguinte (conversões futuras).` : ''}</p>
     ${r.admin && t.por_unidade?.length > 1 ? porUnidade(t, rotuloAnt) : ''}
-    ${daUnidade ? `<h3 class="titulo-equipe">Equipe ${esc(t.nome)}</h3>` : ''}
+    ${daUnidade ? `${canaisHtml}${funilHtml}<h3 class="titulo-equipe">Equipe ${esc(t.nome)}</h3>` : ''}
     ${alerta ? `<div class="faixa urgente" style="display:block;margin:12px 0"><b>⚠️ Conversão muito diferente entre as consultoras</b><div style="margin-top:4px">${esc(alerta.texto)}</div></div>` : ''}
     ${eu ? quadroEu(eu, padrao) : ''}
     ${r.admin ? tabelaPessoas(pessoas, padrao) : ''}
-    ${r.admin && t.canais?.length ? quadroCanais(t.canais, rotuloAnt) : ''}
-    ${quadroFunilIa(fi, rotuloAnt)}
+    ${daUnidade ? '' : `${canaisHtml}${funilHtml}`}
     ${prof ? professores(prof) : ''}
     ${semanas(t)}
   </div>`;

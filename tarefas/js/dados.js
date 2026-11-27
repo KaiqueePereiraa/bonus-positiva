@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261126225450';
+import { sb } from '../../shared/sessao.js?v=20261126232913';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -233,6 +233,8 @@ export const meusDias = async (userId) => ok(await sb.from('dias_consultora').se
 export const desempenhoComercial = (mes) => rpc('desempenho_comercial', { p_mes: mes, p_como: comoId || null });
 // Kanban da WasFit espelhado e conversão por professor (gestor)
 export const kanbanWasfit = () => rpc('kanban_wasfit', {});
+// Saldo do mês pela EVO (entradas × saídas de alunos, pessoas): mês atual e os 3 anteriores; a regra do banco filtra as unidades
+export const saldoMes = async (desde) => ok(await sb.from('evo_saldo_mes').select('unidade, mes, saidas, cancelados, vencidos, entradas, matriculas, rematriculas, ate, fechado, lido_em').gte('mes', desde).order('mes'));
 export const kanbanWebhooks = () => rpc('kanban_webhooks', {});
 export const kanbanSalvarTagEspera = (nome) => rpc('kanban_salvar_tag_espera', { p_nome: nome });
 export const meuKanban = () => rpc('meu_kanban', { p_como: comoId || null });

@@ -1,7 +1,7 @@
 // Painel do gestor — o resumo do comercial e do kanban já pronto para agir (testado em tests/painel-comercial.test.js).
 // Junta no "Precisa da sua atenção" o que antes estava espalhado em Desempenho comercial e Kanban; monta o quadro do mês
 // por unidade e acha a carteira e o kanban de cada consultora para a tabela da equipe.
-import { avaliarUnidades, avaliarTime, alertaCarteiras, pct } from './comercial-regras.js?v=20261126225450';
+import { avaliarUnidades, avaliarTime, alertaCarteiras, pct } from './comercial-regras.js?v=20261126232913';
 
 const br = (n) => String(n).replace('.', ',');
 const semAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -33,8 +33,9 @@ export function itensComercial(comercial, kanban, unidade) {
   for (const t of timesDaUnidade(comercial, unidade)) {
     const a = alertaCarteiras(avaliarTime(t));
     if (a) itens.push({ texto: `${a.pior.nome} converte ${br(a.pior.taxa)}% da carteira e ${a.melhor.nome} ${br(a.melhor.taxa)}% (${br(a.gap)} pontos de diferença${(t.unidades || []).length > 1 ? `; equipe ${t.nome}` : ''}).`, acao: `Acompanhe o kanban de ${a.pior.nome} e veja o que ${a.melhor.nome} faz diferente.`, rota: '#/analises/comercial' });
-    const sd = t.funil_ia?.atual?.sem_dona || 0;
-    if (sd > 0) itens.push({ texto: `${sd} cadastro${sd > 1 ? 's' : ''} da IA neste mês ainda sem dona — fora da carteira de todas (${t.nome}).`, acao: 'Distribua no kanban da WasFit: quem assumir o contato passa a ser a dona. (O kanban mostra só quem está sem dona agora.)', rota: '#/analises/comercial' });
+    const pu = unidade ? (t.por_unidade || []).find((u) => u.id === unidade) : null;   // com unidade escolhida, o funil é o dela (146)
+    const sd = (pu?.funil_ia ?? t.funil_ia)?.atual?.sem_dona || 0;
+    if (sd > 0) itens.push({ texto: `${sd} cadastro${sd > 1 ? 's' : ''} da IA neste mês ainda sem dona — fora da carteira de todas (${pu ? String(pu.nome).replace('Positiva ', '').replace('Acqua ', '') : t.nome}).`, acao: 'Distribua no kanban da WasFit: quem assumir o contato passa a ser a dona. (O kanban mostra só quem está sem dona agora.)', rota: '#/analises/comercial' });
   }
   const cr = kanban?.niveis?.critico || 0;
   if (cr > 0) {
@@ -63,4 +64,25 @@ export function kanbanDe(kanban, nome) {
   const ps = (kanban?.pessoas || []).filter((p) => primeiro(p.dona) === pn);
   if (!ps.length) return null;
   return ps.reduce((a, p) => ({ contatos: a.contatos + (p.contatos || 0), critico: a.critico + (p.critico || 0), atrasado: a.atrasado + (p.urgente || 0) }), { contatos: 0, critico: 0, atrasado: 0 });
+}
+
+// Entradas × saídas de alunos por unidade (EVO, contando pessoas): o mês atual até hoje e o saldo dos 3 meses fechados.
+// Saldo negativo = a "caixa d'água" está esvaziando (saiu mais gente do que entrou).
+export function linhasSaldo(registros, unidade, mesAtual) {
+  const por = new Map();
+  for (const r of registros || []) {
+    if (unidade && r.unidade !== unidade) continue;
+    const x = por.get(r.unidade) || { unidade: r.unidade, atual: null, antes: [] };
+    if (r.mes.slice(0, 7) === mesAtual.slice(0, 7)) x.atual = r; else if (r.fechado) x.antes.push(r);
+    por.set(r.unidade, x);
+  }
+  return [...por.values()].filter((x) => x.atual || x.antes.length).map((x) => {
+    const antes = x.antes.sort((a, b) => b.mes.localeCompare(a.mes)).slice(0, 3);
+    const saldo = (r) => (r ? r.entradas - r.saidas : null);
+    const media = antes.length ? Math.round(antes.reduce((t, r) => t + r.saidas, 0) / antes.length) : null;
+    const s = saldo(x.atual);
+    const aviso = s == null ? null : s < 0 ? `Saiu mais gente do que entrou neste mês (${-s} a menos).`
+      : media != null && x.atual.saidas > media ? `Saídas acima da média dos últimos meses (${x.atual.saidas} × ${media}).` : null;
+    return { unidade: x.unidade, atual: x.atual, saldo: s, antes: antes.map((r) => ({ mes: r.mes, saldo: saldo(r), saidas: r.saidas, entradas: r.entradas })), mediaSaidas: media, aviso };
+  });
 }

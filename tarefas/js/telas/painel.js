@@ -1,16 +1,16 @@
 // Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
 // juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
 // do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
-import * as dados from '../dados.js?v=20261126225450';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126225450';
-import { somarDias, semanaDe } from '../regras.js?v=20261126225450';
+import * as dados from '../dados.js?v=20261126232913';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261126232913';
+import { somarDias, semanaDe } from '../regras.js?v=20261126232913';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261126225450';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261126225450';
-import { itensComercial, linhasMes, carteiraDe, kanbanDe } from '../painel-comercial.js?v=20261126225450';
-import { cartaoAnaliseSemanal } from './_analise-semanal.js?v=20261126225450';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261126232913';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261126232913';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261126232913';
+import { cartaoAnaliseSemanal } from './_analise-semanal.js?v=20261126232913';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();
@@ -21,7 +21,9 @@ export async function render(el, ctx) {
     hojeIso > seg ? dados.desempenho(seg, somarDias(hojeIso, -1)).catch(() => []) : Promise.resolve([]),
     dados.vitoriasEquipe(7).catch(() => []),
     dados.desempenhoComercial(`${hojeIso.slice(0, 8)}01`).catch(() => null), dados.kanbanWasfit().catch(() => null)]);
-  const analiseSemana = await cartaoAnaliseSemanal(ctx).catch(() => '');   // leitura da IA de segunda (some quando não há)
+  const analiseSemana = await cartaoAnaliseSemanal(ctx).catch(() => '');
+  const ini3 = (() => { const d = new Date(`${hojeIso.slice(0, 7)}-01T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() - 3); return d.toISOString().slice(0, 10); })();
+  const saldo = linhasSaldo(await dados.saldoMes(ini3).catch(() => []), ctx.unidade, hojeIso);   // leitura da IA de segunda (some quando não há)
   const vitorias = ctx.unidade ? todasVitorias.filter((v) => v.unidade === ctx.unidade) : todasVitorias;
   const pendentes = pendentesPorConsultora(tarefas, hojeIso);
   const semanaDe_ = Object.fromEntries(semana.map((c) => [c.id, c]));
@@ -60,6 +62,8 @@ export async function render(el, ctx) {
         <td><span class="selo ${cor}">${rot}</span><span class="sub">${esc(u.diagnostico)}</span></td></tr>`; }).join('')}
       </tbody></table></div>
       <p class="dica" style="margin-top:8px">Venda = cadastrou e virou cliente no mês. Detalhe por consultora, canais e funil da IA: <a href="#/analises/comercial">Análises → Comercial</a></p></div>` : ''}
+
+    ${saldo.length ? quadroSaldo(saldo, ctx) : ''}
 
     <div class="cartao"><h2>Equipe hoje</h2>
       ${todas.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Consultora</th><th>Hoje</th><th>Pendentes</th><th>Atrasados</th><th>Último contato</th><th>Semana</th><th>Carteira do mês</th><th>Kanban</th><th></th></tr></thead><tbody>
@@ -140,4 +144,21 @@ function listasDaSemana(tarefas, hoje) {
       <td class="oculta-cel">${x.atrasadas ? `<b style="color:var(--danger)">${x.atrasadas}</b>` : '—'}</td>
       <td class="acoes"><a class="btn sec peq" href="#/${ROTA_CONTROLE[c]}">Abrir</a></td></tr>`).join('')}
     </tbody></table></div></div>`;
+}
+
+// Entradas × saídas de alunos (EVO, pessoas): este mês até hoje e o saldo dos 3 meses fechados
+const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+function quadroSaldo(linhas, ctx) {
+  const sinal = (n) => (n == null ? '—' : n > 0 ? `+${n}` : String(n));
+  const cor = (n) => (n == null ? '' : n < 0 ? 'vermelho' : n > 0 ? 'verde' : 'cinza');
+  const meses = [...new Set(linhas.flatMap((l) => l.antes.map((a) => a.mes)))].sort().reverse().slice(0, 3);
+  return `<div class="cartao"><h2>Entradas × saídas de alunos <span class="selo cinza">EVO · pessoas</span></h2>
+    <div class="tabela-wrap"><table class="tabela"><thead><tr><th>Unidade</th><th>Entraram este mês</th><th>Saíram este mês</th><th>Saldo do mês</th>${meses.map((m) => `<th>${MESES_CURTOS[+m.slice(5, 7) - 1]}</th>`).join('')}</tr></thead><tbody>
+    ${linhas.map((l) => `<tr><td class="nome">${esc(ctx.nomeUnidade(l.unidade).replace('Positiva ', '').replace('Acqua ', ''))}${l.aviso ? `<span class="sub">⚠️ ${esc(l.aviso)}</span>` : ''}</td>
+      <td>${l.atual ? `<b>${l.atual.entradas}</b><span class="sub">${l.atual.matriculas} matrículas · ${l.atual.rematriculas} rematrículas</span>` : '—'}</td>
+      <td>${l.atual ? `<b>${l.atual.saidas}</b><span class="sub">${l.atual.cancelados} cancelaram · ${l.atual.vencidos} venceram sem renovar</span>` : '—'}</td>
+      <td>${l.atual ? `<span class="selo ${cor(l.saldo)}">${sinal(l.saldo)}</span>` : '—'}</td>
+      ${meses.map((m) => { const a = l.antes.find((x) => x.mes === m); return `<td>${a ? `<span class="selo ${cor(a.saldo)}">${sinal(a.saldo)}</span><span class="sub">${a.entradas} entraram · ${a.saidas} saíram</span>` : '—'}</td>`; }).join('')}</tr>`).join('')}
+    </tbody></table></div>
+    <details class="como-ler"><summary>Como é contado</summary><p class="dica">Conta pessoas, lidas da EVO todo dia cedo. Saiu = cancelou ou o contrato venceu sem renovar e ela não voltou em até 15 dias depois do fim do mês (troca de plano e transferência não contam). Entrou = matrícula ou rematrícula vendida no mês (renovação não conta). Ficam fora Gympass, TotalPass, convênios, diária, Kids, VIP e semelhantes. No mês atual, quem venceu e ainda vai renovar conta como saída até renovar.</p></details></div>`;
 }

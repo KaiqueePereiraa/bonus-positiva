@@ -78,3 +78,13 @@ dialog .acoes{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
   .numeros{grid-template-columns:repeat(2,minmax(0,1fr))}
   .numero b{font-size:22px}
 }
+
+/* busca pelo e-mail de alguém da equipe */
+.busca{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--borda)}
+.busca label{font-size:13px;font-weight:600;color:var(--titulo)}
+.busca>div{display:flex;gap:8px;max-width:520px}
+.busca input{flex:1;font:inherit;font-size:15px;padding:9px 12px;border-radius:10px;border:1px solid var(--borda);background:var(--superficie);color:var(--texto)}
+.busca input:focus{outline:none;border-color:var(--primaria-forte);box-shadow:0 0 0 3px color-mix(in oklch,var(--primaria) 25%,transparent)}
+.busca-res{list-style:none;display:flex;flex-direction:column;gap:6px}
+.busca-res li{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;padding:6px 0}
+.busca-res .btn{padding:6px 12px;font-size:13px}

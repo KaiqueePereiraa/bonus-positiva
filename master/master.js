@@ -1,8 +1,8 @@
 // Painel master da WasFit (26/11/2026): todas as academias do sistema — cadastradas, ativas e inativas, saúde (licença e
 // uso), receita mensal — com "Entrar" e "Editar". Só o master admin (o banco recusa os outros com "Só o master admin.").
-import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261126225450';
-import { saude, resumo, filtrar, FILTROS, haQuanto, reais } from './master-regras.js?v=20261126225450';
-import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261126225450';
+import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261126232913';
+import { saude, resumo, filtrar, FILTROS, haQuanto, reais } from './master-regras.js?v=20261126232913';
+import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261126232913';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -113,6 +113,18 @@ $('linhas').addEventListener('click', (e) => {
   if (bE) entrar(contas.find((c) => c.id === bE.dataset.entrar), bE);
   if (bD) editar(contas.find((c) => c.id === bD.dataset.editar));
 });
+// Achar a academia pelo e-mail (suporte: "o gestor X pediu ajuda")
+$('busca').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const termo = $('busca-email').value.trim();
+  if (termo.length < 3) { $('busca-res').innerHTML = '<li class="dica">Digite pelo menos 3 letras do e-mail.</li>'; return; }
+  const { data, error } = await sb.rpc('master_buscar_email', { p_email: termo });
+  if (error) { $('busca-res').innerHTML = `<li class="dica">${esc(error.message)}</li>`; return; }
+  $('busca-res').innerHTML = (data || []).map((x) => `<li><span><b>${esc(x.pessoa || x.email)}</b> · ${esc(x.email)} <span class="dica">${esc(x.papel)}${x.ativo ? '' : ' · inativo'}</span></span>
+    <span><span class="dica">${esc(x.conta)}</span> <button class="btn sec" type="button" data-entrar="${esc(x.conta_id)}">Entrar</button></span></li>`).join('')
+    || '<li class="dica">Ninguém com esse e-mail.</li>';
+});
+$('busca-res').addEventListener('click', (e) => { const b = e.target.closest('[data-entrar]'); if (b) entrar(contas.find((c) => c.id === b.dataset.entrar) || { id: b.dataset.entrar }, b); });
 $('sair').addEventListener('click', () => { try { sessionStorage.removeItem('wasfit_academia_escolhida'); } catch { /* */ } sair(); });
 $('tema').addEventListener('click', () => {
   const escuro = document.documentElement.dataset.tema !== 'escuro';

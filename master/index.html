@@ -9,8 +9,8 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/marca.css?v=20261126225450">
-<link rel="stylesheet" href="master.css?v=20261126225450">
+<link rel="stylesheet" href="../shared/marca.css?v=20261126232913">
+<link rel="stylesheet" href="master.css?v=20261126232913">
 </head>
 <body>
 <header class="topo">
@@ -36,6 +36,11 @@
   </section>
   <section class="numeros" id="numeros" aria-label="Resumo"></section>
   <section class="cartao">
+    <form class="busca" id="busca" role="search">
+      <label for="busca-email">Achar pelo e-mail de alguém da equipe</label>
+      <div><input id="busca-email" type="search" placeholder="ex.: gestor@academia.com.br" autocomplete="off" minlength="3"><button class="btn sec" type="submit">Buscar</button></div>
+      <ul id="busca-res" class="busca-res" aria-live="polite"></ul>
+    </form>
     <div class="filtros" id="filtros" role="tablist" aria-label="Filtrar academias"></div>
     <div class="tabela-wrap"><table class="tabela" id="tabela">
       <thead><tr><th>Academia</th><th>Situação</th><th>Plano</th><th>Licença</th><th>Equipe</th><th>Uso (contatos)</th><th>Último acesso</th><th></th></tr></thead>
@@ -59,6 +64,6 @@
   </form>
 </dialog>
 
-<script type="module" src="master.js?v=20261126225450"></script>
+<script type="module" src="master.js?v=20261126232913"></script>
 </body>
 </html>
