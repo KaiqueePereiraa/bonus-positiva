@@ -1,13 +1,13 @@
 // Central de Tarefas — inicialização, menu, rotas e sino.
-import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261127011833';
-import * as dados from './dados.js?v=20261127011833';
-import { seloLicenca } from './conta-regras.js?v=20261127011833';
-import { hojeSP } from './regras.js?v=20261127011833';
-import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261127011833';
-import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261127011833';
-import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261127011833';
-import { resumoSemana, equipeDoDia } from './bonus-meta.js?v=20261127011833';
-import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261127011833';
+import { exigirArea, areasDoPerfil, sair } from '../../shared/sessao.js?v=20261127024402';
+import * as dados from './dados.js?v=20261127024402';
+import { seloLicenca } from './conta-regras.js?v=20261127024402';
+import { hojeSP } from './regras.js?v=20261127024402';
+import { avisosConsultora, avisosAdmin } from './avisos.js?v=20261127024402';
+import { esc, erro, carregando, modal, toast, ROTA_CONTROLE } from './ui.js?v=20261127024402';
+import { circulos, disponivelDe, caminhoSequencia, recordeDoDia } from './jogo.js?v=20261127024402';
+import { resumoSemana, equipeDoDia } from './bonus-meta.js?v=20261127024402';
+import { aneisSvg, animar, maisUm, festaCirculo, celebrar, festasDaSequencia, festaRecorde } from './jogo-visual.js?v=20261127024402';
 
 const ICONES = {
   visao: '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',
@@ -244,6 +244,14 @@ async function mostrarConta() {
   try {
     const c = await dados.minhaConta();
     if (!c?.nome) return;
+    if (c.ativa === false && !c.master) {   // academia bloqueada ou encerrada (27/11/2026): só o master entra
+      document.body.innerHTML = `<main style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:var(--fonte)"><div class="cartao" style="max-width:440px;text-align:center">
+        <h2 style="margin-bottom:8px">${c.encerrada ? 'Academia encerrada' : 'Acesso suspenso'}</h2>
+        <p class="dica">${c.encerrada ? 'Esta academia foi encerrada na Wasfit gestão. Fale com a WasFit se precisar da cópia dos dados.'
+          : `${c.bloqueio_motivo ? `Motivo: ${c.bloqueio_motivo}. ` : ''}Fale com a WasFit para regularizar — seus dados continuam guardados.`}</p>
+        <p style="margin-top:14px"><a href="../index.html">Voltar</a></p></div></main>`;
+      return;
+    }
     $('conta-nome').textContent = c.nome;
     const escuro = document.documentElement.dataset.tema === 'escuro';
     const logo = escuro ? (c.logo_claro || c.logo_escuro) : (c.logo_escuro || c.logo_claro);
@@ -287,7 +295,7 @@ async function navegar() {
   el.innerHTML = carregando();
   const meu = ++renderAtual;
   try {
-    const tela = await import(`./telas/${modulo}.js?v=20261127011833`);
+    const tela = await import(`./telas/${modulo}.js?v=20261127024402`);
     if (meu !== renderAtual) return;
     await tela.render(el, ctx, params);
   } catch (e) {

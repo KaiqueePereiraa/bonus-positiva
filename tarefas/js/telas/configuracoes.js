@@ -1,11 +1,11 @@
 // Configurações (só admin): usuários, unidades e grupos, kanban (dias do monitoramento), feriados, motivos, mensagens e WhatsApp.
-import * as dados from '../dados.js?v=20261127011833';
-import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261127011833';
-import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261127011833';
-import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261127011833';
+import * as dados from '../dados.js?v=20261127024402';
+import { normalizarTelefone, diaDaSemana } from '../regras.js?v=20261127024402';
+import { esc, dataLonga, dataHora, diaSemana, toast, erro, vazio, modal, confirmar } from '../ui.js?v=20261127024402';
+import { diasDe, horasDe, texto as regraTexto, PADRAO as REGRA_PADRAO } from '../kanban-regras.js?v=20261127024402';
 
 // 26/11: abre na 1ª aba (Usuários); a licença (só o master admin) foi para o fim
-const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO'], ['conta', 'Conta e licença']];
+const ABAS = [['usuarios', 'Usuários'], ['rodizio', 'Unidades e grupos'], ['kanban', 'Comercial e kanban'], ['feriados', 'Feriados'], ['motivos', 'Motivos'], ['mensagens', 'Mensagens'], ['whatsapp', 'WhatsApp'], ['evo', 'EVO'], ['privacidade', 'Privacidade (LGPD)'], ['conta', 'Conta e licença']];
 
 // coordenador de unidade: só a equipe e as unidades dele (o resto vale para todas e fica com o administrador geral)
 const ABAS_COORD = ['usuarios', 'rodizio', 'kanban'];
@@ -17,7 +17,7 @@ export async function render(el, ctx, [aba = 'usuarios']) {
   el.innerHTML = `<div class="cartao"><div class="abas">${abas.map(([id, r]) => `<button data-aba="${id}" class="${id === aba ? 'ativo' : ''}">${r}</button>`).join('')}</div><div id="aba"></div></div>`;
   el.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/configuracoes/${b.dataset.aba}`; }));
   const alvo = el.querySelector('#aba');
-  const fn = { conta, usuarios, rodizio, kanban, feriados, motivos, mensagens, whatsapp, evo }[aba] || usuarios;
+  const fn = { conta, usuarios, rodizio, kanban, feriados, motivos, mensagens, whatsapp, evo, privacidade }[aba] || usuarios;
   await fn(alvo, ctx);
 }
 
@@ -590,4 +590,47 @@ async function evo(el, ctx) {
     const lista = el.querySelector('#palavras-renov').value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
     try { await dados.salvarConfig('renovacao_contratos_excluidos', lista); toast('Palavras salvas.'); } catch (err) { erro(err); }
   };
+}
+
+// ── Privacidade (LGPD): pedido do aluno/interessado — baixar tudo o que guardamos dele ou apagar (só admin geral) ──
+async function privacidade(el) {
+  el.innerHTML = `<h2>Pedido de um aluno sobre os dados dele (LGPD)</h2>
+    <p class="dica">Quando um aluno ou interessado pedir para ver ou apagar os dados dele, procure pelo nome, celular ou código da EVO.
+      "Baixar dados" gera um arquivo com tudo o que a Central guarda da pessoa (para enviar a ela). "Apagar" tira nome, celular,
+      informações e anotações de todas as listas, do kanban e dos cadastros; os números da equipe continuam (sem identificar ninguém).
+      A EVO e o WhatsApp da academia são sistemas à parte: apague lá também, se for o caso.</p>
+    <form class="linha-acoes" id="lg-form" style="margin:14px 0"><label class="campo" style="flex:1;min-width:240px">Nome, celular ou código da EVO
+      <input class="ctrl" id="lg-termo" minlength="3" required></label><button class="btn" type="submit">Procurar</button></form>
+    <div id="lg-res"></div>`;
+  const baixar = (nome, obj) => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }));
+    a.download = nome; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  let achados = [];
+  el.querySelector('#lg-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      achados = await dados.lgpdBuscar(el.querySelector('#lg-termo').value.trim());
+      el.querySelector('#lg-res').innerHTML = achados.length ? `<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Pessoa</th><th>Código EVO</th><th>Celular</th><th>Listas</th><th></th></tr></thead><tbody>
+        ${achados.map((x, k) => `<tr><td class="nome">${esc(x.nome)}</td><td>${esc(x.evo_id || '—')}</td><td>${esc(x.celular || '—')}</td><td>${x.listas}</td>
+          <td class="acoes"><button class="btn sec peq" data-baixar="${k}">Baixar dados</button> <button class="btn perigo peq" data-apagar="${k}">Apagar</button></td></tr>`).join('')}
+        </tbody></table></div>` : vazio('Ninguém encontrado com esse nome, celular ou código.');
+    } catch (err) { erro(err); }
+  });
+  el.querySelector('#lg-res').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-baixar],[data-apagar]');
+    if (!b) return;
+    const x = achados[+(b.dataset.baixar ?? b.dataset.apagar)];
+    try {
+      if (b.dataset.baixar != null) {
+        baixar(`dados-${(x.nome || 'pessoa').toLowerCase().replace(/[^a-z0-9]+/gi, '-')}.json`, await dados.lgpdExportar(x.evo_id, x.celular_busca));
+        return;
+      }
+      if (!(await confirmar('Apagar os dados desta pessoa', `Apagar nome, celular, informações e anotações de "${x.nome}" em todas as listas, no kanban e nos cadastros? Não dá para desfazer. Baixe os dados antes, se ela pediu uma cópia.`, 'Apagar'))) return;
+      const r = await dados.lgpdApagar(x.evo_id, x.celular_busca);
+      toast(`Dados apagados (${r.itens} contato(s) nas listas${r.kanban ? `, ${r.kanban} no kanban` : ''}).`);
+      el.querySelector('#lg-form').requestSubmit();
+    } catch (err) { erro(err); }
+  });
 }

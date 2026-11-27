@@ -9,8 +9,8 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/marca.css?v=20261127011833">
-<link rel="stylesheet" href="master.css?v=20261127011833">
+<link rel="stylesheet" href="../shared/marca.css?v=20261127024402">
+<link rel="stylesheet" href="master.css?v=20261127024402">
 </head>
 <body>
 <header class="topo">
@@ -61,6 +61,8 @@
     <label class="campo">Valor mensal (R$)<input id="ed-valor" type="number" min="0" step="0.01" placeholder="ex.: 897"></label>
     <label class="campo">Licença vence em<input id="ed-vence" type="date"></label>
     <p class="dica">Deixe a data em branco para não mostrar aviso de vencimento para o gestor.</p>
+    <div class="cobranca" id="ed-cobranca"></div>
+    <div class="zona-perigo" id="ed-encerrar"></div>
     <div class="acoes"><button class="btn sec" value="cancelar" type="submit">Cancelar</button><button class="btn" value="salvar" type="submit" id="ed-salvar">Salvar</button></div>
   </form>
 </dialog>
@@ -81,6 +83,6 @@
   </form>
 </dialog>
 
-<script type="module" src="master.js?v=20261127011833"></script>
+<script type="module" src="master.js?v=20261127024402"></script>
 </body>
 </html>

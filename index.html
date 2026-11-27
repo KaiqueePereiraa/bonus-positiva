@@ -8,7 +8,7 @@
 <script>try{if(localStorage.getItem('wasfit_tema')==='escuro')document.documentElement.dataset.tema='escuro'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/marca.css?v=20261127011833">
+<link rel="stylesheet" href="shared/marca.css?v=20261127024402">
 <script>window.__hashInicial = location.hash;</script>
 <style>
 #tela{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--fundo);position:relative;overflow:hidden;padding:24px}
@@ -124,7 +124,7 @@
     </section>
 
     <section id="sem-acesso" hidden>
-      <p class="ajuda">Seu usuário ainda não tem acesso liberado. Fale com o administrador.</p>
+      <p class="ajuda" id="sem-acesso-txt">Seu usuário ainda não tem acesso liberado. Fale com o administrador.</p>
       <button class="btn" type="button" id="sair2">Sair</button>
     </section>
 
@@ -134,7 +134,7 @@
 </main>
 
 <script type="module">
-import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261127011833';
+import { sb, carregarPerfil, areasDoPerfil, traduzirErroAuth, sair } from './shared/sessao.js?v=20261127024402';
 
 const $ = (id) => document.getElementById(id);
 const telas = ['form-login', 'form-esqueci', 'form-nova', 'escolha', 'sem-acesso', 'carregando'];
@@ -197,6 +197,12 @@ async function seguir() {
   let conta = null;
   try { ({ data: conta } = await sb.rpc('minha_conta')); } catch { /* sem conta */ }
   const nome1 = (perfil.nome || perfil.email).split(' ')[0];
+  // academia bloqueada (pagamento em atraso) ou encerrada: só o master entra (27/11/2026)
+  if (conta && conta.ativa === false && !conta.master) {
+    $('sem-acesso-txt').textContent = conta.encerrada ? 'Esta academia foi encerrada na Wasfit gestão. Fale com a WasFit se precisar da cópia dos dados.'
+      : `Acesso suspenso${conta.bloqueio_motivo ? `: ${conta.bloqueio_motivo}` : ''}. Fale com a WasFit para regularizar — seus dados continuam guardados.`;
+    return mostrar('sem-acesso');
+  }
   // Master admin (WasFit): depois do login cai no painel das academias e escolhe qual acessar (pedido de 26/11/2026)
   if (conta?.master && (busca.has('academias') || !escolheuAcademia())) return location.replace('master/');   // painel master da WasFit
   const areas = areasDoPerfil(perfil);

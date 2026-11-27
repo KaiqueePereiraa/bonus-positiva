@@ -1,8 +1,8 @@
 // Painel master da WasFit (26/11/2026): todas as academias do sistema — cadastradas, ativas e inativas, saúde (licença e
 // uso), receita mensal — com "Entrar" e "Editar". Só o master admin (o banco recusa os outros com "Só o master admin.").
-import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261127011833';
-import { saude, resumo, filtrar, FILTROS, haQuanto, reais } from './master-regras.js?v=20261127011833';
-import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261127011833';
+import { sb, carregarPerfil, sair } from '../shared/sessao.js?v=20261127024402';
+import { saude, resumo, filtrar, FILTROS, haQuanto, reais } from './master-regras.js?v=20261127024402';
+import { seloLicenca } from '../tarefas/js/conta-regras.js?v=20261127024402';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -43,8 +43,9 @@ function linhas(agora) {
     return `<tr class="${c.ativa === false ? 'inativa' : ''}">
       <td class="nome">${logo ? `<img src="${esc(logo)}" alt="">` : `<span class="sem-logo">${esc((c.nome || '?').slice(0, 1))}</span>`}
         <div><b>${esc(c.nome)}</b><span class="sub">${c.casa ? 'sua academia' : `desde ${new Date(c.criado_em).toLocaleDateString('pt-BR')}`}${c.atual ? ' · você está aqui' : ''}</span></div></td>
-      <td><span class="saude ${s.nivel}">${SAUDE[s.nivel]}</span><span class="sub" title="${esc(s.motivos.join(' · '))}">${esc(s.motivos[0])}</span></td>
-      <td>${c.plano ? esc(c.plano) : '<span class="dica">—</span>'}<span class="sub">${Number(c.valor_mensal) > 0 ? `${reais(c.valor_mensal)}/mês` : 'sem valor'}</span></td>
+      <td>${c.apagada_em ? '<span class="saude inativa">Apagada</span>' : c.encerrada_em ? `<span class="saude vermelho">Encerrada</span><span class="sub">apaga em ${new Date(`${c.apagar_em}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>`
+        : `<span class="saude ${s.nivel}">${SAUDE[s.nivel]}</span><span class="sub" title="${esc(s.motivos.join(' · '))}">${esc(s.motivos[0])}</span>`}</td>
+      <td>${c.plano ? esc(c.plano) : '<span class="dica">—</span>'}<span class="sub">${Number(c.valor_mensal) > 0 ? `${reais(c.valor_mensal)}/mês` : 'sem valor'}</span>${c.cobranca_aberta ? `<span class="sub" style="color:${c.cobranca_aberta.status === 'vencida' ? 'var(--texto-perigo)' : 'inherit'}">${c.cobranca_aberta.status === 'vencida' ? 'cobrança vencida' : 'cobrança aberta'} · ${reais(c.cobranca_aberta.valor)}</span>` : ''}${c.bloqueio_motivo ? `<span class="sub" style="color:var(--texto-perigo)">bloqueada: ${esc(c.bloqueio_motivo)}</span>` : ''}</td>
       <td>${sl ? `<span class="selo ${sl.cor}" title="${esc(sl.dica)}">${esc(sl.texto)}</span>` : '<span class="dica">sem data</span>'}</td>
       <td>${configHtml(trilhas.get(c.id))}</td>
       <td>${n(c.unidades || 0, 'unidade', 'unidades')}<span class="sub">${n(c.usuarios || 0, 'usuário', 'usuários')} · ${n(c.consultoras || 0, 'consultora', 'consultoras')}</span></td>
@@ -97,6 +98,36 @@ function editar(c) {
   $('ed-plano').value = c.plano || '';
   $('ed-valor').value = c.valor_mensal ?? '';
   $('ed-vence').value = c.licenca_vence || '';
+  cobrancaHtml(c);
+  // LGPD: cópia de tudo e encerramento (a academia fica inativa; os dados são apagados sozinhos 30 dias depois)
+  const dm = (d) => (d ? new Date(`${String(d).slice(0, 10)}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '');
+  $('ed-encerrar').innerHTML = c.casa ? '' : `<h3 class="sub-titulo">Encerrar academia</h3>
+    <p class="dica">${c.encerrada_em ? `Encerrada. Os dados serão apagados em <b>${dm(c.apagar_em)}</b>. Até lá, dá para baixar tudo ou reabrir.`
+      : 'A academia fica inativa e tem 30 dias para receber a cópia dos dados; depois tudo é apagado sozinho (pessoas, listas, cadastros e kanban).'}</p>
+    <div class="linha"><button class="btn sec" type="button" data-acao="exportar">Baixar todos os dados</button>
+      ${c.encerrada_em ? '<button class="btn sec" type="button" data-acao="reabrir">Reabrir academia</button>' : '<button class="btn perigo" type="button" data-acao="encerrar">Encerrar academia</button>'}</div>`;
+  $('ed-encerrar').onclick = async (e) => {
+    const b = e.target.closest('[data-acao]');
+    if (!b) return;
+    b.disabled = true;
+    try {
+      if (b.dataset.acao === 'exportar') {
+        const { data, error } = await sb.rpc('master_exportar_conta', { p_conta: c.id });
+        if (error) throw error;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+        a.download = `wasfit-gestao-${c.slug || 'academia'}-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+      } else {
+        const encerrar = b.dataset.acao === 'encerrar';
+        if (encerrar && prompt(`Para encerrar "${c.nome}", digite ENCERRAR. Os dados serão apagados em 30 dias.`) !== 'ENCERRAR') return;
+        const { error } = await sb.rpc('master_encerrar_conta', { p_conta: c.id, p_encerrar: encerrar });
+        if (error) throw error;
+        $('editar').close('cancelar');
+        await carregar();
+      }
+    } catch (err) { $('msg').textContent = err?.message || 'Não foi possível.'; }
+    finally { b.disabled = false; }
+  };
   d.onclose = async () => {
     if (d.returnValue !== 'salvar') return;
     const valor = $('ed-valor').value === '' ? null : Number($('ed-valor').value);
@@ -181,3 +212,43 @@ $('nova-form').addEventListener('submit', async (e) => {
     await carregar().catch(() => {});
   } finally { botao.disabled = false; }
 });
+
+// ── Cobrança (Asaas ainda não conectado: o master cria a cobrança e marca como paga; paga = licença +1 mês e desbloqueia) ──
+const ST_COB = { pendente: ['amarelo', 'Pendente'], vencida: ['vermelho', 'Vencida'], paga: ['verde', 'Paga'], cancelada: ['inativa', 'Cancelada'] };
+async function cobrancaHtml(c) {
+  const box = $('ed-cobranca');
+  box.innerHTML = '<p class="dica">Carregando cobranças…</p>';
+  const { data: lista, error } = await sb.rpc('master_cobrancas', { p_conta: c.id });
+  const dm = (d) => new Date(`${String(d).slice(0, 10)}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+  const mesQue = (() => { const d = new Date(); d.setUTCDate(1); return d.toISOString().slice(0, 7); })();
+  box.innerHTML = `<h3 class="sub-titulo">Cobrança ${c.casa ? '<span class="dica">(sua academia não é cobrada nem bloqueada)</span>' : ''}</h3>
+    <p class="dica">O Asaas ainda não está conectado: crie a cobrança aqui e marque como paga quando o dinheiro entrar. Paga = licença vai um mês adiante e a academia é desbloqueada.
+      Vencida há mais que a tolerância = academia bloqueada (vê "Acesso suspenso").</p>
+    <div class="dupla"><label class="campo">Dia do vencimento<input id="cb-dia" type="number" min="1" max="28" value="${c.dia_vencimento ?? 10}"></label>
+      <label class="campo">Tolerância (dias)<input id="cb-tol" type="number" min="0" max="60" value="${c.dias_tolerancia ?? 10}"></label></div>
+    <label class="campo checkbox"><input id="cb-auto" type="checkbox" ${c.cobranca_automatica ? 'checked' : ''}> Gerar a cobrança do mês seguinte sozinha (10 dias antes)</label>
+    <div class="linha"><button class="btn sec" type="button" data-cob="salvar-regra">Salvar regra</button>
+      <label class="campo" style="flex-direction:row;align-items:center;gap:6px">Mês<input id="cb-mes" type="month" value="${mesQue}"></label>
+      <button class="btn sec" type="button" data-cob="nova">Nova cobrança</button></div>
+    ${error ? `<p class="msg">${esc(error.message)}</p>` : (lista || []).length ? `<ul class="cob-lista">${lista.map((b) => {
+      const [cor, rot] = ST_COB[b.status] || ['', b.status];
+      return `<li><span><b>${esc(b.referencia.slice(5, 7))}/${esc(b.referencia.slice(0, 4))}</b> · ${reais(b.valor)} · vence ${dm(b.vencimento)}${b.pago_em ? ` · paga em ${dm(b.pago_em)}` : ''}</span>
+        <span><span class="saude ${cor}">${rot}</span>${b.status === 'paga' || b.status === 'cancelada' ? '' : ` <button class="btn sec" type="button" data-cob="paga" data-id="${b.id}">Marcar paga</button> <button class="btn sec" type="button" data-cob="cancelada" data-id="${b.id}">Cancelar</button>`}</span></li>`;
+    }).join('')}</ul>` : '<p class="dica">Nenhuma cobrança ainda.</p>'}`;
+  box.onclick = async (e) => {
+    const b = e.target.closest('[data-cob]');
+    if (!b) return;
+    b.disabled = true;
+    try {
+      let r;
+      if (b.dataset.cob === 'salvar-regra') r = await sb.rpc('master_conta_cobranca', { p_conta: c.id, p_dia: +$('cb-dia').value || 10, p_tolerancia: +$('cb-tol').value || 0, p_automatica: $('cb-auto').checked });
+      else if (b.dataset.cob === 'nova') r = await sb.rpc('master_cobranca_criar', { p_conta: c.id, p_referencia: `${$('cb-mes').value}-01` });
+      else r = await sb.rpc('master_cobranca_status', { p_id: b.dataset.id, p_status: b.dataset.cob });
+      if (r.error) throw r.error;
+      await carregar();
+      const atual = contas.find((x) => x.id === c.id) || c;
+      Object.assign(c, atual);
+      await cobrancaHtml(c);
+    } catch (err) { $('msg').textContent = err?.message || 'Não foi possível.'; b.disabled = false; }
+  };
+}

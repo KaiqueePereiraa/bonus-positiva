@@ -1,10 +1,10 @@
 // Resultados — o que os contatos trouxeram (conferido na EVO), o que os números dizem (frases automáticas, antes na
 // tela "Insights"), cumprimento dos prazos e os motivos do "Por que não fechou?". O resultado de cada consultora e o ranking ficam em Desempenho.
-import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261127011833';
-import * as dados from '../dados.js?v=20261127011833';
-import { linha, barras } from '../graficos.js?v=20261127011833';
-import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261127011833';
-import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261127011833';
+import { resumo, evolucao, contarMotivos, motivosPorConsultora, motivosPorMes, gruposReais, resultadoDe, gerarInsights, POSITIVO } from '../analises.js?v=20261127024402';
+import * as dados from '../dados.js?v=20261127024402';
+import { linha, barras } from '../graficos.js?v=20261127024402';
+import { esc, vazio, NOMES_CONTROLE } from '../ui.js?v=20261127024402';
+import { filtrosPadrao, htmlFiltros, lerFiltros, pessoasDoFiltro, carregar, ligarPeriodos } from './_analise.js?v=20261127024402';
 
 let filtros;
 

@@ -95,3 +95,18 @@ dialog .acoes{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
 .sub-titulo{font-size:14px;font-weight:700;margin-top:6px}
 #dlg-nova{width:min(480px,calc(100vw - 32px))}
 #dlg-nova .msg{min-height:0}
+
+/* encerrar academia (LGPD) */
+.zona-perigo:empty{display:none}
+.zona-perigo{border-top:1px solid var(--borda);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.zona-perigo .linha{display:flex;gap:8px;flex-wrap:wrap}
+.btn.perigo{background:var(--superficie);color:var(--texto-perigo);box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--danger) 45%,transparent)}
+
+/* cobrança na janela Editar */
+.cobranca{border-top:1px solid var(--borda);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.cobranca .linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.campo.checkbox{flex-direction:row;align-items:center;gap:8px;font-weight:500}
+.cob-lista{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.cob-lista li{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;padding:6px 0;border-bottom:1px solid var(--borda)}
+.cob-lista .btn{padding:5px 10px;font-size:12px}
+#editar{width:min(560px,calc(100vw - 32px));max-height:90vh;overflow:auto}

@@ -1,6 +1,6 @@
 // Acesso a dados da Central. Toda leitura/escrita passa por aqui (as telas não falam com o Supabase).
 // Escritas usam as funções do banco (supabase/migrations/005_funcoes.sql), que conferem permissão.
-import { sb } from '../../shared/sessao.js?v=20261127011833';
+import { sb } from '../../shared/sessao.js?v=20261127024402';
 
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 // "Ver como consultora" (coordenador): as leituras usam os dados dela e NADA é salvo (rpc e escritas recusam).
@@ -233,6 +233,10 @@ export const meusDias = async (userId) => ok(await sb.from('dias_consultora').se
 export const desempenhoComercial = (mes) => rpc('desempenho_comercial', { p_mes: mes, p_como: comoId || null });
 // Kanban da WasFit espelhado e conversão por professor (gestor)
 export const kanbanWasfit = () => rpc('kanban_wasfit', {});
+// LGPD: pedido do titular (admin geral da academia)
+export const lgpdBuscar = (termo) => rpc('lgpd_buscar_titular', { p_termo: termo });
+export const lgpdExportar = (evoId, celular) => rpc('lgpd_exportar_titular', { p_evo_id: evoId || null, p_celular: celular || null });
+export const lgpdApagar = (evoId, celular) => rpc('lgpd_apagar_titular', { p_evo_id: evoId || null, p_celular: celular || null });
 // Saldo do mês pela EVO (entradas × saídas de alunos, pessoas): mês atual e os 3 anteriores; a regra do banco filtra as unidades
 export const saldoMes = async (desde) => ok(await sb.from('evo_saldo_mes').select('unidade, mes, saidas, cancelados, vencidos, entradas, matriculas, rematriculas, ate, fechado, lido_em').gte('mes', desde).order('mes'));
 export const kanbanWebhooks = () => rpc('kanban_webhooks', {});
