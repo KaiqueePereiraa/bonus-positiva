@@ -3,16 +3,16 @@
 // No 1º acesso do mês (até o dia 7) a versão é a do mês anterior. Depois de visto não reaparece (nem em outro aparelho);
 // para rever, o link "📬 Resumo da semana". No "ver como consultora" só abre pelo link e não marca como visto.
 // Regras puras em ../resumo-regras.js; novidades em ../novidades.js.
-import * as dados from '../dados.js?v=20261127195325';
-import { esc, erro, NOMES_CONTROLE } from '../ui.js?v=20261127195325';
-import { destaques, voceVsVoce, TIPOS_RESULTADO } from '../jogo.js?v=20261127195325';
-import { celebrar } from '../jogo-visual.js?v=20261127195325';
-import { agruparVitorias } from './_vitorias.js?v=20261127195325';
-import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127195325';
-import { periodoResumo, unidadesPeriodo, vitoriasPeriodo, vitoriasPorConsultora, novidadesPara, delta } from '../resumo-regras.js?v=20261127195325';
-import { tempoEspera } from '../fila-espera-regras.js?v=20261127195325';
-import { NOVIDADES } from '../novidades.js?v=20261127195325';
-import { somarDias, semanaDe } from '../regras.js?v=20261127195325';
+import * as dados from '../dados.js?v=20261127212309';
+import { esc, erro, NOMES_CONTROLE } from '../ui.js?v=20261127212309';
+import { destaques, voceVsVoce, TIPOS_RESULTADO } from '../jogo.js?v=20261127212309';
+import { celebrar } from '../jogo-visual.js?v=20261127212309';
+import { agruparVitorias } from './_vitorias.js?v=20261127212309';
+import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127212309';
+import { periodoResumo, unidadesPeriodo, vitoriasPeriodo, vitoriasPorConsultora, novidadesPara, delta } from '../resumo-regras.js?v=20261127212309';
+import { tempoEspera } from '../fila-espera-regras.js?v=20261127212309';
+import { NOVIDADES } from '../novidades.js?v=20261127212309';
+import { somarDias, semanaDe } from '../regras.js?v=20261127212309';
 
 let aberto = false;
 const ESTREIA = '2026-11-30';   // abre sozinho a partir da 1ª segunda (antes disso, só pelo link 📬)

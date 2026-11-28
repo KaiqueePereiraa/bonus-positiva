@@ -1,17 +1,17 @@
 // Painel do gestor — a página única que o gestor abre todo dia (26/11/2026): o que pede ação (listas, comercial e kanban
 // juntos, cada item com "o que fazer"), como está o mês por unidade e a equipe numa tabela só (contatos de hoje, carteira
 // do mês e kanban). O detalhe de cada assunto fica em Análises (abas Comercial, Kanban, Contatos da equipe, Resultados).
-import { abrirResumo, linkResumo, ligarLinkResumo } from './_resumo-semana.js?v=20261127195325';
-import * as dados from '../dados.js?v=20261127195325';
-import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127195325';
-import { somarDias, semanaDe } from '../regras.js?v=20261127195325';
+import { abrirResumo, linkResumo, ligarLinkResumo } from './_resumo-semana.js?v=20261127212309';
+import * as dados from '../dados.js?v=20261127212309';
+import { esc, vazio, barra, dataHora, NOMES_CONTROLE, ROTA_CONTROLE } from '../ui.js?v=20261127212309';
+import { somarDias, semanaDe } from '../regras.js?v=20261127212309';
 
 // rotinas novas que começam desligadas e precisam ser simuladas antes de ligar
 const ROTINAS_NOVAS = { renovacao: 'Renovação', relacionamento: 'Relacionamento' };
-import { sinais, atencao, reais } from '../painel-regras.js?v=20261127195325';
-import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127195325';
-import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127195325';
-import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127195325';
+import { sinais, atencao, reais } from '../painel-regras.js?v=20261127212309';
+import { listaVitorias, ligarPalmas, faltaAplaudir } from './_vitorias.js?v=20261127212309';
+import { itensComercial, linhasMes, carteiraDe, kanbanDe, linhasSaldo } from '../painel-comercial.js?v=20261127212309';
+import { avaliarUnidade, alertasProfessores } from '../professores-regras.js?v=20261127212309';
 
 export async function render(el, ctx) {
   const hojeIso = ctx.hoje();

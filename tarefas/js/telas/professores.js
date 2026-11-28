@@ -3,9 +3,9 @@
 //    unidade e com o mesmo período do mês anterior; quantos entraram na lista de risco de abandono;
 //  • aula experimental: quantos interessados fizeram a experimental com ele e quantos viraram cliente em até 30 dias.
 // Turmas vêm da agenda da EVO (lida todo dia; histórico desde 01/08/2026); saídas, da leitura de saldo do mês.
-import * as dados from '../dados.js?v=20261127195325';
-import { esc, vazio, nomeMesCap, dataCurta } from '../ui.js?v=20261127195325';
-import { avaliarUnidade, MIN_ALUNOS, FOLGA } from '../professores-regras.js?v=20261127195325';
+import * as dados from '../dados.js?v=20261127212309';
+import { esc, vazio, nomeMesCap, dataCurta } from '../ui.js?v=20261127212309';
+import { avaliarUnidade, MIN_ALUNOS, FOLGA } from '../professores-regras.js?v=20261127212309';
 
 let escolhido = null;
 const SIT = { perde_mais: ['vermelho', 'Perde mais'], perde_menos: ['verde', 'Segura bem'], na_media: ['azul', 'Na média'], poucos: ['cinza', 'Poucos alunos'] };
